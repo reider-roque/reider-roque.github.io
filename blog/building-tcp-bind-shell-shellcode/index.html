@@ -10,8 +10,7 @@
 </title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
-        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oleg's Web Log Atom Feed" />
+        <link rel="stylesheet" href="/theme/css/cid.css">
         
  
         <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
@@ -43,12 +42,12 @@
             <div class="container">
 
 <header class="blog-header">
-    <h1><a href="http://www.wryway.com/blog/">Oleg's Web Log</a></h1>
+    <h1><a href="/blog/">Oleg's Web Log</a></h1>
     <p> Stochastic records on Information Security </p>
     <nav>
-        <a href="http://www.wryway.com/blog/categories/">CATEGORIES</a>
-        <a href="http://www.wryway.com/blog/tags/">TAGS</a>
-        <a href="http://www.wryway.com/blog/archives/">ARCHIVES</a>
+        <a href="/blog/categories/">CATEGORIES</a>
+        <a href="/blog/tags/">TAGS</a>
+        <a href="/blog/archives/">ARCHIVES</a>
     </nav>
 </header>
 
@@ -57,7 +56,7 @@
         <header>
             <h1>Building TCP bind shell shellcode (SLAE, Assignment #1)</h1>
             <p class="category">
-                Category: <a class="category" href="http://www.wryway.com/blog/category/exploit-development/"><b>Exploit development</b></a>
+                Category: <a class="category" href="/blog/category/exploit-development/"><b>Exploit development</b></a>
             </p>
             <p class="date">
                 Written on <time datetime="2015-10-05T18:00:00-04:00">Oct 05, 2015</time>
@@ -65,7 +64,7 @@
         </header>
 
         <article>
-            <p>If you haven't written a bind TCP shell in Assembly before, than it is better to start with a higher-level language working prototype and then translate it to Assembly. The obvious choice of the higher level language for Linux is C. Here is a working TCP bind shell code in C. I tried to remove as many unneeded code as possible. Generally it may be a bad idea, but when writing shellcode this is exactly what you want - a working thing with as less parts as possible.</p>
+            <p>If you haven't written a bind TCP shell in Assembly before, then it is better to start with a higher-level language working prototype and then translate it to Assembly. The obvious choice of the higher level language for Linux is C. Here is a working TCP bind shell code in C. I tried to remove as much unneeded code as possible. Generally it may be a bad idea, but when writing shellcode, this is exactly what you want - a working thing with as few parts as possible.</p>
 <div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
 <span class="cp">#include &lt;strings.h&gt;</span>
 <span class="cp">#include &lt;sys/socket.h&gt;</span>
@@ -104,7 +103,7 @@
 </pre></div>
 
 
-<p>After we compile and start it we should make sure that the program is working:</p>
+<p>After we compile and start it, we should make sure that the program is working:</p>
 <div class="highlight"><pre><span class="c"># Build and start the program</span>
 gcc bindshell.c -o bindshell <span class="o">&amp;&amp;</span> ./bindshell
 
@@ -118,7 +117,7 @@ id
 
 <p>Now, to get a compact shellcode we first need to translate the above C code into Assembly.</p>
 <p>One nitty gritty detail you must be aware of is that four socket-related functions that were used in the C program actually use the same kernel entry point - <code>socketcall</code>. The manual page for this syscall (<code>man 2 socketcall</code>) says that only standard library implementers and kernel hackers need to know about it. It also says that this implementation is x86 platform specific and that on x86-64 and ARM there is no <code>socketcall</code> system call; instead <code>socket</code>, <code>accept</code>, <code>bind</code>, and all other socket functions are implemented as separate system calls.</p>
-<p>Here comes the Assembly version of the TCP bind shell with my extensive commments:</p>
+<p>Here is the Assembly version of the TCP bind shell with my extensive comments:</p>
 <div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
     <span class="k">global</span> <span class="nv">_start</span>
 
@@ -220,7 +219,7 @@ Payload: &quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\
 </pre></div>
 
 
-<p>That's it. We have a working shellcode that initiates listening on predetermined port and serves a <code>/bin/sh</code> shell to anyone connecting to that port. To make sure the shellcode works as inteded let's run it from inside of our C shellcode-framing program:</p>
+<p>That's it. We have a working shellcode that initiates listening on predetermined port and serves a <code>/bin/sh</code> shell to anyone connecting to that port. To make sure the shellcode works as intended, let's run it from inside of our C shellcode-framing program:</p>
 <div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
 <span class="cp">#include &lt;string.h&gt;</span>
 
@@ -251,7 +250,7 @@ nc localhost 1234
 </pre></div>
 
 
-<p><img alt="Bind TCP shell shellcode successful test" src="http://www.wryway.com/blog/building-tcp-bind-shell-shellcode/tcp-bind-shellcode-successful-test.png" title="Bind TCP shell shellcode successful test" />
+<p><img alt="Bind TCP shell shellcode successful test" src="/blog/building-tcp-bind-shell-shellcode/tcp-bind-shellcode-successful-test.png" title="Bind TCP shell shellcode successful test" />
 <div class="img-caption">Bind TCP shell shellcode successful test</div></p>
 <div class="divider"></div>
 
@@ -276,19 +275,6 @@ This blog post was created to fulfill the requirements of the <a href="http://se
             </p>
         </footer>
 
-<div class="comments">
-    <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        var disqus_shortname = 'wryway';
-        (function() {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-</div>
 
     </div>
 
@@ -308,16 +294,10 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015.
+    Oleg Mitrofanov &copy; 2015-2016.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>
             </div>
-<script>
-    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
-    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-</script>
     </body>
 </html>

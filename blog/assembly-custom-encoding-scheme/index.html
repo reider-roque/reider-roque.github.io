@@ -10,8 +10,7 @@
 </title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
-        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oleg's Web Log Atom Feed" />
+        <link rel="stylesheet" href="/theme/css/cid.css">
         
  
         <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
@@ -43,12 +42,12 @@
             <div class="container">
 
 <header class="blog-header">
-    <h1><a href="http://www.wryway.com/blog/">Oleg's Web Log</a></h1>
+    <h1><a href="/blog/">Oleg's Web Log</a></h1>
     <p> Stochastic records on Information Security </p>
     <nav>
-        <a href="http://www.wryway.com/blog/categories/">CATEGORIES</a>
-        <a href="http://www.wryway.com/blog/tags/">TAGS</a>
-        <a href="http://www.wryway.com/blog/archives/">ARCHIVES</a>
+        <a href="/blog/categories/">CATEGORIES</a>
+        <a href="/blog/tags/">TAGS</a>
+        <a href="/blog/archives/">ARCHIVES</a>
     </nav>
 </header>
 
@@ -57,7 +56,7 @@
         <header>
             <h1>Custom encoding scheme in Assembly (SLAE, Assignment #4)</h1>
             <p class="category">
-                Category: <a class="category" href="http://www.wryway.com/blog/category/exploit-development/"><b>Exploit development</b></a>
+                Category: <a class="category" href="/blog/category/exploit-development/"><b>Exploit development</b></a>
             </p>
             <p class="date">
                 Written on <time datetime="2015-10-06T20:00:00-04:00">Oct 06, 2015</time>
@@ -65,11 +64,11 @@
         </header>
 
         <article>
-            <p>The <em>encoding</em> and <em>encryption</em> notions are sometimes used interchangeably to describe a process of data transformation. While in fact <a href="https://danielmiessler.com/study/encoding_encryption_hashing/">there is a difference</a>. The purpose of encoding is to transform data so that it can be properly consumed by a different type of system. Encoding transforms data into another format using a scheme that is publicly available and does not require a key. The purpose of encryption on the other hand is to transform data to keep it secret from others so it can only be consumed the intended recipient. Encryption usually transforms (encrypts/decrypts) data using a secret key and the algorithm may or may not be publicly available.</p>
+            <p>The <em>encoding</em> and <em>encryption</em> notions are sometimes used interchangeably to describe a process of data transformation, while, in fact, <a href="https://danielmiessler.com/study/encoding_encryption_hashing/">there is a difference</a>. The purpose of encoding is to transform data so that it can be properly consumed by a different type of system. Encoding transforms data into another format using a scheme that is publicly available and does not require a key. The purpose of encryption, on the other hand, is to transform data to keep it secret from others, so it can only be consumed by the intended recipient. Encryption usually transforms (encrypts/decrypts) data using a secret key, and the algorithm may or may not be publicly available.</p>
 <p>I contemplated on what type of data transformation this post was going to tackle. Because there is no secret key involved and the shellcode is encrypted so it can be safely consumed by the decoding stub I decided that it would be proper to call it an encoding scheme.</p>
-<p>The purpose of creating a custom encoding scheme in exploit development craft is to evade antiviruses and intrusion detection systems. When crafting one keep in mind that its purpose is to fool a, more often than not, signature-based software, not an intelligent live person dedicated his life to breaking encryption algorithms. So it doesn't have to be complicated.</p>
+<p>The purpose of creating a custom encoding scheme in exploit development craft is to evade antiviruses and intrusion detection systems. When crafting one, keep in mind that its purpose is to fool, more often than not, signature-based software, not an intelligent live person who dedicated his life to breaking encryption algorithms. So it doesn't have to be too complicated.</p>
 <p>To apply the encoding scheme to a shellcode one usually creates a separate encoder and a decoding stub, which becomes a part of a new shellcode and is used to decode the main encoded payload before transferring the execution flow to it.</p>
-<p>Before describing the encoding scheme I came up with let's first create a shellcode to work with. I will use the shell-starting shellcode:</p>
+<p>Before describing the encoding scheme I came up with, let's first create a shellcode to work with. I will use the shell-starting shellcode:</p>
 <div class="highlight"><pre><span class="nf">section</span> <span class="no">.text</span>
     <span class="nf">global</span> <span class="no">_start</span>
 
@@ -100,7 +99,7 @@ Payload: &quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\
 </pre></div>
 
 
-<p>The encoding scheme itself is super simple. It just exchanges position of two adjacent bytes. For it to work correctly the shellcode length must be a multiple of 2. So if it is not the encoder appends a no-operation <code>\x90</code> byte to satisfy the requirement. The encoder implementation in Python follows:</p>
+<p>The encoding scheme itself is super simple. It just exchanges position of two adjacent bytes. For it to work correctly, the shellcode length must be a multiple of 2. So, if it is not, the encoder appends a no-operation <code>\x90</code> byte to satisfy the requirement. The encoder implementation in Python follows:</p>
 <div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
 
 <span class="c"># Author: Oleg Mitrofanov (reider-roque) 2015</span>
@@ -155,7 +154,7 @@ NASM:      0xc0,0x31,0x68,0x50,0x2f,0x6e,0x68,0x73,0x2f,0x68,0x62,0x2f,0x89,0x69
 </pre></div>
 
 
-<p>After the encoded payload was ready all I needed to do is to write the decoder stub in Assembly. The decoding stub first decodes the main payload and then jumps the execution to where the payload begins:</p>
+<p>After the encoded payload was ready all I needed to do was write the decoder stub in Assembly. The decoding stub first decodes the main payload and then jumps the execution to where the payload begins:</p>
 <div class="highlight"><pre><span class="nf">section</span> <span class="no">.text</span>
     <span class="nf">global</span> <span class="no">_start</span>
 
@@ -182,8 +181,8 @@ NASM:      0xc0,0x31,0x68,0x50,0x2f,0x6e,0x68,0x73,0x2f,0x68,0x62,0x2f,0x89,0x69
 </pre></div>
 
 
-<p>In the above code to make the long shellcode fit the screen and keep the code executable (in case you are copy-pasting) I divided it onto two parts with the second being titled <em>sc_continued</em>. In the actual source code it is just one long line of comma separated bytes titled <em>shellcode</em>.</p>
-<p>It's time to build another binary and extract the resulted shellcode:</p>
+<p>In the above code to make the long shellcode fit the screen and keep the code executable (in case you are copy-pasting), I divided it into two parts with the second titled <em>sc_continued</em>. In the actual source code it is just one long line of comma separated bytes titled <em>shellcode</em>.</p>
+<p>It's time to build another binary and extract the resulting shellcode:</p>
 <div class="highlight"><pre>nasm -f elf xchgdecoder.asm <span class="o">&amp;&amp;</span> ld -o xchgdecoder xchgdecoder.o
 scdump xchgdecoder
 </pre></div>
@@ -197,7 +196,7 @@ Payload: &quot;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff\xc1\xe8\x08\
 </pre></div>
 
 
-<p>Remember that if you try to run the <code>./xchgdecoder</code> by itself you'll get segmentation fault as soon as your stub decoder will try to overwrite the first byte of the encrypted payload. Overwriting executable code of the <em>.text</em> section is prohibited by design and you can do nothing about it.</p>
+<p>Remember that if you try to run the <code>./xchgdecoder</code> by itself you'll get segmentation fault as soon as your stub decoder tries to overwrite the first byte of the encrypted payload. Overwriting executable code of the <em>.text</em> section is prohibited by design and you can do nothing about it.</p>
 <p>To test that the whole encoding business is actually working we'll need the help of a C language. Here is the source code that tests our shellcode:</p>
 <div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
 <span class="cp">#include &lt;string.h&gt;</span>
@@ -223,7 +222,7 @@ Payload: &quot;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff\xc1\xe8\x08\
 </pre></div>
 
 
-<p><img alt="Working encoded shellcode" src="http://www.wryway.com/blog/assembly-custom-encoding-scheme/working-encoded-shellcode.png" title="Working encoded shellcode" />
+<p><img alt="Working encoded shellcode" src="/blog/assembly-custom-encoding-scheme/working-encoded-shellcode.png" title="Working encoded shellcode" />
 <div class="img-caption">It works!</div></p>
 <div class="divider"></div>
 
@@ -248,19 +247,6 @@ This blog post was created to fulfill the requirements of the <a href="http://se
             </p>
         </footer>
 
-<div class="comments">
-    <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        var disqus_shortname = 'wryway';
-        (function() {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-</div>
 
     </div>
 
@@ -280,16 +266,10 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015.
+    Oleg Mitrofanov &copy; 2015-2016.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>
             </div>
-<script>
-    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
-    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-</script>
     </body>
 </html>

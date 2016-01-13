@@ -10,8 +10,7 @@
 </title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
-        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oleg's Web Log Atom Feed" />
+        <link rel="stylesheet" href="/theme/css/cid.css">
         
  
         <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
@@ -43,12 +42,12 @@
             <div class="container">
 
 <header class="blog-header">
-    <h1><a href="http://www.wryway.com/blog/">Oleg's Web Log</a></h1>
+    <h1><a href="/blog/">Oleg's Web Log</a></h1>
     <p> Stochastic records on Information Security </p>
     <nav>
-        <a href="http://www.wryway.com/blog/categories/">CATEGORIES</a>
-        <a href="http://www.wryway.com/blog/tags/">TAGS</a>
-        <a href="http://www.wryway.com/blog/archives/">ARCHIVES</a>
+        <a href="/blog/categories/">CATEGORIES</a>
+        <a href="/blog/tags/">TAGS</a>
+        <a href="/blog/archives/">ARCHIVES</a>
     </nav>
 </header>
 
@@ -57,7 +56,7 @@
         <header>
             <h1>Executing shellcode from C# on Linux</h1>
             <p class="category">
-                Category: <a class="category" href="http://www.wryway.com/blog/category/exploit-development/"><b>Exploit development</b></a>
+                Category: <a class="category" href="/blog/category/exploit-development/"><b>Exploit development</b></a>
             </p>
             <p class="date">
                 Written on <time datetime="2015-10-11T19:00:00-04:00">Oct 11, 2015</time>
@@ -65,7 +64,7 @@
         </header>
 
         <article>
-            <p>In this post I will show you how to run shellcode from a C# application on Linux. I realize that unlike, say, Python, <a href="http://www.mono-project.com/">Mono</a> is not present on most vanilla Linux installations. So there are not many cases when you will be able to leverage this ability. But it is out there and you never know what you can run into in the wild. With that being said let's first install Mono.</p>
+            <p>In this post I will show you how to run shellcode from a C# application on Linux. I realize that unlike, say, Python, <a href="http://www.mono-project.com/">Mono</a> is not present on most vanilla Linux installations. So there are not many cases when you will be able to leverage this ability. But it is out there and you never know what you can run into in the wild. With that being said, let's first install Mono.</p>
 <h1>Mono installation</h1>
 <p>I am using a freshly downloaded <a href="https://www.offensive-security.com/kali-linux-vmware-arm-image-download/">x86 Kali image</a> here. After upgrading and changing the default password I followed the <a href="http://www.mono-project.com/docs/getting-started/install/linux/">installation instructions</a> found in official Mono documentation:</p>
 <div class="highlight"><pre><span class="c"># Become root if you aren&#39;t</span>
@@ -82,10 +81,10 @@ apt-get install mono-complete monodevelop
 </pre></div>
 
 
-<p>The first added repository is for getting the latest and greatest version of Mono and the second one is to satisfy <em>libgdiplus</em> dependency on Debian 8.0 and later. Installation of the <a href="http://www.monodevelop.com/">MonoDevelop IDE</a> is optional, but it is more convenient to debug your C# code in an IDE instead of a command line.</p>
+<p>The first added repository is for getting the latest and greatest version of Mono, and the second one is to satisfy <em>libgdiplus</em> dependency on Debian 8.0 and later. Installation of the <a href="http://www.monodevelop.com/">MonoDevelop IDE</a> is optional, but it is more convenient to debug your C# code in an IDE instead of a command line.</p>
 <h1>Windows prototype and Linux port</h1>
-<p>While researching the issue I came across a wonderful post that provided a working example of <a href="https://maxxor.org/posts/execute-native-x86-shellcode-in-csharp">shellcode execution in C# on Windows</a>. The example uses WinAPI <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366898(v=vs.85).aspx">VirtualProtect</a> function to make the shellcode containing region of memory executable. Linux analog of VirtualProtect function is <a href="http://linux.die.net/man/2/mprotect">mprotect</a>. Both VirtualProtect and mprotect change protection on pages, not on arbitrary regions of memory. So even if you shellcode takes only 21 bytes, the whole page containing the code will have to be made executable. The difference between VirtaulProtect and mprotect is in that that to the first one you don't have to pass the base address of the page containing shellcode; you can just <a href="http://stackoverflow.com/questions/10838902/does-virtualprotect-require-the-address-of-the-beginning-of-the-page">pass the shellcode address</a>. And to the second one you must pass the base address of the page containing the shellcode.</p>
-<p>Here comes the source:</p>
+<p>While researching the issue I came across a wonderful post that provided a working example of <a href="https://maxxor.org/posts/execute-native-x86-shellcode-in-csharp">shellcode execution in C# on Windows</a>. The example uses WinAPI <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366898(v=vs.85).aspx">VirtualProtect</a> function to make the shellcode containing region of memory executable. Linux analog of VirtualProtect function is <a href="http://linux.die.net/man/2/mprotect">mprotect</a>. Both VirtualProtect and mprotect change protection on pages, not on arbitrary regions of memory. So, even if your shellcode takes only 21 bytes, the whole page containing the code will have to be made executable. The difference between VirtaulProtect and mprotect is that you don't have to pass the base address of the page containing shellcode to the first one; you can just <a href="http://stackoverflow.com/questions/10838902/does-virtualprotect-require-the-address-of-the-beginning-of-the-page">pass the shellcode address</a>. And to the second one you must pass the base address of the page containing the shellcode.</p>
+<p>Here is the source:</p>
 <div class="highlight"><pre><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">System.Runtime.InteropServices</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">Mono.Unix.Native</span><span class="p">;</span>
@@ -183,7 +182,7 @@ apt-get install mono-complete monodevelop
 </pre></div>
 
 
-<p>The main logic in the above code is located in the <code>ExecShellcode()</code> function. The first thing it does is it converts shellcode string to byte array. Then it tells the garbage collector to not disturb that byte array with memory relocations. After that the code gets base address of the first page containing the shellcode and sets executable permissions on it. The code also takes care of an unlikely event of having a large shellcode that takes up memory belonging to two or more pages. And finally pointer to the shellcode is casted to a C# function and called.</p>
+<p>The main logic in the above code is located in the <code>ExecShellcode()</code> function. The first thing it does is it converts shellcode string to byte array. Then it tells the garbage collector to not disturb that byte array with memory relocations. After that, the code gets base address of the first page containing the shellcode and sets executable permissions on it. The code also takes care of an unlikely event of having a large shellcode that takes up memory belonging to two or more pages. And finally, pointer to the shellcode is casted to a C# function and called.</p>
 <p>The shellcode used in the source is an x86 Linux shellcode that starts <em>/bin/sh</em>.</p>
 <p>The PAGE_SIZE constant used in the code is, by default, equal to 4096 bytes in Linux. The exact value is determined in runtime.</p>
 <p>To compile the above source you must reference the standard <em>Mono.Posix.dll</em> assembly; used in the project <code>Mono.Unix.Native</code> namespace lives there:</p>
@@ -197,12 +196,12 @@ apt-get install mono-complete monodevelop
 
 
 <p>we should see the following output:</p>
-<p><img alt="Shellcode running output" src="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/csharp-shellcode-running-output.png" title="Shellcode running output" />
+<p><img alt="Shellcode running output" src="/blog/shellcode-in-csharp-on-linux/csharp-shellcode-running-output.png" title="Shellcode running output" />
 <div class="img-caption">Shellcode running output</div></p>
-<p>Alternatively to referencing the Mono.Posix.dll assembly we could directly reference <code>mprotect()</code> and <code>sysconf()</code> functions from <em>libc.so</em> library. In that case we should remember that library name passed to the <code>DllImport</code> attribute should be either <em>libc</em> or <em>libc.so.6</em> (or whatever version is current). Passing <em>libc.so</em> will produce the <em>Mono: DllImport error loading library</em> error. One inconvenience of not using the <code>Mono.Posix.dll</code> namespace is that it is not possible (at least I didn't find how) to reference the standard C global <code>errno</code> variable to get the error code of the last libc failed function. Overall there is no benefit of using this version instead of the given above. Both versions of the source can be found in the <a href="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/scframe.zip">accompanying archive</a>.</p>
+<p>Alternatively to referencing the Mono.Posix.dll assembly we could directly reference <code>mprotect()</code> and <code>sysconf()</code> functions from <em>libc.so</em> library. In that case we should remember that library name passed to the <code>DllImport</code> attribute should be either <em>libc</em> or <em>libc.so.6</em> (or whatever version is current). Passing <em>libc.so</em> will produce the <em>Mono: DllImport error loading library</em> error. One inconvenience of not using the <code>Mono.Posix.dll</code> namespace is that it is not possible (at least I couldn't find how) to reference the standard C global <code>errno</code> variable to get the error code of the last libc failed function. Overall there is no benefit of using this version instead of the given above. Both versions of the source can be found in the <a href="/blog/shellcode-in-csharp-on-linux/scframe.zip">accompanying archive</a>.</p>
 <h1>Debugging</h1>
-<p>Lastly I want to share a few tips for debugging C# executables in Linux. </p>
-<p>For that purpose I primarily used MonoDevelop and GDB. High-level debugging with MonoDevelop was a no-brainer. It was a bit more involed with GDB.</p>
+<p>Lastly, I want to share a few tips for debugging C# executables in Linux. </p>
+<p>For that purpose I primarily used MonoDevelop and GDB. High-level debugging with MonoDevelop was a no-brainer. It was a bit more involved with GDB.</p>
 <p>I found two ways of inserting breakpoints using GDB:</p>
 <ul>
 <li>By inserting the <code>\CC</code> byte in the beginning of the shellcode, which corresponds to <code>int3</code> Assembly mnemonic. I used this to catch the moment of passing execution flow to the shellcode.</li>
@@ -214,7 +213,7 @@ gdb -x mono-gdb-settings mono
 </pre></div>
 
 
-<p>To set a breakpoint on a particular line I ended up moving it and a few lines that followed into a separate method and then calling that method from where I had plucked out those lines. Then I was setting a breakpoint on the newly created method name and debugged it that way.</p>
+<p>To set a breakpoint on a particular line I ended up moving it and a few lines that followed into a separate method and then calling that method from where I had plucked out those lines. Then I set a breakpoint on the newly created method name and debugged it that way.</p>
         </article>
 
         <footer>
@@ -227,19 +226,6 @@ gdb -x mono-gdb-settings mono
             </p>
         </footer>
 
-<div class="comments">
-    <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        var disqus_shortname = 'wryway';
-        (function() {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-</div>
 
     </div>
 
@@ -259,16 +245,10 @@ gdb -x mono-gdb-settings mono
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015.
+    Oleg Mitrofanov &copy; 2015-2016.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>
             </div>
-<script>
-    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
-    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-</script>
     </body>
 </html>

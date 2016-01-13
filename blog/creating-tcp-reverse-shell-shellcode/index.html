@@ -10,8 +10,7 @@
 </title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
-        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oleg's Web Log Atom Feed" />
+        <link rel="stylesheet" href="/theme/css/cid.css">
         
  
         <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
@@ -43,12 +42,12 @@
             <div class="container">
 
 <header class="blog-header">
-    <h1><a href="http://www.wryway.com/blog/">Oleg's Web Log</a></h1>
+    <h1><a href="/blog/">Oleg's Web Log</a></h1>
     <p> Stochastic records on Information Security </p>
     <nav>
-        <a href="http://www.wryway.com/blog/categories/">CATEGORIES</a>
-        <a href="http://www.wryway.com/blog/tags/">TAGS</a>
-        <a href="http://www.wryway.com/blog/archives/">ARCHIVES</a>
+        <a href="/blog/categories/">CATEGORIES</a>
+        <a href="/blog/tags/">TAGS</a>
+        <a href="/blog/archives/">ARCHIVES</a>
     </nav>
 </header>
 
@@ -57,7 +56,7 @@
         <header>
             <h1>Creating TCP reverse shell shellcode (SLAE, Assignment #2)</h1>
             <p class="category">
-                Category: <a class="category" href="http://www.wryway.com/blog/category/exploit-development/"><b>Exploit development</b></a>
+                Category: <a class="category" href="/blog/category/exploit-development/"><b>Exploit development</b></a>
             </p>
             <p class="date">
                 Written on <time datetime="2015-10-05T21:00:00-04:00">Oct 05, 2015</time>
@@ -65,9 +64,9 @@
         </header>
 
         <article>
-            <p>I remember when I was first introduced to the concept of the reverse shell it was a bit difficult to wrap my mind around it. The reverse shell is called so because instead of attacker connecting to the victim machine, the victim machine initiates a connection to attacking machine. The shell-throwing direction is reversed in this case. Reverse shell's main purpose is to circumvent firewalls that blindly allow outgoing traffic without proper filtering. </p>
+            <p>I remember when I was first introduced to the concept of the reverse shell it was a bit difficult to wrap my mind around it. The reverse shell is called so because instead of attacker connecting to the victim machine, the victim machine initiates a connection to the attacking machine. The shell-throwing direction is reversed in this case. Reverse shell's main purpose is to circumvent firewalls that blindly allow outgoing traffic without proper filtering. </p>
 <p>It turned out that the code for the reverse shell is actually simpler than that of the <a href="/blog/building-tcp-bind-shell-shellcode/">bind TCP shell</a> I wrote about in a previous post. It is also shorter. </p>
-<p>Here comes the prototype C program that we will base our Assembly code on. Code is pretty simple, but nevertheless I furnished it with comments:</p>
+<p>Here is the prototype C program that we will base our Assembly code on. Code is pretty simple, but nevertheless I furnished it with comments:</p>
 <div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
 <span class="cp">#include &lt;strings.h&gt;</span>
 <span class="cp">#include &lt;sys/socket.h&gt;</span>
@@ -117,8 +116,8 @@ id
 </pre></div>
 
 
-<p>One thing to remember from the previous post on bind TCP shell is that <code>socket</code> and <code>connect</code> functions are plugged into the <code>socketcall</code> system call. And basically we can largely reuse the bind shell source code making relevant changes to it. The changes include removing blocks for listen and accept functions, transforming bind function block to connect and replacing the address from 0.0.0.0 to 127.1.1.1. The 127.1.1.1 is equivalent to 127.0.0.1 localhost address, with an advantage of eliminating zeroes. Some people think that only 127.0.0.1 address refers to the localhost, while in truth all valid IPv4 address beginning with 127 are synonyms and refer to the same localhost address. </p>
-<p>After applying the aforementioned changes here is what I got (follow the comments if it is not clear what's going on):</p>
+<p>One thing to remember from the previous post on bind TCP shell is that <code>socket</code> and <code>connect</code> functions are plugged into the <code>socketcall</code> system call. And basically we can largely reuse the bind shell source code making relevant changes to it. The changes include removing blocks for listen and accept functions, transforming bind function block to connect, and replacing the address from 0.0.0.0 to 127.1.1.1. The 127.1.1.1 is equivalent to 127.0.0.1 localhost address, with an advantage of eliminating zeroes. Some people think that only 127.0.0.1 address refers to the localhost, while in truth all valid IPv4 address beginning with 127 are synonyms and refer to the same localhost address. </p>
+<p>After applying the aforementioned changes, here is what I got (follow the comments if it is not clear what's going on):</p>
 <div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
     <span class="k">global</span> <span class="nv">_start</span>
 
@@ -183,7 +182,7 @@ id
 </pre></div>
 
 
-<p>Now let's build the binary and extract and thest the shellcode to make sure that we did not miss anything. </p>
+<p>Now let's build the binary and extract and thest the shellcode to make sure that we have not missed anything. </p>
 <div class="highlight"><pre><span class="c"># Build a binary and extract the shellcode </span>
 nasm -f elf revshell.asm <span class="o">&amp;&amp;</span> ld -o revshell revshell.o
 scdump revshell
@@ -245,19 +244,6 @@ This blog post was created to fulfill the requirements of the <a href="http://se
             </p>
         </footer>
 
-<div class="comments">
-    <div id="disqus_thread"></div>
-    <script type="text/javascript">
-        var disqus_shortname = 'wryway';
-        (function() {
-            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
-            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
-            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
-        })();
-    </script>
-    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
-    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
-</div>
 
     </div>
 
@@ -277,16 +263,10 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015.
+    Oleg Mitrofanov &copy; 2015-2016.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>
             </div>
-<script>
-    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
-    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
-    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
-    s.parentNode.insertBefore(g,s)}(document,'script'));
-</script>
     </body>
 </html>
