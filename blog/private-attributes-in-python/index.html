@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <title>    Private attributes in Python
+</title>
+        <meta name="description" content="">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
+        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oleg's Web Log Atom Feed" />
+        
+ 
+        <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
+        <link rel="apple-touch-icon" sizes="60x60" href="/icons/apple-touch-icon-60x60.png">
+        <link rel="apple-touch-icon" sizes="72x72" href="/icons/apple-touch-icon-72x72.png">
+        <link rel="apple-touch-icon" sizes="76x76" href="/icons/apple-touch-icon-76x76.png">
+        <link rel="apple-touch-icon" sizes="114x114" href="/icons/apple-touch-icon-114x114.png">
+        <link rel="apple-touch-icon" sizes="120x120" href="/icons/apple-touch-icon-120x120.png">
+        <link rel="apple-touch-icon" sizes="144x144" href="/icons/apple-touch-icon-144x144.png">
+        <link rel="apple-touch-icon" sizes="152x152" href="/icons/apple-touch-icon-152x152.png">
+        <link rel="apple-touch-icon" sizes="180x180" href="/icons/apple-touch-icon-180x180.png">
+        <link rel="icon" type="image/png" href="/icons/favicon-32x32.png" sizes="32x32">
+        <link rel="icon" type="image/png" href="/icons/favicon-194x194.png" sizes="194x194">
+        <link rel="icon" type="image/png" href="/icons/favicon-96x96.png" sizes="96x96">
+        <link rel="icon" type="image/png" href="/icons/android-chrome-192x192.png" sizes="192x192">
+        <link rel="icon" type="image/png" href="/icons/favicon-16x16.png" sizes="16x16">
+        <link rel="manifest" href="/icons/manifest.json">
+        <link rel="shortcut icon" href="/icons/favicon.ico">
+        <meta name="msapplication-TileColor" content="#ffffff">
+        <meta name="msapplication-TileImage" content="/icons/mstile-144x144.png">
+        <meta name="msapplication-config" content="/icons/browserconfig.xml">
+        <meta name="theme-color" content="#ffffff">
+    </head>
+    <body>
+        <!--[if lt IE 7]>
+            <p class="chromeframe">You are using an <strong>outdated</strong> browser. Please <a href="http://browsehappy.com/">upgrade your browser</a> or <a href="http://www.google.com/chromeframe/?redirect=true">activate Google Chrome Frame</a> to improve your experience.</p>
+        <![endif]-->
+
+            <div class="container">
+
+<header class="blog-header">
+    <h1><a href="http://www.wryway.com/blog/">Oleg's Web Log</a></h1>
+    <p> Stochastic records on Information Security </p>
+    <nav>
+        <a href="http://www.wryway.com/blog/categories/">CATEGORIES</a>
+        <a href="http://www.wryway.com/blog/tags/">TAGS</a>
+        <a href="http://www.wryway.com/blog/archives/">ARCHIVES</a>
+    </nav>
+</header>
+
+    <div class="post">
+
+        <header>
+            <h1>Private attributes in Python</h1>
+            <p class="category">
+                Category: <a class="category" href="http://www.wryway.com/blog/category/software-development/"><b>Software Development</b></a>
+            </p>
+            <p class="date">
+                Written on <time datetime="2016-01-23T14:00:00-05:00">Jan 23, 2016</time>
+            </p>
+        </header>
+
+        <article>
+            <p>Python does not natively support complete hiding of class attributes similar to that provided by the <code>private</code> keyword in languages like C# or C++. The whole idea of hiding attributes goes against <a href="http://stackoverflow.com/a/1641236/1027946">Python's philosophy of being responsible</a> and avoiding messing with attributes marked as private or internal with an underscore prefix.</p>
+<p>Python trusts you to stay away from attributes that begin with an underscore and even provides a limited support for attribute hiding for attributes whose name start with two underscores.</p>
+<p>Attribute names starting with double underscore are mangled into some not-so-readable names so that you can't access them with the name they were referred to in the class definition (still, <a href="https://docs.python.org/3/tutorial/classes.html#private-variables">Python documentation</a> notes that it is there to avoid name clashes with names defined by subclasses, not for hiding). But knowing standard mangling rules it is still possible to access those attributes with mangled names:</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">Person</span><span class="p">():</span>
+     <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">age</span><span class="p">):</span>
+             <span class="bp">self</span><span class="o">.</span><span class="n">__age</span> <span class="o">=</span> <span class="n">age</span>
+     <span class="k">def</span> <span class="nf">getAge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+             <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">__age</span>
+
+<span class="n">p</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="mi">20</span><span class="p">)</span>
+<span class="n">p</span><span class="o">.</span><span class="n">getAge</span><span class="p">()</span>     <span class="c"># =&gt; 20</span>
+<span class="n">p</span><span class="o">.</span><span class="n">__age</span>        <span class="c"># =&gt; AttributeError: &#39;Person&#39; object has no attribute &#39;__age&#39;   </span>
+<span class="nb">dir</span><span class="p">(</span><span class="n">p</span><span class="p">)</span>         <span class="c"># =&gt; [&#39;_Person__age&#39;, ...] &lt;= Peeking the mangled name</span>
+<span class="n">p</span><span class="o">.</span><span class="n">_Person__age</span> <span class="c"># =&gt; 20</span>
+</pre></div>
+
+
+<p>With the above said there is at least one way to create private attributes completely inaccessible from outside. And, as you might have guessed, it goes against Python's best practices.</p>
+<p>The approach I describe below was gleaned from a wonderful book by Nicholas C. Zakas <a href="http://amzn.com/1593275404">The Principles of Object-Oriented JavaScript</a>. Yes, many patterns stay the same across different programming languages =). In the book the author leverages what in JavaScript is called <em>immediately invoked function expression (IIFE)</em> and closures.</p>
+<p>Consider the following Python class declaration:</p>
+<div class="highlight"><pre><span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+    <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">age</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="n">age</span><span class="p">;</span>
+
+    <span class="k">def</span> <span class="nf">growOlder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="bp">self</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="bp">self</span><span class="o">.</span><span class="n">age</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+
+    <span class="k">def</span> <span class="nf">getAge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+        <span class="k">return</span> <span class="bp">self</span><span class="o">.</span><span class="n">age</span><span class="p">;</span>
+</pre></div>
+
+
+<p>As it is now, it will be possible to directly read and modify the <code>age</code> attribute on a class instance. But let's assume that you want to conceal the age attribute so that it can only be read with <code>getAge()</code> method, or incremented with <code>growOlder()</code> method.</p>
+<p>The whole trick can be achieved by moving class definition inside of a function, declaring class "private" attributes as function local variables and returning a new instance of the class as a result of the function:</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">Person</span><span class="p">(</span><span class="n">age</span><span class="p">):</span>
+    <span class="n">_age</span> <span class="o">=</span> <span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+    <span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">age</span><span class="p">):</span>
+            <span class="n">_age</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">age</span><span class="p">;</span>
+
+        <span class="k">def</span> <span class="nf">growOlder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">_age</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">=</span> <span class="n">_age</span><span class="p">[</span><span class="mi">0</span><span class="p">]</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="k">def</span> <span class="nf">getAge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_age</span><span class="p">[</span><span class="mi">0</span><span class="p">];</span>
+
+    <span class="k">return</span> <span class="n">Person</span><span class="p">(</span><span class="n">age</span><span class="p">);</span>
+</pre></div>
+
+
+<p>You can then use the above function as a class constructor:</p>
+<div class="highlight"><pre><span class="n">p1</span> <span class="o">=</span> <span class="n">Person</span><span class="p">(</span><span class="mi">10</span><span class="p">)</span>
+<span class="n">p1</span><span class="o">.</span><span class="n">getAge</span><span class="p">()</span>    <span class="c"># =&gt; 10</span>
+<span class="n">p1</span><span class="o">.</span><span class="n">growOlder</span><span class="p">()</span>
+<span class="n">p1</span><span class="o">.</span><span class="n">getAge</span><span class="p">()</span>    <span class="c"># =&gt; 11</span>
+<span class="n">p1</span><span class="o">.</span><span class="n">_age</span>        <span class="c"># =&gt; AttributeError: &#39;Person&#39; object has no attribute &#39;_age&#39;</span>
+</pre></div>
+
+
+<p>Because what's declared in the function stays local to that function (not visible or accessible from outside) and because of how closures work, you get the sought for functionality.</p>
+<p>Note that Python list was used to hold the private attribute. This is because of how scoping rules in Python work. In Python, you can read an immutable variable defined in an outer scope, but an attempt to assign a new value to it will result in creation of a new variable in the current scope. To overcome this issue one has to use mutable objects, of which the list is one. </p>
+<p>One another mutable object usable for this purpose is dictionary. You could define your private attributes as elements of a local dictionary variable (e.g. <code>private = {"age":  0}</code>) and then access them through the class definition (e.g. <code>private["age"] = private["age"] + 1</code>).</p>
+<p>My favorite way though is to define an empty class (which is a reference mutable type) and then use it as private attributes holder:</p>
+<div class="highlight"><pre><span class="k">def</span> <span class="nf">Person</span><span class="p">(</span><span class="n">age</span><span class="p">):</span>
+    <span class="k">class</span> <span class="nc">_</span><span class="p">:</span> <span class="k">pass</span>
+
+    <span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">age</span><span class="p">):</span>
+            <span class="n">_</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="n">age</span><span class="p">;</span>
+
+        <span class="k">def</span> <span class="nf">growOlder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">_</span><span class="o">.</span><span class="n">age</span> <span class="o">=</span> <span class="n">_</span><span class="o">.</span><span class="n">age</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="k">def</span> <span class="nf">getAge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="k">return</span> <span class="n">_</span><span class="o">.</span><span class="n">age</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="n">Person</span><span class="p">(</span><span class="n">age</span><span class="p">);</span>
+</pre></div>
+
+
+<p>And one more variation on the theme that uses the <code>nonlocal</code> keyword to write to outer scope immutable variables. It is a bit verbose and only works for Python 3:</p>
+<div class="highlight"><pre><span class="c"># Python 3 only</span>
+<span class="k">def</span> <span class="nf">Person</span><span class="p">(</span><span class="n">age</span><span class="p">):</span>
+    <span class="n">_age</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
+
+    <span class="k">class</span> <span class="nc">Person</span><span class="p">:</span>
+
+        <span class="k">def</span> <span class="nf">__init__</span><span class="p">(</span><span class="bp">self</span><span class="p">,</span> <span class="n">age</span><span class="p">):</span>
+            <span class="n">nonlocal</span> <span class="n">_age</span><span class="p">;</span>
+            <span class="n">_age</span> <span class="o">=</span> <span class="n">age</span><span class="p">;</span>
+
+        <span class="k">def</span> <span class="nf">growOlder</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">nonlocal</span> <span class="n">_age</span><span class="p">;</span>
+            <span class="n">_age</span> <span class="o">=</span> <span class="n">_age</span> <span class="o">+</span> <span class="mi">1</span><span class="p">;</span>
+
+        <span class="k">def</span> <span class="nf">getAge</span><span class="p">(</span><span class="bp">self</span><span class="p">):</span>
+            <span class="n">nonlocal</span> <span class="n">_age</span><span class="p">;</span>
+            <span class="k">return</span> <span class="n">_age</span><span class="p">;</span>
+
+    <span class="k">return</span> <span class="n">Person</span><span class="p">(</span><span class="n">age</span><span class="p">);</span>
+</pre></div>
+        </article>
+
+        <footer>
+            <p>
+                Tags:  
+ 
+                    <a class="tag" href="/blog/tag/python/">Python</a>
+            </p>
+        </footer>
+
+<div class="comments">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'wryway';
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
+
+    </div>
+
+
+<footer class="blog-footer">
+
+    <ul class="nav">
+
+            <li><a href="https://github.com/reider-roque">Github</h3>
+            </a></li>
+            <li><a href="https://linkedin.com/in/olegmi">Linkedin</h3>
+            </a></li>
+    <script type="text/javascript">
+        // JS ROT13 by http://techblog.tilllate.com/2008/07/20/ten-methods-to-obfuscate-e-mail-addresses-compared/
+        document.write( "<yv><n uers=\"znvygb:byrt@jeljnl.pbz\" ery=\"absbyybj\">Rznvy</n></yv>".replace(/[a-zA-Z]/g, function(c){return String.fromCharCode((c<="Z"?90:122)>=(c=c.charCodeAt(0)+13)?c:c-26);}));
+    </script>
+    </ul>
+
+    <p class="disclaimer">
+    Oleg Mitrofanov &copy; 2015-2016.
+    Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
+    </p>
+</footer>
+            </div>
+<script>
+    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
+    </body>
+</html>

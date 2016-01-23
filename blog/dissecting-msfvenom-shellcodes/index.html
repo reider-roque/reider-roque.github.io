@@ -10,7 +10,8 @@
 </title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="/theme/css/cid.css">
+        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
+        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oleg's Web Log Atom Feed" />
         
  
         <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
@@ -42,12 +43,12 @@
             <div class="container">
 
 <header class="blog-header">
-    <h1><a href="/blog/">Oleg's Web Log</a></h1>
+    <h1><a href="http://www.wryway.com/blog/">Oleg's Web Log</a></h1>
     <p> Stochastic records on Information Security </p>
     <nav>
-        <a href="/blog/categories/">CATEGORIES</a>
-        <a href="/blog/tags/">TAGS</a>
-        <a href="/blog/archives/">ARCHIVES</a>
+        <a href="http://www.wryway.com/blog/categories/">CATEGORIES</a>
+        <a href="http://www.wryway.com/blog/tags/">TAGS</a>
+        <a href="http://www.wryway.com/blog/archives/">ARCHIVES</a>
     </nav>
 </header>
 
@@ -56,7 +57,7 @@
         <header>
             <h1>Dissecting msfvenom shellcodes (SLAE, Assignment #5)</h1>
             <p class="category">
-                Category: <a class="category" href="/blog/category/exploit-development/"><b>Exploit development</b></a>
+                Category: <a class="category" href="http://www.wryway.com/blog/category/exploit-development/"><b>Exploit development</b></a>
             </p>
             <p class="date">
                 Written on <time datetime="2015-10-07T20:00:00-04:00">Oct 07, 2015</time>
@@ -130,7 +131,7 @@ LPORT  4444             yes       The listen port
 
 
 <p>The <code>-vvv</code> option to <code>sctest</code> increases verbosity. The <code>-S</code> is for reading input from stdin. The <code>-s</code> option controls the maximum number of instructions to execute and defaults to 1, which means <code>sctest</code> will emulate execution of only the first instruction of the supplied shellcode. To be on the safe side and make sure that every shellcode instruction is executed, it is usually set to some big number, like 100000.</p>
-<p><img alt="Top of the sctest output" src="/blog/dissecting-msfvenom-shellcodes/sctest-top-output.png" title="Top of the sctest output" />
+<p><img alt="Top of the sctest output" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/sctest-top-output.png" title="Top of the sctest output" />
 <div class="img-caption">Top of the sctest output</div></p>
 <p>At the top of the output you can see how <code>sctest</code> tears down the shellcode instruction by instruction and shows you the state of registers after execution of each instruction. At the bottom of the output you will find the reconstructed high level view of what's going on:</p>
 <div class="highlight"><pre><span class="kt">int</span> <span class="n">socket</span> <span class="p">(</span>
@@ -203,7 +204,7 @@ LPORT  4444             yes       The listen port
 </pre></div>
 
 
-<p><img alt="Chmod shellcode call graph" src="/blog/dissecting-msfvenom-shellcodes/chmod-shellcode-call-graph.png" title="Chmod shellcode call graph" />
+<p><img alt="Chmod shellcode call graph" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/chmod-shellcode-call-graph.png" title="Chmod shellcode call graph" />
 <div class="img-caption">Chmod shellcode call graph</div></p>
 <p>On the call graph we can again see that <code>sctest</code> definitely caught calls to the <code>chmod()</code> and <code>exit()</code> functions. We can also see that the second argument (ECX register) to the <code>chmod</code> system call is set to <em>0x1b6</em>, which, as we can confirm on Linux command line with </p>
 <div class="highlight"><pre><span class="nb">printf</span> <span class="s2">&quot;%o\n&quot;</span> 0x1b6 
@@ -328,7 +329,7 @@ readelf --headers tmp.elf
 </pre></div>
 
 
-<p><img alt="Disassembly view in gdb" src="/blog/dissecting-msfvenom-shellcodes/disassembly-view-in-gdb.png" title="Disassembly view in gdb" />
+<p><img alt="Disassembly view in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/disassembly-view-in-gdb.png" title="Disassembly view in gdb" />
 <div class="img-caption">Disassembly view in gdb</div></p>
 <p>On the above picture you can see that the data starts at the address following the <code>call</code> instruction which is 0x0804807f. And running either of the following two commands, we can be certain that the 40 bytes of the data represent the string that as we saw earlier written to the <code>/etc/passwd</code> file:</p>
 <div class="highlight"><pre><span class="o">(</span>gdb<span class="o">)</span> x/40cb 0x0804807f
@@ -336,7 +337,7 @@ readelf --headers tmp.elf
 </pre></div>
 
 
-<p><img alt="Checking string data in gdb" src="/blog/dissecting-msfvenom-shellcodes/checking-string-data-in-gdb.png" title="Checking string data in gdb" />
+<p><img alt="Checking string data in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/checking-string-data-in-gdb.png" title="Checking string data in gdb" />
 <div class="img-caption">Checking string data in gdb</div></p>
 <div class="divider"></div>
 
@@ -361,6 +362,19 @@ This blog post was created to fulfill the requirements of the <a href="http://se
             </p>
         </footer>
 
+<div class="comments">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'wryway';
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
 
     </div>
 
@@ -385,5 +399,11 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </p>
 </footer>
             </div>
+<script>
+    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
     </body>
 </html>
