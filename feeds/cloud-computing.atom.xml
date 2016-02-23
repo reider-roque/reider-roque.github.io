@@ -1,0 +1,98 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Oleg's Web Log</title><link href="http://www.wryway.com/" rel="alternate"></link><link href="http://www.wryway.com/feeds/cloud-computing.atom.xml" rel="self"></link><id>http://www.wryway.com/</id><updated>2016-02-23T15:00:00-05:00</updated><entry><title>AWS S3 URL Styles</title><link href="http://www.wryway.com/blog/aws-s3-url-styles/" rel="alternate"></link><updated>2016-02-23T15:00:00-05:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2016-02-23:blog/aws-s3-url-styles/</id><summary type="html">&lt;h1&gt;S3 endpoints&lt;/h1&gt;
+&lt;p&gt;Before describing S3 bucket URL schemes, one thing that causes a lot of the confusion needs to be clarified. And that thing is S3 endpoint. &lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;S3 endpoint&lt;/strong&gt; is a &lt;em&gt;region-specific&lt;/em&gt; URL that is used in both S3 URL styles (more on styles below). Follow the link to see the &lt;a href="http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region"&gt;list of all S3 endpoints&lt;/a&gt;. &lt;/p&gt;
+&lt;p&gt;Most of the endpoints follow this pattern (with region names being eu-west-1, us-west-2, etc):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    s3-REGION.amazonaws.com
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Examples:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    s3-eu-west-1.amazonaws.com
+    s3-us-west-2.amazonaws.com
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;But there are a few quirks to the general naming scheme. &lt;/p&gt;
+&lt;p&gt;The first two outstanding endpoints that do not follow the above pattern are those of the &lt;em&gt;us-east-1&lt;/em&gt; (N. Virginia, also called US Standard) region. For that region endpoints are (they are synonyms and both point to the same place):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    s3.amazonaws.com
+    s3-external-1.amazonaws.com
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;The other quirk is that &lt;em&gt;eu-central-1&lt;/em&gt; (Frankfurt) and &lt;em&gt;ap-northeast-2&lt;/em&gt; (Seoul) regions both have one endpoint that follows the general pattern and one alias endpoint that differs from the general scheme in one symbol (first dash is replaced by dot): &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    s3-eu-central-1.amazonaws.com
+    s3.eu-central-1.amazonaws.com
+
+    s3-ap-northeast-2.amazonaws.com
+    s3.ap-northeast-2.amazonaws.com
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h1&gt;S3 bucket URL schemes&lt;/h1&gt;
+&lt;p&gt;Now, after comprehending S3 endpoints, understanding of S3 bucket URL styles should be a breeze. According to &lt;a href="https://aws.amazon.com/documentation/s3/"&gt;S3 Developer Guide (PDF, p.57)&lt;/a&gt;, S3 supports both virtual-hosted and path URL styles for bucket access.&lt;/p&gt;
+&lt;h2&gt;Path style URL&lt;/h2&gt;
+&lt;p&gt;In path style URL bucket name is appended to the domain name and is a part of URL path:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://s3endpoint/BUCKET
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;For example, if your store photo.jpg into images bucket residing in the us-west-2 region, you could access that file with &lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://s3-us-west-2.amazonaws.com/images/photo.jpg
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;To access the file from bucket located in eu-central-1 region, you could use either of the following URLs:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://s3-eu-central-1.amazonaws.com/images/photo.jpg
+    http://s3.eu-central-1.amazonaws.com/images/photo.jpg
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;And to access the file from bucket residing in us-east-1 region, you would have to use either of the following two URLs:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://s3.amazonaws.com/images/photo.jpg
+    http://s3-external-1.amazonaws.com/images/photo.jpg
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;h2&gt;Virtual-hosted style URL&lt;/h2&gt;
+&lt;p&gt;In virtual-hosted style URL the bucket name becomes a subdomain:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://BUCKET.s3endpoint
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;To access photo.jpg file stored in images bucket that resides in the us-west-2 region, you would use the following URL:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://images.s3-us-west-2.amazonaws.com/photo.jpg
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;To access the file from bucket located in eu-central-1 region, you could use either of the following URLs:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://images.s3-eu-central-1.amazonaws.com/photo.jpg
+    http://images.s3.eu-central-1.amazonaws.com/photo.jpg
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;And to access the file from bucket registered in us-east-1 region, you would have to use either of the following two URLs:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://images.s3.amazonaws.com/photo.jpg
+    http://images.s3-external-1.amazonaws.com/photo.jpg
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Note, however, one important thing. With virtual-hosted style you can additionally use s3.amazonaws.com endpoint for any bucket residing in ANY region. Because bucket name is part of the domain name, AWS backend has sufficient information to correctly resolve or redirect (with 307 Temporary Redirect HTTP response code) your request to the region where the bucket resides. For example the following pairs of requests are equivalent:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://images.s3-us-west-2.amazonaws.com/photo.jpg
+    http://images.s3.amazonaws.com/photo.jpg
+
+    http://gods.s3.eu-central-1.amazonaws.com/odin.jpg
+    http://gods.s3.amazonaws.com/odin.jpg
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;This last feature is very convenient in my opinion.&lt;/p&gt;
+&lt;h2&gt;Static Website Hosting Endpoints&lt;/h2&gt;
+&lt;p&gt;Finally, note that if you use S3's &lt;em&gt;Static Website Hosting&lt;/em&gt; feature you will need to use &lt;em&gt;Website Endpoints&lt;/em&gt;. &lt;/p&gt;
+&lt;p&gt;There are two general forms of S3 website endpoint:&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://BUCKET.s3-website**-**region.amazonaws.com
+    http://BUCKET.s3-website**.**region.amazonaws.com
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;Most of the regions follow the first form, while &lt;em&gt;eu-central-1&lt;/em&gt; and &lt;em&gt;ap-northeast-2&lt;/em&gt; follow the second. Follow the link for the &lt;a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html#d0e27023"&gt;list of all S3 website endpoints&lt;/a&gt;.&lt;/p&gt;</summary><category term="AWS"></category><category term="S3"></category></entry></feed>
