@@ -90,8 +90,8 @@
 &lt;h2&gt;Static Website Hosting Endpoints&lt;/h2&gt;
 &lt;p&gt;Finally, note that if you use S3's &lt;em&gt;Static Website Hosting&lt;/em&gt; feature you will need to use &lt;em&gt;Website Endpoints&lt;/em&gt;. &lt;/p&gt;
 &lt;p&gt;There are two general forms of S3 website endpoint:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://BUCKET.s3-website**-**region.amazonaws.com
-    http://BUCKET.s3-website**.**region.amazonaws.com
+&lt;div class="highlight"&gt;&lt;pre&gt;    http://BUCKET.s3-website-region.amazonaws.com
+    http://BUCKET.s3-website.region.amazonaws.com
 &lt;/pre&gt;&lt;/div&gt;
 
 
