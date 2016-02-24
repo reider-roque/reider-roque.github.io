@@ -143,7 +143,7 @@
 </pre></div>
 
 
-<p>Note, however, one important thing. With virtual-hosted style you can additionally use s3.amazonaws.com endpoint for any bucket residing in ANY region. Because bucket name is part of the domain name, AWS backend has sufficient information to correctly resolve or redirect (with 307 Temporary Redirect HTTP response code) your request to the region where the bucket resides. For example the following pairs of requests are equivalent:</p>
+<p>Note, however, one important thing. With virtual-hosted style you can additionally use s3.amazonaws.com endpoint for any bucket residing in ANY region. Because bucket name is part of the domain name, AWS backend has sufficient information to correctly resolve or redirect (with 307 Temporary Redirect HTTP response code) your request to the region where the bucket resides. For example, the following URLs in each pair are equivalent:</p>
 <div class="highlight"><pre>    http://images.s3-us-west-2.amazonaws.com/photo.jpg
     http://images.s3.amazonaws.com/photo.jpg
 
