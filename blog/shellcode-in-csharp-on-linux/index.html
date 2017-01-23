@@ -68,16 +68,16 @@
             <p>In this post I will show you how to run shellcode from a C# application on Linux. I realize that unlike, say, Python, <a href="http://www.mono-project.com/">Mono</a> is not present on most vanilla Linux installations. So there are not many cases when you will be able to leverage this ability. But it is out there and you never know what you can run into in the wild. With that being said, let's first install Mono.</p>
 <h1>Mono installation</h1>
 <p>I am using a freshly downloaded <a href="https://www.offensive-security.com/kali-linux-vmware-arm-image-download/">x86 Kali image</a> here. After upgrading and changing the default password I followed the <a href="http://www.mono-project.com/docs/getting-started/install/linux/">installation instructions</a> found in official Mono documentation:</p>
-<div class="highlight"><pre><span class="c"># Become root if you aren&#39;t</span>
+<div class="highlight"><pre><span></span><span class="c1"># Become root if you aren&#39;t</span>
 su - root
-<span class="c"># Add mono-project packages signing key so all packages you pull from their repo are trusted</span>
+<span class="c1"># Add mono-project packages signing key so all packages you pull from their repo are trusted</span>
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-<span class="c">#  Add mono-project repositories</span>
+<span class="c1">#  Add mono-project repositories</span>
 <span class="nb">echo</span> <span class="s2">&quot;deb http://download.mono-project.com/repo/debian wheezy main&quot;</span> <span class="p">|</span> tee /etc/apt/sources.list.d/mono-xamarin.list
 <span class="nb">echo</span> <span class="s2">&quot;deb http://download.mono-project.com/repo/debian wheezy-libjpeg62-compat main&quot;</span> <span class="p">|</span> tee -a /etc/apt/sources.list.d/mono-xamarin.list
-<span class="c"># Update your package index</span>
+<span class="c1"># Update your package index</span>
 apt-get update
-<span class="c"># Install Mono-related packages</span>
+<span class="c1"># Install Mono-related packages</span>
 apt-get install mono-complete monodevelop
 </pre></div>
 
@@ -86,7 +86,7 @@ apt-get install mono-complete monodevelop
 <h1>Windows prototype and Linux port</h1>
 <p>While researching the issue I came across a wonderful post that provided a working example of <a href="https://maxxor.org/posts/execute-native-x86-shellcode-in-csharp">shellcode execution in C# on Windows</a>. The example uses WinAPI <a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366898(v=vs.85).aspx">VirtualProtect</a> function to make the shellcode containing region of memory executable. Linux analog of VirtualProtect function is <a href="http://linux.die.net/man/2/mprotect">mprotect</a>. Both VirtualProtect and mprotect change protection on pages, not on arbitrary regions of memory. So, even if your shellcode takes only 21 bytes, the whole page containing the code will have to be made executable. The difference between VirtaulProtect and mprotect is that you don't have to pass the base address of the page containing shellcode to the first one; you can just <a href="http://stackoverflow.com/questions/10838902/does-virtualprotect-require-the-address-of-the-beginning-of-the-page">pass the shellcode address</a>. And to the second one you must pass the base address of the page containing the shellcode.</p>
 <p>Here is the source:</p>
-<div class="highlight"><pre><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">System.Runtime.InteropServices</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">Mono.Unix.Native</span><span class="p">;</span>
 
@@ -187,17 +187,17 @@ apt-get install mono-complete monodevelop
 <p>The shellcode used in the source is an x86 Linux shellcode that starts <em>/bin/sh</em>.</p>
 <p>The PAGE_SIZE constant used in the code is, by default, equal to 4096 bytes in Linux. The exact value is determined in runtime.</p>
 <p>To compile the above source you must reference the standard <em>Mono.Posix.dll</em> assembly; used in the project <code>Mono.Unix.Native</code> namespace lives there:</p>
-<div class="highlight"><pre>mcs /reference:Mono.Posix scframe.cs
+<div class="highlight"><pre><span></span>mcs /reference:Mono.Posix scframe.cs
 </pre></div>
 
 
 <p>After running the resulted executable</p>
-<div class="highlight"><pre>./scframe.exe
+<div class="highlight"><pre><span></span>./scframe.exe
 </pre></div>
 
 
 <p>we should see the following output:</p>
-<p><img alt="Shellcode running output" src="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/csharp-shellcode-running-output.png" title="Shellcode running output" />
+<p><img alt="Shellcode running output" src="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/csharp-shellcode-running-output.png" title="Shellcode running output">
 <div class="img-caption">Shellcode running output</div></p>
 <p>Alternatively to referencing the Mono.Posix.dll assembly we could directly reference <code>mprotect()</code> and <code>sysconf()</code> functions from <em>libc.so</em> library. In that case we should remember that library name passed to the <code>DllImport</code> attribute should be either <em>libc</em> or <em>libc.so.6</em> (or whatever version is current). Passing <em>libc.so</em> will produce the <em>Mono: DllImport error loading library</em> error. One inconvenience of not using the <code>Mono.Posix.dll</code> namespace is that it is not possible (at least I couldn't find how) to reference the standard C global <code>errno</code> variable to get the error code of the last libc failed function. Overall there is no benefit of using this version instead of the given above. Both versions of the source can be found in the <a href="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/scframe.zip">accompanying archive</a>.</p>
 <h1>Debugging</h1>
@@ -208,7 +208,7 @@ apt-get install mono-complete monodevelop
 <li>By inserting the <code>\CC</code> byte in the beginning of the shellcode, which corresponds to <code>int3</code> Assembly mnemonic. I used this to catch the moment of passing execution flow to the shellcode.</li>
 <li>By setting a breakpoint on a method name as described in <a href="http://www.mono-project.com/docs/debug+profile/debug/#debugging-with-gdb">Mono documentation</a>:</li>
 </ul>
-<div class="highlight"><pre><span class="nb">echo</span> <span class="s1">&#39;handle SIGXCPU SIG33 SIG35 SIGPWR nostop noprint&#39;</span> &gt; mono-gdb-settings
+<div class="highlight"><pre><span></span><span class="nb">echo</span> <span class="s1">&#39;handle SIGXCPU SIG33 SIG35 SIGPWR nostop noprint&#39;</span> &gt; mono-gdb-settings
 gdb -x mono-gdb-settings mono
 <span class="o">(</span>gdb<span class="o">)</span> run --debug --break <span class="s2">&quot;MainClass:Main&quot;</span> scframe.exe
 </pre></div>
@@ -259,7 +259,7 @@ gdb -x mono-gdb-settings mono
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015-2016.
+    Oleg Mitrofanov &copy; 2015-2017.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>

@@ -69,7 +69,7 @@
 <p>We all know that inventing your own cryptography algorithm, especially if you aren't a Nobel laureate in cryptography, is a bad idea. Though when the goal is to trick a signature-based anti-virus or intrusion detection system, I would argue that this is not the case. Anyway, to not complicate things and clearly demonstrate the encryption approach, I decided to go with the .NET implementation of the DES algorithm.</p>
 <p>My language of choice for this assignment is C#. If you don't know how to <a href="/blog/shellcode-in-csharp-on-linux/">execute x86 Linux shellcode from C# application</a>, please, check the link. The solution consists of two programs. The first one is used to encrypt the given shellcode, the second one to decrypt and run it. The decrypter part is based on the C# shellcode execution frame from the aforementioned post.</p>
 <p>First comes the source code of the encrypter:</p>
-<div class="highlight"><pre><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">System.Security.Cryptography</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">System.Text</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">System.Linq</span><span class="p">;</span>
@@ -163,16 +163,16 @@
 
 <p>The shellcode string, initial vector value and the encryption key are all hard-coded into the source. I know that using hard-coded keys and initial vectors is generally a very bad idea, but remember that we are just fooling signature-based software here, not a human analyst. The shellcode used starts the <code>/bin/sh</code> shell.</p>
 <p>After compiling and running the above source code, we will get an output with original, encrypted, and decrypted shellcode strings: </p>
-<div class="highlight"><pre>mcs encrypter.cs <span class="o">&amp;&amp;</span> ./encrypter.exe
+<div class="highlight"><pre><span></span>mcs encrypter.cs <span class="o">&amp;&amp;</span> ./encrypter.exe
 </pre></div>
 
 
 <p>The output will also contain a comparison result of the original and decrypted shellcode strings:</p>
-<p><img alt="Running shellcode encrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-encrypter.png" title="Running shellcode encrypter" />
+<p><img alt="Running shellcode encrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-encrypter.png" title="Running shellcode encrypter">
 <div class="img-caption">Running shellcode encrypter</div></p>
 <p>Note that the size of the encrypted strings increased by 3 bytes. This fact may or may not be an issue while writing an exploit for a particular program. If it becomes an issue, some alternative encryption algorithm that does not increase the payload size should be chosen.</p>
 <p>The encrypted string from the encrypter's output, along with the same IV and key, is pated into decrypter source code:</p>
-<div class="highlight"><pre><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
+<div class="highlight"><pre><span></span><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">System.Runtime.InteropServices</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">Mono.Unix.Native</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">System.Security.Cryptography</span><span class="p">;</span>
@@ -290,12 +290,12 @@
 
 
 <p>After compiling and running the decrypter</p>
-<div class="highlight"><pre>mcs -reference:Mono.Posix decrypter.cs <span class="o">&amp;&amp;</span> ./decrypter.exe
+<div class="highlight"><pre><span></span>mcs -reference:Mono.Posix decrypter.cs <span class="o">&amp;&amp;</span> ./decrypter.exe
 </pre></div>
 
 
 <p>we should get output similar to the one shown on the following print screen:</p>
-<p><img alt="Running shellcode decrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-decrypter.png" title="Running shellcode decrypter" />
+<p><img alt="Running shellcode decrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-decrypter.png" title="Running shellcode decrypter">
 <div class="img-caption">Running shellcode decrypter</div></p>
 <p>As we can see everything worked out as expected.</p>
 <div class="divider"></div>
@@ -355,7 +355,7 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015-2016.
+    Oleg Mitrofanov &copy; 2015-2017.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>

