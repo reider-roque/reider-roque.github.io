@@ -10,7 +10,8 @@
 </title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="/theme/css/cid.css">
+        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
+        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oleg's Web Log Atom Feed" />
         
  
         <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
@@ -42,12 +43,12 @@
             <div class="container">
 
 <header class="blog-header">
-    <h1><a href="/blog/">Oleg's Web Log</a></h1>
+    <h1><a href="http://www.wryway.com/blog/">Oleg's Web Log</a></h1>
     <p> Stochastic records on Information Security and IT in general </p>
     <nav>
-        <a href="/blog/categories/">CATEGORIES</a>
-        <a href="/blog/tags/">TAGS</a>
-        <a href="/blog/archives/">ARCHIVES</a>
+        <a href="http://www.wryway.com/blog/categories/">CATEGORIES</a>
+        <a href="http://www.wryway.com/blog/tags/">TAGS</a>
+        <a href="http://www.wryway.com/blog/archives/">ARCHIVES</a>
     </nav>
 </header>
 
@@ -56,7 +57,7 @@
         <header>
             <h1>Executing shellcode from C# on Linux</h1>
             <p class="category">
-                Category: <a class="category" href="/blog/category/exploit-development/"><b>Exploit development</b></a>
+                Category: <a class="category" href="http://www.wryway.com/blog/category/exploit-development/"><b>Exploit development</b></a>
             </p>
             <p class="date">
                 Written on <time datetime="2015-10-11T19:00:00-04:00">Oct 11, 2015</time>
@@ -196,9 +197,9 @@ apt-get install mono-complete monodevelop
 
 
 <p>we should see the following output:</p>
-<p><img alt="Shellcode running output" src="/blog/shellcode-in-csharp-on-linux/csharp-shellcode-running-output.png" title="Shellcode running output">
+<p><img alt="Shellcode running output" src="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/csharp-shellcode-running-output.png" title="Shellcode running output">
 <div class="img-caption">Shellcode running output</div></p>
-<p>Alternatively to referencing the Mono.Posix.dll assembly we could directly reference <code>mprotect()</code> and <code>sysconf()</code> functions from <em>libc.so</em> library. In that case we should remember that library name passed to the <code>DllImport</code> attribute should be either <em>libc</em> or <em>libc.so.6</em> (or whatever version is current). Passing <em>libc.so</em> will produce the <em>Mono: DllImport error loading library</em> error. One inconvenience of not using the <code>Mono.Posix.dll</code> namespace is that it is not possible (at least I couldn't find how) to reference the standard C global <code>errno</code> variable to get the error code of the last libc failed function. Overall there is no benefit of using this version instead of the given above. Both versions of the source can be found in the <a href="/blog/shellcode-in-csharp-on-linux/scframe.zip">accompanying archive</a>.</p>
+<p>Alternatively to referencing the Mono.Posix.dll assembly we could directly reference <code>mprotect()</code> and <code>sysconf()</code> functions from <em>libc.so</em> library. In that case we should remember that library name passed to the <code>DllImport</code> attribute should be either <em>libc</em> or <em>libc.so.6</em> (or whatever version is current). Passing <em>libc.so</em> will produce the <em>Mono: DllImport error loading library</em> error. One inconvenience of not using the <code>Mono.Posix.dll</code> namespace is that it is not possible (at least I couldn't find how) to reference the standard C global <code>errno</code> variable to get the error code of the last libc failed function. Overall there is no benefit of using this version instead of the given above. Both versions of the source can be found in the <a href="http://www.wryway.com/blog/shellcode-in-csharp-on-linux/scframe.zip">accompanying archive</a>.</p>
 <h1>Debugging</h1>
 <p>Lastly, I want to share a few tips for debugging C# executables in Linux. </p>
 <p>For that purpose I primarily used MonoDevelop and GDB. High-level debugging with MonoDevelop was a no-brainer. It was a bit more involved with GDB.</p>
@@ -226,6 +227,19 @@ gdb -x mono-gdb-settings mono
             </p>
         </footer>
 
+<div class="comments">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'wryway';
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
 
     </div>
 
@@ -250,5 +264,11 @@ gdb -x mono-gdb-settings mono
     </p>
 </footer>
             </div>
+<script>
+    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
     </body>
 </html>

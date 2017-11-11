@@ -10,7 +10,8 @@
 </title>
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
-        <link rel="stylesheet" href="/theme/css/cid.css">
+        <link rel="stylesheet" href="http://www.wryway.com/theme/css/cid.css">
+        <link href="http://www.wryway.com/feeds/all.atom.xml" type="application/atom+xml" rel="alternate" title="Oleg's Web Log Atom Feed" />
         
  
         <link rel="apple-touch-icon" sizes="57x57" href="/icons/apple-touch-icon-57x57.png">
@@ -42,12 +43,12 @@
             <div class="container">
 
 <header class="blog-header">
-    <h1><a href="/blog/">Oleg's Web Log</a></h1>
+    <h1><a href="http://www.wryway.com/blog/">Oleg's Web Log</a></h1>
     <p> Stochastic records on Information Security and IT in general </p>
     <nav>
-        <a href="/blog/categories/">CATEGORIES</a>
-        <a href="/blog/tags/">TAGS</a>
-        <a href="/blog/archives/">ARCHIVES</a>
+        <a href="http://www.wryway.com/blog/categories/">CATEGORIES</a>
+        <a href="http://www.wryway.com/blog/tags/">TAGS</a>
+        <a href="http://www.wryway.com/blog/archives/">ARCHIVES</a>
     </nav>
 </header>
 
@@ -56,7 +57,7 @@
         <header>
             <h1>Mutating existing shellcodes (SLAE, Assignment #6)</h1>
             <p class="category">
-                Category: <a class="category" href="/blog/category/exploit-development/"><b>Exploit development</b></a>
+                Category: <a class="category" href="http://www.wryway.com/blog/category/exploit-development/"><b>Exploit development</b></a>
             </p>
             <p class="date">
                 Written on <time datetime="2015-10-08T20:00:00-04:00">Oct 08, 2015</time>
@@ -115,7 +116,7 @@
 </pre></div>
 
 
-<p><img alt="Testing the shellcode" src="/blog/mutating-existing-shellcodes/testing-the-shellcode.png" title="Testing the shellcode">
+<p><img alt="Testing the shellcode" src="http://www.wryway.com/blog/mutating-existing-shellcodes/testing-the-shellcode.png" title="Testing the shellcode">
 <div class="img-caption">Testing the shellcode</div></p>
 <p>At first, I wanted to do a step by step modification of every couple instructions preserving the overall functionality, but then, after reviewing the given shellcode architecture, I realized that it is quite inefficient. So I decided to rewrite most of the code employing a couple of shellcode-shortening techniques I learned while taking the SLAE course. Follows my modified copy of the shellcode with some comments:</p>
 <div class="highlight"><pre><span></span><span class="k">section</span> <span class="nv">.text</span>
@@ -475,6 +476,19 @@ This blog post was created to fulfill the requirements of the <a href="http://se
             </p>
         </footer>
 
+<div class="comments">
+    <div id="disqus_thread"></div>
+    <script type="text/javascript">
+        var disqus_shortname = 'wryway';
+        (function() {
+            var dsq = document.createElement('script'); dsq.type = 'text/javascript'; dsq.async = true;
+            dsq.src = '//' + disqus_shortname + '.disqus.com/embed.js';
+            (document.getElementsByTagName('head')[0] || document.getElementsByTagName('body')[0]).appendChild(dsq);
+        })();
+    </script>
+    <noscript>Please enable JavaScript to view the <a href="http://disqus.com/?ref_noscript">comments powered by Disqus.</a></noscript>
+    <a href="http://disqus.com" class="dsq-brlink">comments powered by <span class="logo-disqus">Disqus</span></a>
+</div>
 
     </div>
 
@@ -499,5 +513,11 @@ This blog post was created to fulfill the requirements of the <a href="http://se
     </p>
 </footer>
             </div>
+<script>
+    var _gaq=[['_setAccount','UA-68669065-1'],['_trackPageview']];
+    (function(d,t){var g=d.createElement(t),s=d.getElementsByTagName(t)[0];
+    g.src=('https:'==location.protocol?'//ssl':'//www')+'.google-analytics.com/ga.js';
+    s.parentNode.insertBefore(g,s)}(document,'script'));
+</script>
     </body>
 </html>

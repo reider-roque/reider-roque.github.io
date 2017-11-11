@@ -1,17 +1,23 @@
 <?xml version="1.0" encoding="utf-8"?>
 <feed xmlns="http://www.w3.org/2005/Atom"><title>Oleg's Web Log</title><link href="http://www.wryway.com/" rel="alternate"></link><link href="http://www.wryway.com/feeds/all.atom.xml" rel="self"></link><id>http://www.wryway.com/</id><updated>2017-11-10T23:00:00-05:00</updated><entry><title>Albert to CentOS 7</title><link href="http://www.wryway.com/blog/albert-on-centos7/" rel="alternate"></link><published>2017-11-10T23:00:00-05:00</published><updated>2017-11-10T23:00:00-05:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2017-11-10:/blog/albert-on-centos7/</id><summary type="html">&lt;p&gt;Steps for patching and installing Albert on CentOS 7 (Red Hat 7)&lt;/p&gt;</summary><content type="html">&lt;h1&gt;Who is Albert?&lt;/h1&gt;
-&lt;p&gt;&lt;a href="https://albertlauncher.github.io/"&gt;Albert&lt;/a&gt; is a Linux application launcher similar to &lt;a href="https://www.alfredapp.com/"&gt;Alfred&lt;/a&gt; (OS X) and &lt;a href="http://www.listary.com/"&gt;Listary&lt;/a&gt; (Windows). It's own of those huge time savers absolutely worth getting.&lt;/p&gt;
+&lt;p&gt;&lt;a href="https://albertlauncher.github.io/"&gt;Albert&lt;/a&gt; is a Linux application launcher similar to &lt;a href="https://www.alfredapp.com/"&gt;Alfred&lt;/a&gt; (OS X) and &lt;a href="http://www.listary.com/"&gt;Listary&lt;/a&gt; (Windows). It's one of those huge time savers absolutely worth getting.&lt;/p&gt;
 &lt;h1&gt;Challenges&lt;/h1&gt;
 &lt;p&gt;At this time Albert does not officially support CentOS 7. Building from the source to the rescue! &lt;/p&gt;
 &lt;p&gt;Not so fast, cowboy. There are a few software version bummers along the road. One of them is gcc. Another one is sqlite. But no worries, I got you covered.&lt;/p&gt;
 &lt;h1&gt;The solution&lt;/h1&gt;
-&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Install EPEL, RPM Fusion, and [SCL](https://wiki.centos.org/AdditionalResources/Repositories/SCL) repositories (EPEL must be installed prior to RPM Fusion) &lt;/span&gt;
-yum install epel-release                                                                             
+&lt;p&gt;&lt;div&gt;&lt;/div&gt;&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="c1"&gt;# Install EPEL, RPM Fusion, and SCL repositories &lt;/span&gt;
+&lt;span class="c1"&gt;# (EPEL must be installed prior to RPM Fusion) &lt;/span&gt;
+yum install epel-release
 yum install centos-release-scl-rh
-yum localinstall https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm https://download1.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-7.noarch.rpm
+yum localinstall &lt;span class="se"&gt;\&lt;/span&gt;
+https://download1.rpmfusion.org/free/el/rpmfusion-free-release-7.noarch.rpm &lt;span class="se"&gt;\&lt;/span&gt;
+https://download1.rpmfusion.org/nonfree/el/rpmfusion-nonfree-release-7.noarch.rpm
 
 &lt;span class="c1"&gt;# Install dependencies, including the latest version of GCC via SCL repository&lt;/span&gt;
-yum install cmake3 qt5-qtbase qt5-qtbase-devel qt5-qtx11extras-devel qt5-qtsvg-devel qt5-qtdeclarative-devel VirtualBox-devel muParser-devel python34-devel devtoolset-3-gcc devtoolset-3-gcc-c++
+yum install cmake3 qt5-qtbase qt5-qtbase-devel qt5-qtx11extras-devel &lt;span class="se"&gt;\&lt;/span&gt;
+qt5-qtsvg-devel qt5-qtdeclarative-devel VirtualBox-devel muParser-devel &lt;span class="se"&gt;\&lt;/span&gt;
+python34-devel devtoolset-3-gcc devtoolset-3-gcc-c++
 
 &lt;span class="c1"&gt;# Spin a bash shell with the latest version of GCC in the environment&lt;/span&gt;
 scl &lt;span class="nb"&gt;enable&lt;/span&gt; devtoolset-3 bash
@@ -20,33 +26,33 @@ scl &lt;span class="nb"&gt;enable&lt;/span&gt; devtoolset-3 bash
 git clone --recursive https://github.com/albertlauncher/albert.git
 
 &lt;span class="c1"&gt;# Reset to the commit that I worked with (the most recent at the time)&lt;/span&gt;
-&lt;span class="c1"&gt;# Future commits may or may not work :)&lt;/span&gt;
+&lt;span class="c1"&gt;# Future commits may or may not build using steps from this post &lt;/span&gt;
 &lt;span class="nb"&gt;cd&lt;/span&gt; albert
 git reset --hard 21c7972 
 
 &lt;span class="c1"&gt;# Apply the patch to fix sqlite version problem (more on this below)&lt;/span&gt;
-curl -O https://github.com/reidre-roque/io.github.reider-roque/??????????
 git apply albert-centos7.patch 
 
 &lt;span class="c1"&gt;# Build the thing&lt;/span&gt;
 &lt;span class="nb"&gt;cd&lt;/span&gt; ..
 mkdir albert-build
 &lt;span class="nb"&gt;cd&lt;/span&gt; albert-build
-cmake3 ../albert -DCMAKE_INSTALL_PREFIX&lt;span class="o"&gt;=&lt;/span&gt;/usr -DCMAKE_BUILD_TYPE&lt;span class="o"&gt;=&lt;/span&gt;Debug -DCMAKE_PREFIX_PATH&lt;span class="o"&gt;=&lt;/span&gt;/usr/lib/cmake
+cmake3 ../albert -DCMAKE_INSTALL_PREFIX&lt;span class="o"&gt;=&lt;/span&gt;/usr -DCMAKE_BUILD_TYPE&lt;span class="o"&gt;=&lt;/span&gt;Debug &lt;span class="se"&gt;\&lt;/span&gt;
+-DCMAKE_PREFIX_PATH&lt;span class="o"&gt;=&lt;/span&gt;/usr/lib/cmake
 make
 
 &lt;span class="c1"&gt;# Install the thing noting all the files being touched in the process&lt;/span&gt;
 tracefile -u make install &lt;span class="p"&gt;|&lt;/span&gt; tee albert-make-install-files.txt
 
-&lt;span class="c1"&gt;# Test it! Fingers crossed it should fly&lt;/span&gt;
+&lt;span class="c1"&gt;# Fingers crossed the bird should fly&lt;/span&gt;
 albert
 &lt;/pre&gt;&lt;/div&gt;
 
 
 &lt;h1&gt;Why patching?&lt;/h1&gt;
-&lt;p&gt;It's all about SQLite version. The default SQLite binary on my installation was reporting version that was below version 3.8.2 supporting the &lt;a href="https://www.sqlite.org/withoutrowid.html"&gt;&lt;code&gt;WITHOUT ROWID&lt;/code&gt;&lt;/a&gt; syntax.&lt;/p&gt;
+&lt;p&gt;The SQLite from CentOS 7 repo on my installation was reporting version below 3.8.2 required to support the &lt;a href="https://www.sqlite.org/withoutrowid.html"&gt;&lt;code&gt;WITHOUT ROWID&lt;/code&gt;&lt;/a&gt; syntax. As a result after successful compilation my binary was failing miserably. The &lt;a href="http://www.wryway.com/blog/albert-on-centos7/albert-centos7.patch"&gt;patch&lt;/a&gt; fixes this nuisance.&lt;/p&gt;
 &lt;h1&gt;What's tracefile?&lt;/h1&gt;
-&lt;p&gt;A simple Perl script monitoring files and directories touched by a running process. You can check out the &lt;a href="https://gitlab.com/ole.tange/tangetools/blob/master/tracefile/tracefile"&gt;original&lt;/a&gt; version or, a little bit cleand up &lt;a href="https://github.com/reider-roque/linux-utils"&gt;mine&lt;/a&gt;.&lt;/p&gt;</content><category term="Linux"></category><category term="Albert"></category></entry><entry><title>AWS S3 URL Styles</title><link href="http://www.wryway.com/blog/aws-s3-url-styles/" rel="alternate"></link><published>2016-02-23T15:00:00-05:00</published><updated>2016-02-23T15:00:00-05:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2016-02-23:/blog/aws-s3-url-styles/</id><summary type="html">&lt;p&gt;Description of AWS S3 URL schemes&lt;/p&gt;</summary><content type="html">&lt;h1&gt;S3 endpoints&lt;/h1&gt;
+&lt;p&gt;A simple Perl script monitoring files and directories touched by a running process. You can check out the &lt;a href="https://gitlab.com/ole.tange/tangetools/blob/master/tracefile/tracefile"&gt;original&lt;/a&gt; version or, a little bit cleand up &lt;a href="https://github.com/reider-roque/linux-utils"&gt;mine&lt;/a&gt;. I found it useful noting all the files touched by &lt;code&gt;make install&lt;/code&gt; so I can clean up my system in case &lt;code&gt;make uninstall&lt;/code&gt; was not provided.&lt;/p&gt;</content><category term="Linux"></category><category term="Albert"></category></entry><entry><title>AWS S3 URL Styles</title><link href="http://www.wryway.com/blog/aws-s3-url-styles/" rel="alternate"></link><published>2016-02-23T15:00:00-05:00</published><updated>2016-02-23T15:00:00-05:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2016-02-23:/blog/aws-s3-url-styles/</id><summary type="html">&lt;p&gt;Description of AWS S3 URL schemes&lt;/p&gt;</summary><content type="html">&lt;h1&gt;S3 endpoints&lt;/h1&gt;
 &lt;p&gt;Before describing S3 bucket URL schemes, one thing that causes a lot of the confusion needs to be clarified. And that thing is S3 endpoint. &lt;/p&gt;
 &lt;p&gt;&lt;strong&gt;S3 endpoint&lt;/strong&gt; is a &lt;em&gt;region-specific&lt;/em&gt; URL that is used in both S3 URL styles (more on styles below). Follow the link to see the &lt;a href="http://docs.aws.amazon.com/general/latest/gr/rande.html#s3_region"&gt;list of all S3 endpoints&lt;/a&gt;. &lt;/p&gt;
 &lt;p&gt;Most of the endpoints follow this pattern (with region names being eu-west-1, us-west-2, etc):&lt;/p&gt;
