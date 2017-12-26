@@ -1,0 +1,111 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns="http://www.w3.org/2005/Atom"><title>Oleg's Web Log - Security Architecting</title><link href="http://www.wryway.com/" rel="alternate"></link><link href="http://www.wryway.com/feeds/security-architecting.atom.xml" rel="self"></link><id>http://www.wryway.com/</id><updated>2017-12-25T19:00:00-05:00</updated><entry><title>Should an authenticator be paired with an identificator?</title><link href="http://www.wryway.com/blog/pairing-of-authenticator-and-identificator/" rel="alternate"></link><published>2017-12-25T19:00:00-05:00</published><updated>2017-12-25T19:00:00-05:00</updated><author><name>Oleg Mitrofanov</name></author><id>tag:www.wryway.com,2017-12-25:/blog/pairing-of-authenticator-and-identificator/</id><summary type="html">&lt;p&gt;Or can they not?&lt;/p&gt;</summary><content type="html">&lt;p&gt;It seamed reasonable when I heard that it was a good security practice to pair
+an authenticator with an identificator. I could not give a concrete explanation
+of why it should be so. This post is an attempt to provide such explanation.&lt;/p&gt;
+&lt;h1&gt;Definitions&lt;/h1&gt;
+&lt;p&gt;For starters, let's agree on a few terms: &lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;Authenticator&lt;/em&gt;&lt;/strong&gt; is a secret (or a set of public and secret components) used
+to prove caller's identity or knoweldge of a secret. &lt;/p&gt;
+&lt;p&gt;&lt;strong&gt;&lt;em&gt;Identificator&lt;/em&gt;&lt;/strong&gt; is a non-secret reference to the authenticator used to state
+caller's identity or secret id. It can be a reference to an identity (e.g.
+username) or a secret specific reference (e.g. API Key Id).&lt;/p&gt;
+&lt;h1&gt;Examples&lt;/h1&gt;
+&lt;p&gt;A few instances of identificators and authenticators to make it tangible.&lt;/p&gt;
+&lt;p&gt;Identificator &amp;amp; authenticator pair examples:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Username &amp;amp; Password&lt;/em&gt;, where  username, the identificator, is a reference to
+user's identity; password is the authenticator. Used in client-to-server and
+rarely server-to-server authentication.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;API Key Id &amp;amp; API Secret Key&lt;/em&gt; , where API Key Id, the identificator, is a
+reference to the API Secret Key (authenticator); a user can have more than one
+pair of these. Used in client-to-server and server-to-server authentication.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Host name &amp;amp; server TLS certificate&lt;/em&gt;. Used in server-to-client
+authentication.&lt;/li&gt;
+&lt;li&gt;&lt;em&gt;Sender email address &amp;amp; sender's private-public key pair&lt;/em&gt;, where the email
+address is the identificator, and the key pair is the authenticator. Used in
+client-to-client authentication.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Identificator-less authenticator (or is it authenticator-less identificator?)
+examples:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;Monolithic API Key not broken into Key Id and Key Secret&lt;/em&gt;. E.g. &lt;a href="https://developer.nytimes.com/signup"&gt;NY Times API
+ Key&lt;/a&gt; currently looks like a UUID with
+removed dashes: &lt;em&gt;4dd3f7b027074ff89961cfa321a2dfd2&lt;/em&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;Examples of an identificator misuse:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;em&gt;SSN&lt;/em&gt; – is a number that in the US uniquely identifies US citizens and
+residents (something that would not be possible using first and last name
+combination for they are not unique across population). As a low-entropy number
+and because of its identification role it should clearly not be a secret.
+However, practically, many private and government establishments treat it as a
+secret and use to authenticate a person.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h1&gt;So why should they come in pair?&lt;/h1&gt;
+&lt;p&gt;After thinking on the subject for a while I came up with the following list of
+issues arising from an authenticator  &lt;strong&gt;&lt;em&gt;not&lt;/em&gt;&lt;/strong&gt; being paired with an
+identificator. The first three apply to client-to-server and server-to-server
+authentication. The fourth and fifth apply to the server-to-client and
+client-to-client authentication:&lt;/p&gt;
+&lt;ol&gt;
+&lt;li&gt;The authenticator cannot be stored securely in the back end using traditional
+hashing with a salt approach. If all authenticators are stored hashed with as
+salt (as they should be) but without any identificators to reference them, then
+the authenticating party will have to hash the authenticator with all available
+salts prior to being able to authenticate. The authentication will be slowing
+down for all callers as their number grows.&lt;/li&gt;
+&lt;li&gt;Every new authenticator issued will be increasing attacker's chances of
+recovering a valid authenticator and compromise one of the callers. For
+example, if you randomly generate 128-bit long authenticators, and issue only 1
+authenticator, it'll take an attacker 2&lt;sup&gt;128&lt;/sup&gt;/2=2&lt;sup&gt;127&lt;/sup&gt; time on
+average to recover it by brute forcing the available key space. With 1024 active
+authenticators the time to recover a valid key will be decreased to
+2&lt;sup&gt;127&lt;/sup&gt;/2&lt;sup&gt;10&lt;/sup&gt;=2&lt;sup&gt;117&lt;/sup&gt;. With 32768 active
+authenticators, the time goes down to 2&lt;sup&gt;112&lt;/sup&gt;. To be equally secure an
+authenticator will be required to employ more bits (become longer) compared to
+the case where it is accompanied by an identificator.&lt;/li&gt;
+&lt;li&gt;In case of non-local communication channel, the authenticator or a temporary
+token generated from it will have to be transmitted on the wire with every
+authenticated call. This is how web authentication works today, which is deemed
+acceptable. However, if paired with an identificator, the security bar can be
+raised for authenticated calls by employing HMAC signing where the authenticator
+is not sent over the wire at all (this is how AWS SigV4 works).&lt;/li&gt;
+&lt;li&gt;The authenticating party may not be capable of storing authenticators for all
+callers and rely on the presence of an identificator to be able to retrieve
+artifacts required to authenticate the caller. This is the case of
+client-to-client authentication between an email sender and receiver, where the
+receiver may have to retrieve sender's public key before they can authenticate
+the message. &lt;/li&gt;
+&lt;li&gt;It may be required for the authenticating party to only communicate to a
+particular party with a valid authenticator, and not to any party with a
+valid authenticator. This may not matter for client-to-server authentication,
+but is the case for the server-to-client HTTPS authentication where the web
+server has to prove its identity to the user agent.  Had a server certificate
+only contained a validly signed public key, without hostname, it would not have
+been possible for the user agent to be convinced that the certificate was issued
+for the web site it was trying to talk to.&lt;/li&gt;
+&lt;/ol&gt;
+&lt;p&gt;After staring at the above list for a bit, I challenged myself to think about
+how identificator-less authenticators can be stored securely.  The following
+section contains a couple of potential solutions.&lt;/p&gt;
+&lt;h1&gt;Can identificator-less authenticators be stored securely?&lt;/h1&gt;
+&lt;p&gt;The simple solution to storing identificator-less authenticators securely is to
+treat the first part of the authenticator as an identificator and the second
+part as the actual secret. When storing them only the second part will be
+hashed.&lt;/p&gt;
+&lt;p&gt;Another solution is, at the expense of introduction of an extra secret and
+having to manage it, to synthetically generate identificators from the
+authenticators using a secret salt. I do not see any apparent high-risk issues
+with this solution, however, it was not reviewed by crypto experts and can
+potentially be horribly broken. The back-end data store table can look as
+follows when this scheme is employed (where &lt;code&gt;SSalt&lt;/code&gt; is short for &lt;code&gt;SecretSalt&lt;/code&gt;):&lt;/p&gt;
+&lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;| Identificator                                | Hashed Authenticator               |
+| SSaltVersion$SlowHash(SSalt, Authenticator)  | Salt$SlowHash(Salt, Authenticator) |
+&lt;/pre&gt;&lt;/div&gt;
+
+
+&lt;p&gt;One of the threats to this approach is once the secret salt and the list of
+identificators are leaked, all authenticators hashed with that secret salt
+version will be compromised. This is as opposed to a leaked list of
+authenticator hashes where an attacker will have to spend considerable effort to
+recover each authenticator. &lt;/p&gt;</content><category term="Authentication"></category></entry></feed>
