@@ -87,7 +87,7 @@ reference to the API Secret Key (authenticator); a user can have more than one
 pair of these. Used in client-to-server and server-to-server authentication.</li>
 <li><em>Host name &amp; server TLS certificate</em>. Used in server-to-client
 authentication.</li>
-<li><em>Sender email address &amp; sender's private-public key pair</em>, where the email
+<li><em>Sender's email address &amp; sender's private-public key pair</em>, where the email
 address is the identificator, and the key pair is the authenticator. Used in
 client-to-client authentication.</li>
 </ul>
@@ -115,7 +115,7 @@ authentication. The fourth and fifth apply to the server-to-client and
 client-to-client authentication:</p>
 <ol>
 <li>The authenticator cannot be stored securely in the back end using traditional
-hashing with a salt approach. If all authenticators are stored hashed with as
+hashing with a salt approach. If all authenticators are stored hashed with a
 salt (as they should be) but without any identificators to reference them, then
 the authenticating party will have to hash the authenticator with all available
 salts prior to being able to authenticate. The authentication will be slowing

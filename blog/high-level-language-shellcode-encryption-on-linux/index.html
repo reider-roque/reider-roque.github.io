@@ -171,7 +171,7 @@
 <p><img alt="Running shellcode encrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-encrypter.png" title="Running shellcode encrypter">
 <div class="img-caption">Running shellcode encrypter</div></p>
 <p>Note that the size of the encrypted strings increased by 3 bytes. This fact may or may not be an issue while writing an exploit for a particular program. If it becomes an issue, some alternative encryption algorithm that does not increase the payload size should be chosen.</p>
-<p>The encrypted string from the encrypter's output, along with the same IV and key, is pated into decrypter source code:</p>
+<p>The encrypted string from the encrypter's output, along with the same IV and key, is pasted into decrypter source code:</p>
 <div class="highlight"><pre><span></span><span class="k">using</span> <span class="nn">System</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">System.Runtime.InteropServices</span><span class="p">;</span>
 <span class="k">using</span> <span class="nn">Mono.Unix.Native</span><span class="p">;</span>

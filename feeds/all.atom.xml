@@ -21,7 +21,7 @@ reference to the API Secret Key (authenticator); a user can have more than one
 pair of these. Used in client-to-server and server-to-server authentication.&lt;/li&gt;
 &lt;li&gt;&lt;em&gt;Host name &amp;amp; server TLS certificate&lt;/em&gt;. Used in server-to-client
 authentication.&lt;/li&gt;
-&lt;li&gt;&lt;em&gt;Sender email address &amp;amp; sender's private-public key pair&lt;/em&gt;, where the email
+&lt;li&gt;&lt;em&gt;Sender's email address &amp;amp; sender's private-public key pair&lt;/em&gt;, where the email
 address is the identificator, and the key pair is the authenticator. Used in
 client-to-client authentication.&lt;/li&gt;
 &lt;/ul&gt;
@@ -49,7 +49,7 @@ authentication. The fourth and fifth apply to the server-to-client and
 client-to-client authentication:&lt;/p&gt;
 &lt;ol&gt;
 &lt;li&gt;The authenticator cannot be stored securely in the back end using traditional
-hashing with a salt approach. If all authenticators are stored hashed with as
+hashing with a salt approach. If all authenticators are stored hashed with a
 salt (as they should be) but without any identificators to reference them, then
 the authenticating party will have to hash the authenticator with all available
 salts prior to being able to authenticate. The authentication will be slowing
@@ -464,7 +464,7 @@ albert
 &lt;p&gt;&lt;img alt="Running shellcode encrypter" src="http://www.wryway.com/blog/high-level-language-shellcode-encryption-on-linux/running-shellcode-encrypter.png" title="Running shellcode encrypter"&gt;
 &lt;div class="img-caption"&gt;Running shellcode encrypter&lt;/div&gt;&lt;/p&gt;
 &lt;p&gt;Note that the size of the encrypted strings increased by 3 bytes. This fact may or may not be an issue while writing an exploit for a particular program. If it becomes an issue, some alternative encryption algorithm that does not increase the payload size should be chosen.&lt;/p&gt;
-&lt;p&gt;The encrypted string from the encrypter's output, along with the same IV and key, is pated into decrypter source code:&lt;/p&gt;
+&lt;p&gt;The encrypted string from the encrypter's output, along with the same IV and key, is pasted into decrypter source code:&lt;/p&gt;
 &lt;div class="highlight"&gt;&lt;pre&gt;&lt;span&gt;&lt;/span&gt;&lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;System.Runtime.InteropServices&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
 &lt;span class="k"&gt;using&lt;/span&gt; &lt;span class="nn"&gt;Mono.Unix.Native&lt;/span&gt;&lt;span class="p"&gt;;&lt;/span&gt;
