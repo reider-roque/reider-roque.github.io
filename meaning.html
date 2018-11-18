@@ -1,0 +1,35 @@
+<html>
+<head></head>
+<body>
+    <a id="newTab" target="_blank"></a>
+    <script>
+        const queryStr = new URLSearchParams(window.location.search);
+        const word = queryStr.get('word');
+        var newTab = document.getElementById("newTab");
+        
+        var merriamUrl = "https://www.merriam-webster.com/dictionary/";
+        newTab.href = merriamUrl + encodeURIComponent(word);
+        newTab.click();
+
+        var dictcomUrl = "https://www.dictionary.com/browse/";
+        newTab.href = dictcomUrl + word.split(" ").join("-");
+        newTab.click();
+
+        var collinsUrl = "https://www.collinsdictionary.com/us/dictionary/english/";
+        newTab.href = collinsUrl + word.split(" ").join("-");
+        newTab.click();
+
+        /*
+        var oxfordUrl = "https://en.oxforddictionaries.com/definition/us/";
+        newTab.href = oxfordUrl + word.split(" ").join("_");
+        newTab.click();
+        
+        var cambridgeUrl = "https://dictionary.cambridge.org/us/dictionary/english/";
+        newTab.href = cambridgeUrl + word.split(" ").join("-");
+        newTab.click();
+        */
+
+        window.close();
+    </script>
+</body>
+</html>
